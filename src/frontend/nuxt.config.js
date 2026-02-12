@@ -27,6 +27,14 @@ export default defineNuxtConfig({
 
   },
   vite: {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 20
+      },
+      host: true,
+      port: 3000
+    },
     plugins: [tailwindcssVite()],
   },
 
