@@ -371,6 +371,27 @@ const cancelRoute = async (routeId, driverId, opts = {}) => {
   return { id: routeId, status: RouteStatus.CANCELLED, cancelledBy: 'DRIVER', cancelledAt: now };
 };
 
+const completeRoute = async (routeId, driverId) => {
+  const route = await prisma.route.findUnique({
+    where: { id: routeId },
+    select: { id: true, driverId: true, status: true }
+  });
+
+  if (!route) throw new ApiError(404, 'Route not found');
+  if (route.driverId !== driverId) throw new ApiError(403, 'Forbidden');
+
+  // อนุญาตให้จบงานได้ถ้าสถานะเป็น AVAILABLE, FULL หรือ IN_TRANSIT (ถ้ามี)
+  const allowed = [RouteStatus.AVAILABLE, RouteStatus.FULL, RouteStatus.IN_TRANSIT];
+  if (!allowed.includes(route.status)) {
+    throw new ApiError(400, `Cannot complete route with status ${route.status}`);
+  }
+
+  return prisma.route.update({
+    where: { id: routeId },
+    data: { status: RouteStatus.COMPLETED }
+  });
+};
+
 module.exports = {
   getAllRoutes,
   searchRoutes,
@@ -379,5 +400,6 @@ module.exports = {
   createRoute,
   updateRoute,
   deleteRoute,
-  cancelRoute
+  cancelRoute,
+  completeRoute
 };

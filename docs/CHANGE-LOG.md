@@ -30,4 +30,21 @@ This project follows semantic versioning.
 - Dockerignore in frontend and backend
 
 ### Fixed
+<<<<<<< HEAD
 - Hmr reload issue in frontend for docker dev
+=======
+- Hmr reload issue in frontend for docker dev
+
+
+## [1.0.2] - 2026-02-13 - (Pavarit)
+
+### Added
+- End route api endpoint in server
+- End route button in frontend
+
+### Changed
+
+
+### Fixed
+- Route status tab bugs
+>>>>>>> origin/pavarit

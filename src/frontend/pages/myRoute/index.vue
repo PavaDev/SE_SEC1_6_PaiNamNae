@@ -43,11 +43,23 @@
                                             <h4 class="text-lg font-semibold text-gray-900">
                                                 {{ route.origin }} → {{ route.destination }}
                                             </h4>
-                                            <span class="status-badge" :class="{
+                                            <span
+                                                class="px-2 py-1 text-xs font-medium rounded"
+                                                :class="{
                                                 'status-confirmed': route.status === 'available',
                                                 'status-pending': route.status === 'full',
-                                            }">
-                                                {{ route.status === 'available' ? 'เปิดรับผู้โดยสาร' : 'เต็ม' }}
+                                                'status-completed': route.status === 'completed'
+                                                }"
+                                            >
+                                                {{
+                                                route.status === 'available'
+                                                    ? 'เปิดรับผู้โดยสาร'
+                                                    : route.status === 'full'
+                                                    ? 'เต็ม'
+                                                    : route.status === 'completed'
+                                                    ? 'เสร็จสิ้น'
+                                                    : route.status
+                                                }}
                                             </span>
                                         </div>
                                         <p class="mt-1 text-sm text-gray-600">
@@ -166,9 +178,18 @@
                                 <div class="flex justify-end" :class="{ 'mt-4': selectedTripId !== route.id }">
                                     <NuxtLink :to="`/myRoute/${route.id}/edit`"
                                         class="px-4 py-2 text-sm text-white transition duration-200 bg-blue-600 rounded-md hover:bg-blue-700"
-                                        @click.stop>
+                                        @click.stop 
+                                        v-if="route.status !== 'completed'">
                                         แก้ไขเส้นทาง
                                     </NuxtLink>
+                                    
+                                    <!-- ปุ่มกดจบงานสำหรับคนขับ -->
+                                    <button
+                                        v-if="['available', 'full'].includes(route.status)"
+                                        @click.stop="openConfirmModal(route, 'completeRoute')"
+                                        class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
+                                        สิ้นสุดการเดินทาง
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -424,7 +445,6 @@ const tabs = [
     { status: 'confirmed', label: 'ยืนยันแล้ว' },
     { status: 'rejected', label: 'ปฏิเสธ' },
     { status: 'cancelled', label: 'ยกเลิก' },
-    { status: 'all', label: 'ทั้งหมด' },
     { status: 'myRoutes', label: 'เส้นทางของฉัน' },
 ]
 
@@ -473,7 +493,7 @@ async function fetchMyRoutes() {
     try {
         const routes = await $api('/routes/me')
 
-        const allowedRouteStatuses = new Set(['AVAILABLE', 'FULL', 'IN_TRANSIT'])
+        const allowedRouteStatuses = new Set(['AVAILABLE', 'FULL', 'IN_TRANSIT', 'COMPLETED'])
 
         const formatted = []
         const ownRoutes = []
@@ -782,6 +802,14 @@ const openConfirmModal = (trip, action) => {
             action: 'delete',
             variant: 'danger',
         }
+    } else if (action === 'completeRoute') {
+        modalContent.value = {
+            title: 'ยืนยันการสิ้นสุดการเดินทาง',
+            message: `คุณต้องการยืนยันว่าการเดินทางนี้เสร็จสิ้นแล้วใช่หรือไม่?`,
+            confirmText: 'ใช่, สิ้นสุดการเดินทาง',
+            action: 'completeRoute',
+            variant: 'primary',
+        }
     }
     isModalVisible.value = true
 }
@@ -805,6 +833,10 @@ const handleConfirmAction = async () => {
         } else if (action === 'delete') {
             await $api(`/bookings/${bookingId}`, { method: 'DELETE' })
             toast.success('ลบรายการสำเร็จ', 'ลบคำขอออกจากรายการแล้ว')
+        } else if (action === 'completeRoute') {
+            const routeId = tripToAction.value.id
+            await $api(`/routes/${routeId}/complete`, { method: 'PATCH' })
+            toast.success('สำเร็จ', 'บันทึกการสิ้นสุดการเดินทางเรียบร้อยแล้ว')
         }
         closeConfirmModal()
         await fetchMyRoutes()
