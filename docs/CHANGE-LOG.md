@@ -48,3 +48,13 @@ This project follows semantic versioning.
 ### Fixed
 - Route status tab bugs
 >>>>>>> origin/pavarit
+
+
+## [1.0.3] - 2026-02-14 - (์Narathip)
+
+### Added
+- Review and Report modals with image upload (max 2 images) and star rating
+- Review/Report buttons myTrip pages
+
+### Changed
+- myTrip conditional button display for "All" tab
