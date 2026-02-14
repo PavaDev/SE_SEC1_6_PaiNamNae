@@ -172,6 +172,54 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div v-if="selectedTripId === route.id">
+                                        <!-- ===== รีวิว ===== -->
+                                        <div class="pt-4 mt-4 border-t border-gray-200">
+                                            <h5 class="mb-3 font-medium text-gray-900">
+                                                รีวิวผู้โดยสาร
+                                            </h5>
+
+                                            <!-- loading -->
+                                            <div v-if="loadingReviews[route.id]" class="text-sm text-gray-500">
+                                                กำลังโหลดรีวิว...
+                                            </div>
+
+                                            <!-- empty -->
+                                            <div
+                                                v-else-if="!routeReviews[route.id] || routeReviews[route.id].length === 0"
+                                                class="text-sm text-gray-500"
+                                            >
+                                                ยังไม่มีรีวิว
+                                            </div>
+
+                                            <!-- list -->
+                                            <div v-else class="space-y-4">
+                                                <div
+                                                v-for="review in routeReviews[route.id]"
+                                                :key="review.id"
+                                                class="p-3 border border-gray-200 rounded-md bg-gray-50"
+                                                >
+                                                <!-- stars -->
+                                                <div class="flex items-center mb-1 text-yellow-400">
+                                                    <span>
+                                                    {{ '★'.repeat(review.rating) }}
+                                                    {{ '☆'.repeat(5 - review.rating) }}
+                                                    </span>
+                                                </div>
+
+                                                <!-- comment -->
+                                                <p class="text-sm text-gray-700">
+                                                    {{ review.comment }}
+                                                </p>
+
+                                                <!-- date -->
+                                                <p class="mt-1 text-xs text-gray-500">
+                                                    {{ new Date(review.createdAt).toLocaleString() }}
+                                                </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- ปุ่มขวาล่าง -->
@@ -437,6 +485,10 @@ let geocoder = null
 let placesService = null
 const mapReady = ref(false)
 const GMAPS_CB = '__gmapsReady__'
+
+const routeReviews = reactive({}) // { routeId: Review[] }
+const loadingReviews = reactive({}) // loading state per route
+
 // NEW: เก็บหมุดจุดแวะ
 let stopMarkers = []
 
@@ -470,6 +522,24 @@ const reasonLabelMap = {
     COMMUNICATION_ISSUE: 'สื่อสารไม่สะดวก/ติดต่อไม่ได้',
 }
 function reasonLabel(v) { return reasonLabelMap[v] || v }
+
+async function fetchReviews(routeId) {
+    if (routeReviews[routeId]) return // already cached
+
+    loadingReviews[routeId] = true
+
+    try {
+        const res = await $api(`/reviews/route/${routeId}`)
+        routeReviews[routeId] = res.data || []
+        console.log(routeReviews[routeId]);
+        
+    } catch (err) {
+        console.error('Failed to load reviews', err)
+        routeReviews[routeId] = []
+  } finally {
+        loadingReviews[routeId] = false
+  }
+}
 
 // --- Computed ---
 const filteredTrips = computed(() => {
@@ -662,6 +732,10 @@ const toggleTripDetails = (id) => {
     if (item) updateMap(item)
 
     selectedTripId.value = (selectedTripId.value === id) ? null : id
+
+    if (selectedTripId.value) {
+        fetchReviews(id)
+    }
 }
 
 // ---------- Google Maps helpers ----------

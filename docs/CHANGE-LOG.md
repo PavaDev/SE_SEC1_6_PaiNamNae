@@ -58,3 +58,13 @@ This project follows semantic versioning.
 
 ### Changed
 - myTrip conditional button display for "All" tab
+
+
+## [1.0.4] - 2026-02-14 - (Panya)
+
+### Added
+- Review below my route on myTrip pages
+
+### Changed
+- Review buttons on myTrip pages disible when reviewed
+

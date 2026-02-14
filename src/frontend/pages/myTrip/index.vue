@@ -146,9 +146,15 @@
                                 <div class="flex justify-end space-x-3" :class="{ 'mt-4': selectedTripId !== trip.id }">
                                     <!-- ALL TAB: แสดงเฉพาะปุ่มรีวิวและรายงาน -->
                                     <template v-if="activeTab === 'all'">
-                                        <button @click.stop="openReviewModal(trip)"
-                                            class="px-4 py-2 text-sm text-white transition duration-200 bg-blue-600 rounded-md hover:bg-blue-700">
-                                            รีวิว
+                                        <button
+                                            @click.stop="!trip.hasReview && openReviewModal(trip)"
+                                            :disabled="trip.hasReview"
+                                            class="px-4 py-2 text-sm text-white transition duration-200 rounded-md"
+                                            :class="trip.hasReview
+                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                : 'bg-blue-600 hover:bg-blue-700'"
+                                        >
+                                        {{ trip.hasReview ? 'รีวิวแล้ว' : 'รีวิว' }}
                                         </button>
                                         <button @click.stop="openReportModal(trip)"
                                             class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-red-600 rounded-md hover:bg-red-700">
@@ -373,6 +379,7 @@ let map = null
 let currentPolyline = null
 let currentMarkers = []
 const allTrips = ref([])
+const canReview = ref(true)
 
 let gmap = null // Google Map instance
 let activePolyline = null
@@ -543,7 +550,8 @@ async function fetchMyTrips() {
                     (typeof b.route.durationSeconds === 'number' ? `${Math.round(b.route.durationSeconds / 60)} นาที` : '-'),
                 distanceText:
                     (typeof b.route.distance === 'string' ? formatDistance(b.route.distance) : b.route.distance) ||
-                    (typeof b.route.distanceMeters === 'number' ? `${(b.route.distanceMeters / 1000).toFixed(1)} กม.` : '-')
+                    (typeof b.route.distanceMeters === 'number' ? `${(b.route.distanceMeters / 1000).toFixed(1)} กม.` : '-'),
+                hasReview: !!b.review
             }
         })
 
@@ -969,25 +977,54 @@ function removeReviewImage(idx) {
 
 async function submitReview() {
     if (!reviewTrip.value) return
-    try {
-        const fd = new FormData()
-        fd.append('routeId', reviewTrip.value.routeId)
-        fd.append('rating', String(reviewRating.value))
-        fd.append('text', reviewText.value || '')
-        reviewImages.value.forEach((it) => fd.append('images', it.file))
 
-        await $api('/reviews', { method: 'POST', body: fd })
+    try {
+        const payload = {
+            bookingId: reviewTrip.value.id,
+            rating: reviewRating.value,
+            comment: reviewText.value || '',
+            images: reviewImages.value.length
+                ? reviewImages.value.map(img => img.url)
+                : null
+        }
+
+        // send review to backend
+        await $api('/reviews', {
+            method: 'POST',
+            body: payload
+        })
+
         toast.success('ขอบคุณสำหรับรีวิว!', 'รีวิวของคุณถูกส่งแล้ว')
-        reviewText.value = ''
+
+        const tripInList = allTrips.value.find(
+            trip => trip.id === reviewTrip.value.id
+        )
+
+        if (tripInList) {
+            tripInList.hasReview = true
+        }
+
+        // reset state ของ modal
         reviewRating.value = 5
+        reviewText.value = ''
         reviewImages.value.forEach(it => it.url && URL.revokeObjectURL(it.url))
         reviewImages.value = []
+
         closeReviewModal()
-        await fetchMyTrips()
+        // await fetchMyTrips()
+
     } catch (err) {
-        console.error('Failed to submit review', err)
-        toast.error('ไม่สามารถส่งรีวิวได้', err?.data?.message || 'โปรดลองอีกครั้ง')
+        console.error('Error creating review:', err)
+        toast.error(
+            'ไม่สามารถส่งรีวิวได้',
+            err?.data?.message || 'โปรดลองอีกครั้ง'
+        )
     }
+}
+
+async function checkCanReview(bookingId) {
+    const res = await $api(`/reviews/booking/${bookingId}`)
+    canReview.value = !res.hasReview
 }
 
 // --- Report Modal State ---
