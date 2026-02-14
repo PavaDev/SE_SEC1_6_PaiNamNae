@@ -1,0 +1,65 @@
+const asyncHandler = require("express-async-handler");
+const reviewService = require("../services/review.service");
+const ApiError = require("../utils/ApiError");
+
+const createReview = asyncHandler(async (req, res) => {
+    const userId = req.user.sub;
+    const reviewData = req.body;
+
+    const review = await reviewService.createReview(userId, reviewData);
+    res.status(201).json({ success: true, data: review });
+});
+
+const getGivenReviews = asyncHandler(async (req, res) => {
+    let userId = req.params.userId;
+    if (!userId && req.user) {
+        userId = req.user.sub;
+    }
+
+    if (!userId) {
+        throw new ApiError(400, "User ID is required");
+    }
+
+    const reviews = await reviewService.getGivenReviews(userId);
+    res.status(200).json({ success: true, data: reviews });
+});
+
+const getReceivedReviews = asyncHandler(async (req, res) => {
+    let userId = req.params.userId;
+    if (!userId && req.user) {
+        userId = req.user.sub;
+    }
+
+    if (!userId) {
+        throw new ApiError(400, "User ID is required");
+    }
+
+    const reviews = await reviewService.getReceivedReviews(userId);
+    res.status(200).json({ success: true, data: reviews });
+});
+
+const getReviewByBookingId = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+    const review = await reviewService.getReviewByBookingId(bookingId);
+
+    if (!review) {
+        throw new ApiError(404, "Review not found");
+    }
+
+    res.status(200).json({ success: true, data: review });
+});
+
+const getReviewByRouteId = asyncHandler(async (req, res) => {
+    const { routeId } = req.params;
+    const review = await reviewService.getReviewByRouteId(routeId);
+
+    res.status(200).json({ success: true, data: review });
+});
+
+module.exports = {
+    createReview,
+    getGivenReviews,
+    getReceivedReviews,
+    getReviewByBookingId,
+    getReviewByRouteId
+};

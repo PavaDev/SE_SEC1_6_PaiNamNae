@@ -44,3 +44,16 @@ This project follows semantic versioning.
 
 ### Fixed
 - Route status tab bugs
+
+
+## [1.0.5] - 2026-02-14 - (Pavarit)
+
+### Added
+- Review schema (migration)
+- Review api endpoint in server (create, retrieve)
+- Review route
+
+### Changed
+- User and Route schema to relate with review schema
+
+### Fixed
