@@ -57,3 +57,4 @@ This project follows semantic versioning.
 - User and Route schema to relate with review schema
 
 ### Fixed
+- Hmr reload issue in frontend for docker dev
