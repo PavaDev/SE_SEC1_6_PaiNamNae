@@ -22,6 +22,7 @@ const corsOptions = {
     origin: [
         'http://localhost:3001',
         'https://amazing-crisp-9bcb1a.netlify.app',
+        '*',
         ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [])
     ].filter(Boolean),
     credentials: true,
@@ -30,7 +31,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // เปิดรับ preflight สำหรับทุก route
+app.options('*'); // เปิดรับ preflight สำหรับทุก route
 
 app.use(express.json());
 

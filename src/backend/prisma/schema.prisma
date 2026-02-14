@@ -88,6 +88,11 @@ model User {
   notification          Notification[]
   createdRoutes         Route[]             @relation("DriverRoutes")
   bookings              Booking[]           @relation("PassengerBookings")
+  givenReviews          Review[]            @relation("GivenReviews")
+  receivedReviews       Review[]            @relation("ReceivedReviews")
+
+  ratingAverage         Float               @default(0)
+  ratingCount           Int                 @default(0)
 
   @@index([role])
   @@index([isActive])
@@ -210,4 +215,25 @@ model Booking {
   pickupLocation  Json          @db.Json
   dropoffLocation Json          @db.Json
   createdAt       DateTime      @default(now())
+
+  review Review?
+}
+
+model Review {
+  id          String   @id @default(cuid())
+
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  reviewerId  String
+  reviewer    User     @relation("GivenReviews", fields: [reviewerId], references: [id])
+
+  revieweeId  String
+  reviewee    User     @relation("ReceivedReviews", fields: [revieweeId], references: [id])
+
+  rating      Int      // 1–5 ดาว
+  comment     String?
+  images      Json?    @db.Json
+
+  createdAt   DateTime @default(now())
 }

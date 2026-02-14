@@ -529,10 +529,8 @@ async function fetchReviews(routeId) {
     loadingReviews[routeId] = true
 
     try {
-        const res = await $api(`/reviews/route/${routeId}`)
+        const res = await $fetch(`/api/reviews/route/${routeId}`)
         routeReviews[routeId] = res.data || []
-        console.log(routeReviews[routeId]);
-        
     } catch (err) {
         console.error('Failed to load reviews', err)
         routeReviews[routeId] = []

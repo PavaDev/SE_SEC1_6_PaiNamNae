@@ -30,9 +30,7 @@ This project follows semantic versioning.
 - Dockerignore in frontend and backend
 
 ### Fixed
-<<<<<<< HEAD
 - Hmr reload issue in frontend for docker dev
-=======
 - Hmr reload issue in frontend for docker dev
 
 
@@ -47,7 +45,6 @@ This project follows semantic versioning.
 
 ### Fixed
 - Route status tab bugs
->>>>>>> origin/pavarit
 
 
 ## [1.0.3] - 2026-02-14 - (์Narathip)
@@ -68,3 +65,16 @@ This project follows semantic versioning.
 ### Changed
 - Review buttons on myTrip pages disible when reviewed
 
+
+## [1.0.5] - 2026-02-14 - (Pavarit)
+
+### Added
+- Review schema (migration)
+- Review api endpoint in server (create, retrieve)
+- Review route
+
+### Changed
+- User and Route schema to relate with review schema
+
+### Fixed
+- Hmr reload issue in frontend for docker dev
