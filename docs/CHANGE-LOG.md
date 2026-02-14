@@ -31,6 +31,7 @@ This project follows semantic versioning.
 
 ### Fixed
 - Hmr reload issue in frontend for docker dev
+- Hmr reload issue in frontend for docker dev
 
 
 ## [1.0.2] - 2026-02-13 - (Pavarit)
@@ -44,6 +45,25 @@ This project follows semantic versioning.
 
 ### Fixed
 - Route status tab bugs
+
+
+## [1.0.3] - 2026-02-14 - (์Narathip)
+
+### Added
+- Review and Report modals with image upload (max 2 images) and star rating
+- Review/Report buttons myTrip pages
+
+### Changed
+- myTrip conditional button display for "All" tab
+
+
+## [1.0.4] - 2026-02-14 - (Panya)
+
+### Added
+- Review below my route on myTrip pages
+
+### Changed
+- Review buttons on myTrip pages disible when reviewed
 
 
 ## [1.0.5] - 2026-02-14 - (Pavarit)

@@ -535,7 +535,7 @@ async function fetchReviews(routeId) {
         console.error('Failed to load reviews', err)
         routeReviews[routeId] = []
   } finally {
-    loadingReviews[routeId] = false
+        loadingReviews[routeId] = false
   }
 }
 
@@ -732,8 +732,8 @@ const toggleTripDetails = (id) => {
     selectedTripId.value = (selectedTripId.value === id) ? null : id
 
     if (selectedTripId.value) {
-    fetchReviews(id)
-  }
+        fetchReviews(id)
+    }
 }
 
 // ---------- Google Maps helpers ----------
