@@ -43,11 +43,23 @@
                                             <h4 class="text-lg font-semibold text-gray-900">
                                                 {{ route.origin }} → {{ route.destination }}
                                             </h4>
-                                            <span class="status-badge" :class="{
+                                            <span
+                                                class="px-2 py-1 text-xs font-medium rounded"
+                                                :class="{
                                                 'status-confirmed': route.status === 'available',
                                                 'status-pending': route.status === 'full',
-                                            }">
-                                                {{ route.status === 'available' ? 'เปิดรับผู้โดยสาร' : 'เต็ม' }}
+                                                'status-completed': route.status === 'completed'
+                                                }"
+                                            >
+                                                {{
+                                                route.status === 'available'
+                                                    ? 'เปิดรับผู้โดยสาร'
+                                                    : route.status === 'full'
+                                                    ? 'เต็ม'
+                                                    : route.status === 'completed'
+                                                    ? 'เสร็จสิ้น'
+                                                    : route.status
+                                                }}
                                             </span>
                                         </div>
                                         <p class="mt-1 text-sm text-gray-600">
@@ -160,15 +172,72 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div v-if="selectedTripId === route.id">
+                                        <!-- ===== รีวิว ===== -->
+                                        <div class="pt-4 mt-4 border-t border-gray-200">
+                                            <h5 class="mb-3 font-medium text-gray-900">
+                                                รีวิวผู้โดยสาร
+                                            </h5>
+
+                                            <!-- loading -->
+                                            <div v-if="loadingReviews[route.id]" class="text-sm text-gray-500">
+                                                กำลังโหลดรีวิว...
+                                            </div>
+
+                                            <!-- empty -->
+                                            <div
+                                                v-else-if="!routeReviews[route.id] || routeReviews[route.id].length === 0"
+                                                class="text-sm text-gray-500"
+                                            >
+                                                ยังไม่มีรีวิว
+                                            </div>
+
+                                            <!-- list -->
+                                            <div v-else class="space-y-4">
+                                                <div
+                                                v-for="review in routeReviews[route.id]"
+                                                :key="review.id"
+                                                class="p-3 border border-gray-200 rounded-md bg-gray-50"
+                                                >
+                                                <!-- stars -->
+                                                <div class="flex items-center mb-1 text-yellow-400">
+                                                    <span>
+                                                    {{ '★'.repeat(review.rating) }}
+                                                    {{ '☆'.repeat(5 - review.rating) }}
+                                                    </span>
+                                                </div>
+
+                                                <!-- comment -->
+                                                <p class="text-sm text-gray-700">
+                                                    {{ review.comment }}
+                                                </p>
+
+                                                <!-- date -->
+                                                <p class="mt-1 text-xs text-gray-500">
+                                                    {{ new Date(review.createdAt).toLocaleString() }}
+                                                </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- ปุ่มขวาล่าง -->
                                 <div class="flex justify-end" :class="{ 'mt-4': selectedTripId !== route.id }">
                                     <NuxtLink :to="`/myRoute/${route.id}/edit`"
                                         class="px-4 py-2 text-sm text-white transition duration-200 bg-blue-600 rounded-md hover:bg-blue-700"
-                                        @click.stop>
+                                        @click.stop 
+                                        v-if="route.status !== 'completed'">
                                         แก้ไขเส้นทาง
                                     </NuxtLink>
+                                    
+                                    <!-- ปุ่มกดจบงานสำหรับคนขับ -->
+                                    <button
+                                        v-if="['available', 'full'].includes(route.status)"
+                                        @click.stop="openConfirmModal(route, 'completeRoute')"
+                                        class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
+                                        สิ้นสุดการเดินทาง
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -416,6 +485,10 @@ let geocoder = null
 let placesService = null
 const mapReady = ref(false)
 const GMAPS_CB = '__gmapsReady__'
+
+const routeReviews = reactive({}) // { routeId: Review[] }
+const loadingReviews = reactive({}) // loading state per route
+
 // NEW: เก็บหมุดจุดแวะ
 let stopMarkers = []
 
@@ -424,7 +497,6 @@ const tabs = [
     { status: 'confirmed', label: 'ยืนยันแล้ว' },
     { status: 'rejected', label: 'ปฏิเสธ' },
     { status: 'cancelled', label: 'ยกเลิก' },
-    { status: 'all', label: 'ทั้งหมด' },
     { status: 'myRoutes', label: 'เส้นทางของฉัน' },
 ]
 
@@ -451,6 +523,22 @@ const reasonLabelMap = {
 }
 function reasonLabel(v) { return reasonLabelMap[v] || v }
 
+async function fetchReviews(routeId) {
+    if (routeReviews[routeId]) return // already cached
+
+    loadingReviews[routeId] = true
+
+    try {
+        const res = await $fetch(`/api/reviews/route/${routeId}`)
+        routeReviews[routeId] = res.data || []
+    } catch (err) {
+        console.error('Failed to load reviews', err)
+        routeReviews[routeId] = []
+  } finally {
+    loadingReviews[routeId] = false
+  }
+}
+
 // --- Computed ---
 const filteredTrips = computed(() => {
     if (activeTab.value === 'all') return allTrips.value
@@ -473,7 +561,7 @@ async function fetchMyRoutes() {
     try {
         const routes = await $api('/routes/me')
 
-        const allowedRouteStatuses = new Set(['AVAILABLE', 'FULL', 'IN_TRANSIT'])
+        const allowedRouteStatuses = new Set(['AVAILABLE', 'FULL', 'IN_TRANSIT', 'COMPLETED'])
 
         const formatted = []
         const ownRoutes = []
@@ -642,6 +730,10 @@ const toggleTripDetails = (id) => {
     if (item) updateMap(item)
 
     selectedTripId.value = (selectedTripId.value === id) ? null : id
+
+    if (selectedTripId.value) {
+    fetchReviews(id)
+  }
 }
 
 // ---------- Google Maps helpers ----------
@@ -782,6 +874,14 @@ const openConfirmModal = (trip, action) => {
             action: 'delete',
             variant: 'danger',
         }
+    } else if (action === 'completeRoute') {
+        modalContent.value = {
+            title: 'ยืนยันการสิ้นสุดการเดินทาง',
+            message: `คุณต้องการยืนยันว่าการเดินทางนี้เสร็จสิ้นแล้วใช่หรือไม่?`,
+            confirmText: 'ใช่, สิ้นสุดการเดินทาง',
+            action: 'completeRoute',
+            variant: 'primary',
+        }
     }
     isModalVisible.value = true
 }
@@ -805,6 +905,10 @@ const handleConfirmAction = async () => {
         } else if (action === 'delete') {
             await $api(`/bookings/${bookingId}`, { method: 'DELETE' })
             toast.success('ลบรายการสำเร็จ', 'ลบคำขอออกจากรายการแล้ว')
+        } else if (action === 'completeRoute') {
+            const routeId = tripToAction.value.id
+            await $api(`/routes/${routeId}/complete`, { method: 'PATCH' })
+            toast.success('สำเร็จ', 'บันทึกการสิ้นสุดการเดินทางเรียบร้อยแล้ว')
         }
         closeConfirmModal()
         await fetchMyRoutes()

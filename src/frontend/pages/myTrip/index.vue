@@ -48,6 +48,8 @@
                                                 class="status-badge status-rejected">ปฏิเสธ</span>
                                             <span v-else-if="trip.status === 'cancelled'"
                                                 class="status-badge status-cancelled">ยกเลิก</span>
+                                            <span v-else-if="trip.status === 'completed'"
+                                                class="status-badge status-completed">เสร็จสิ้น</span>
                                         </div>
                                         <p class="mt-1 text-sm text-gray-600">จุดนัดพบ: {{ trip.pickupPoint }}</p>
                                         <p class="text-sm text-gray-600">
@@ -166,6 +168,20 @@
                                         class="px-4 py-2 text-sm text-gray-600 transition duration-200 border border-gray-300 rounded-md hover:bg-gray-50">
                                         ลบรายการ
                                     </button>
+
+                                    <!-- COMPLETED: แสดงสถานะ (อาจจะเพิ่มปุ่มรีวิวทีหลัง) -->
+                                    <span v-else-if="trip.status === 'completed'"
+                                        class="px-4 py-2 text-sm text-green-600 border border-green-200 rounded-md bg-green-50">
+                                        การเดินทางเสร็จสิ้น
+                                    </span>
+
+                                    <!-- ปุ่มสำหรับ DRIVER: กดจบงาน (แสดงเฉพาะถ้าเป็นคนขับและสถานะ confirmed/pending) -->
+                                    <button
+                                        v-if="isDriver(trip) && ['confirmed', 'pending'].includes(trip.status)"
+                                        @click.stop="openConfirmModal(trip, 'complete')"
+                                        class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
+                                        โปรดทราบ: ฉันคือคนขับ
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -236,6 +252,8 @@ dayjs.extend(buddhistEra)
 
 const { $api } = useNuxtApp()
 const { toast } = useToast()
+const { user } = useAuth() // ใช้ useAuth() ที่มีอยู่จริงในโปรเจค
+
 
 // --- State Management ---
 const activeTab = ref('pending')
@@ -263,6 +281,7 @@ const tabs = [
     { status: 'confirmed', label: 'ยืนยันแล้ว' },
     { status: 'rejected', label: 'ปฏิเสธ' },
     { status: 'cancelled', label: 'ยกเลิก' },
+    { status: 'completed', label: 'เสร็จสิ้น' },
     { status: 'all', label: 'ทั้งหมด' }
 ]
 
@@ -289,7 +308,20 @@ const tripToCancel = ref(null)
 // --- Computed Properties ---
 const filteredTrips = computed(() => {
     if (activeTab.value === 'all') return allTrips.value
-    return allTrips.value.filter((trip) => trip.status === activeTab.value)
+    
+    const filtered = allTrips.value.filter((trip) => trip.status === activeTab.value)
+
+    // ถ้าเป็นแท็บ "เสร็จสิ้น" ให้กรอง routeId ซ้ำออก (กรณีจองหลายครั้งใน route เดียว)
+    if (activeTab.value === 'completed') {
+        const seen = new Set()
+        return filtered.filter(trip => {
+            if (seen.has(trip.routeId)) return false
+            seen.add(trip.routeId)
+            return true
+        })
+    }
+
+    return filtered
 })
 
 const selectedTrip = computed(() => {
@@ -301,6 +333,10 @@ function cleanAddr(a) {
         .replace(/,?\s*(Thailand|ไทย|ประเทศ)\s*$/i, '')
         .replace(/\s{2,}/g, ' ')
         .trim()
+}
+
+const isDriver = (trip) => {
+    return user.value && trip.driver.id === user.value.id
 }
 
 // --- Methods ---
@@ -360,9 +396,17 @@ async function fetchMyTrips() {
                 )
                 .filter(Boolean)
 
+            // Logic: ถ้า Booking ยกเลิก/ปฏิเสธ ให้ยึดสถานะ Booking
+            // แต่ถ้าเช่าอยู่ (Pending/Confirmed) แล้ว Route จบ ให้ถือว่า Completed
+            let finalStatus = String(b.status || '').toLowerCase()
+            if (!['cancelled', 'rejected'].includes(finalStatus) && b.route.status === 'COMPLETED') {
+                finalStatus = 'completed'
+            }
+
             return {
                 id: b.id,
-                status: String(b.status || '').toLowerCase(),
+                routeId: b.route.id,
+                status: finalStatus,
                 origin: start?.name || `(${Number(start.lat).toFixed(2)}, ${Number(start.lng).toFixed(2)})`,
                 destination: end?.name || `(${Number(end.lat).toFixed(2)}, ${Number(end.lng).toFixed(2)})`,
                 originAddress: start?.address ? cleanAddr(start.address) : null,
@@ -374,7 +418,7 @@ async function fetchMyTrips() {
                 time: dayjs(b.route.departureTime).format('HH:mm น.'),
                 price: (b.route.pricePerSeat || 0) * (b.numberOfSeats || 1),
                 seats: b.numberOfSeats || 1,
-                driver: driverData,
+                driver: { ...driverData, id: b.route.driver.id },
                 coords: [
                     [start.lat, start.lng],
                     [end.lat, end.lng]
@@ -606,6 +650,14 @@ const openConfirmModal = (trip, action) => {
             action: 'delete',
             variant: 'danger'
         }
+    } else if (action === 'complete') {
+        modalContent.value = {
+            title: 'ยืนยันการสิ้นสุดการเดินทาง',
+            message: `คุณต้องการยืนยันว่าการเดินทางไป "${trip.destination}" ได้เสร็จสิ้นแล้วใช่หรือไม่?`,
+            confirmText: 'ใช่, สิ้นสุดการเดินทาง',
+            action: 'complete',
+            variant: 'primary'
+        }
     }
     isModalVisible.value = true
 }
@@ -628,6 +680,9 @@ const handleConfirmAction = async () => {
         } else if (action === 'delete') {
             await $api(`/bookings/${tripId}`, { method: 'DELETE' })
             toast.success('ลบรายการสำเร็จ', 'รายการได้ถูกลบออกจากประวัติแล้ว')
+        } else if (action === 'complete') {
+            await $api(`/routes/${trip.routeId}/complete`, { method: 'PATCH' }) // ต้องใช้ routeId ไม่ใช่ bookingId
+            toast.success('สำเร็จ', 'บันทึกการสิ้นสุดการเดินทางเรียบร้อยแล้ว')
         }
         closeConfirmModal()
         await fetchMyTrips()

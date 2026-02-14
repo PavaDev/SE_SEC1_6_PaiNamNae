@@ -31,3 +31,30 @@ This project follows semantic versioning.
 
 ### Fixed
 - Hmr reload issue in frontend for docker dev
+
+
+## [1.0.2] - 2026-02-13 - (Pavarit)
+
+### Added
+- End route api endpoint in server
+- End route button in frontend
+
+### Changed
+
+
+### Fixed
+- Route status tab bugs
+
+
+## [1.0.5] - 2026-02-14 - (Pavarit)
+
+### Added
+- Review schema (migration)
+- Review api endpoint in server (create, retrieve)
+- Review route
+
+### Changed
+- User and Route schema to relate with review schema
+
+### Fixed
+- Hmr reload issue in frontend for docker dev
