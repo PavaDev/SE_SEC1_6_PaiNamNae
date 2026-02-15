@@ -245,6 +245,58 @@
                                     </div>
                                 </div>
                             </section>
+                            
+                            <!-- รีวิว -->
+                            <section class="mt-8">
+                                <h3 class="flex items-center gap-2 mb-4 text-sm font-semibold text-gray-700">
+                                    <i class="fa-solid fa-star text-yellow-400"></i>
+                                    รีวิวเส้นทาง
+                                </h3>
+                                
+                                <div v-if="isLoadingReviews" class="p-4 text-center text-gray-500">
+                                    กำลังโหลดรีวิว...
+                                </div>
+                                
+                                <div v-else-if="reviews.length === 0" class="p-8 text-center text-gray-500 border border-gray-300 rounded-lg bg-gray-50">
+                                    ยังไม่มีรีวิวสำหรับเส้นทางนี้
+                                </div>
+                                
+                                <div v-else class="space-y-4">
+                                    <div v-for="review in reviews" :key="review.id" class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                        <div class="flex items-start gap-4">
+                                            <img :src="review.reviewer?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.firstName || 'User')}&background=random`" 
+                                                class="object-cover w-10 h-10 rounded-full border border-gray-200" />
+                                            
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <h4 class="font-medium text-gray-900 truncate">
+                                                        {{ review.reviewer?.firstName }} {{ review.reviewer?.lastName }}
+                                                    </h4>
+                                                    <span class="text-xs text-gray-500 whitespace-nowrap">
+                                                        {{ dayjs(review.createdAt).format('D MMM BBBB') }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="flex items-center mt-1 text-sm text-yellow-400">
+                                                    <span v-for="i in 5" :key="i">
+                                                        {{ i <= review.rating ? '★' : '☆' }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="mt-2 text-sm text-gray-700 leading-relaxed">
+                                                    {{ review.comment }}
+                                                </p>
+                                                
+                                                <div v-if="review.images && review.images.length" class="grid grid-cols-4 gap-2 mt-3">
+                                                    <div v-for="(img, idx) in review.images" :key="idx" class="aspect-square">
+                                                        <img :src="img" class="object-cover w-full h-full rounded-md border border-gray-200" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
 
                         </div>
                     </div>
@@ -278,8 +330,10 @@ useHead({
 
 const route = useRoute()
 const isLoading = ref(true)
+const isLoadingReviews = ref(false)
 const loadError = ref('')
-const routeData = ref(null) // โครงข้อมูลที่ map UI ใช้ (ยังไม่ผูก API)
+const routeData = ref(null) 
+const reviews = ref([])
 
 const mapEl = ref(null)
 let gmap = null
@@ -479,6 +533,42 @@ async function fetchRoute() {
         routeData.value = null
     } finally {
         isLoading.value = false
+        // Fetch reviews after route is loaded
+        fetchReviews()
+    }
+}
+
+async function fetchReviews() {
+    const id = route.params.id
+    if (!id) return
+    
+    isLoadingReviews.value = true
+    try {
+        const token = useCookie('token')?.value || (process.client ? localStorage.getItem('token') : '')
+        const apiBase = useRuntimeConfig().public.apiBase
+        
+        const res = await fetch(`${apiBase}/reviews/route/${id}`, {
+            headers: {
+                Accept: 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            credentials: 'include'
+        })
+        
+        if (res.status === 404) {
+            reviews.value = []
+            return
+        }
+        
+        const body = await res.json()
+        if (res.ok) {
+            reviews.value = body.data || []
+        }
+    } catch (err) {
+        console.error('Failed to fetch reviews:', err)
+        reviews.value = []
+    } finally {
+        isLoadingReviews.value = false
     }
 }
 

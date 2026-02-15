@@ -17,7 +17,7 @@
                         </NuxtLink>
 
                         <div
-                            v-if="user && (user.role === 'PASSENGER' || user.role === 'DRIVER' || user.role === 'ADMIN')">
+                            v-if="user && (user.role === 'DRIVER')">
                             <NuxtLink to="/createTrip"
                                 class="text-gray-600 transition-colors duration-200 hover:text-blue-600"
                                 :class="{ 'text-blue-600': $route.path === '/createTrip' }">
@@ -212,7 +212,7 @@
                                 </NuxtLink>
                                 <button @click="logout"
                                     class="flex items-center block w-full px-4 py-2 text-left text-red-600 transition-colors duration-200 hover:bg-red-50 hover:text-red-700">
-                                    Logout
+                                    ออกจากระบบ
                                 </button>
                             </div>
                         </div>

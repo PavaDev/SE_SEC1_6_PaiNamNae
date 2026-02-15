@@ -177,6 +177,17 @@ const getReviewByRouteId = async (routeId) => {
             booking: {
                 routeId: routeId
             }
+        },
+        include: {
+            reviewer: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    username: true,
+                    profilePicture: true
+                }
+            }
         }
     })
 

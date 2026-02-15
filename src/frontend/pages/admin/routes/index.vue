@@ -54,9 +54,10 @@
                             <select v-model="filters.status"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500">
                                 <option value="">ทั้งหมด</option>
-                                <option value="AVAILABLE">AVAILABLE</option>
-                                <option value="FULL">FULL</option>
-                                <option value="CANCELLED">CANCELLED</option>
+                                <option value="AVAILABLE">เปิดรับผู้โดยสาร</option>
+                                <option value="COMPLETED">ถึงที่หมาย</option>
+                                <option value="FULL">เต็ม</option>
+                                <option value="CANCELLED">ยกเลิก</option>
                             </select>
                         </div>
 
@@ -196,7 +197,7 @@
                                             class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full"
                                             :class="statusBadge(r.status)">
                                             <i class="mr-1 fa-solid"
-                                                :class="r.status === 'AVAILABLE' ? 'fa-circle-check' : r.status === 'FULL' ? 'fa-circle-xmark' : 'fa-triangle-exclamation'"></i>
+                                                :class="r.status === 'AVAILABLE' ? 'fa-circle-check' : r.status === 'FULL' ? 'fa-circle-xmark' : 'fa-triangle-exclamation' ? 'fa-circle-check' : r.status === 'COMPLETED' ? 'fa-circle-check' : r.status === 'CANCELLED' ? 'fa-circle-xmark' : 'fa-triangle-exclamation'"></i>
                                             {{ r.status || '-' }}
                                         </span>
                                     </td>

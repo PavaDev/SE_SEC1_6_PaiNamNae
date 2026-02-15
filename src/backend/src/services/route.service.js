@@ -12,7 +12,9 @@ const baseInclude = {
       lastName: true,
       gender: true,
       profilePicture: true,
-      isVerified: true
+      isVerified: true,
+      ratingAverage: true,
+      ratingCount: true
     }
   },
   vehicle: {

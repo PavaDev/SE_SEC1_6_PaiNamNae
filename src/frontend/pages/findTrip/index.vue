@@ -101,7 +101,11 @@
                                         <div class="flex items-start justify-between">
                                             <div>
                                                 <div class="flex items-center">
-                                                    <h4 class="font-semibold text-gray-900">{{ route.driver.name }}</h4>
+                                                    <h4
+                                                        class="font-semibold text-gray-900 cursor-pointer hover:underline"
+                                                        @click.stop="openDriverReview(route.driver)">
+                                                        {{ route.driver.name }}
+                                                    </h4>
 
                                                     <div v-if="route.driver.isVerified"
                                                         class="relative group ml-1.5 flex items-center">
@@ -218,9 +222,9 @@
                                         </div>
                                     </div>
                                     <div class="flex justify-end mt-4">
-                                        <button @click.stop="openModal(route)" :disabled="route.availableSeats === 0"
+                                        <button @click.stop="openModal(route)" :disabled="route.availableSeats === 0 || route.driver.id === user?.id"
                                             class="px-6 py-2 text-white transition duration-200 bg-blue-600 rounded-md cursor-pointer hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                                            จองที่นั่ง
+                                            {{ route.driver.id === user?.id ? 'เส้นทางของคุณ' : 'จองที่นั่ง' }}
                                         </button>
                                     </div>
                                 </div>
@@ -462,6 +466,98 @@
             </div>
         </transition>
     </div>
+    <transition name="modal-fade">
+        <div v-if="showDriverModal && selectedDriver"
+            class="modal-overlay"
+            @click.self="closeDriverModal">
+
+            <div class="modal-content max-w-2xl">
+
+            <!-- header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-300">
+                <h3 class="text-xl font-semibold text-gray-900">
+                รีวิวคนขับ
+                </h3>
+                <button @click="closeDriverModal" class="text-gray-400 hover:text-gray-600">
+                ✕
+                </button>
+            </div>
+
+            <!-- driver info -->
+            <div class="flex items-center p-6 space-x-4 border-b bg-gray-50">
+                <img :src="selectedDriver.image"
+                    class="object-cover w-14 h-14 rounded-full" />
+
+                <div>
+                <div class="font-semibold text-gray-900">
+                    {{ selectedDriver.name }}
+                </div>
+
+                <div class="flex items-center text-yellow-400">
+                    <span v-for="star in 5" :key="star">
+                    {{ star <= selectedDriver.rating ? '★' : '☆' }}
+                    </span>
+                    <span class="ml-2 text-sm text-gray-600">
+                    {{ selectedDriver.rating }}
+                    </span>
+                </div>
+                </div>
+            </div>
+
+            <!-- reviews -->
+            <div class="p-6 overflow-y-auto max-h-[60vh]">
+
+                <div v-if="loadingDriverReviews" class="text-center text-gray-500">
+                กำลังโหลดรีวิว...
+                </div>
+
+                <div v-else-if="driverReviews.length === 0"
+                    class="text-center text-gray-500">
+                ยังไม่มีรีวิว
+                </div>
+
+                <div v-else class="space-y-4">
+
+                <div v-for="review in driverReviews"
+                    :key="review.id"
+                    class="p-4 border rounded-lg bg-gray-50">
+
+                    <div class="flex items-center justify-between">
+                    <div class="font-medium text-gray-900">
+                        {{ review.reviewer?.firstName || 'ผู้ใช้' }}
+                    </div>
+
+                    <div class="text-xs text-gray-500">
+                        {{ dayjs(review.createdAt).format('D MMM YYYY') }}
+                    </div>
+                    </div>
+
+                    <div class="mt-1 text-sm text-yellow-400">
+                    {{ '★'.repeat(review.rating) }}
+                    {{ '☆'.repeat(5 - review.rating) }}
+                    </div>
+
+                    <p class="mt-2 text-sm text-gray-700">
+                    {{ review.comment }}
+                    </p>
+
+                    <!-- images -->
+                    <div v-if="review.images?.length"
+                        class="grid grid-cols-3 gap-2 mt-3">
+
+                    <img v-for="(img, i) in review.images.slice(0,6)"
+                        :key="i"
+                        :src="img"
+                        class="object-cover w-full rounded-md aspect-square"/>
+                    </div>
+
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </transition>
+
 </template>
 
 
@@ -479,7 +575,7 @@ dayjs.extend(buddhistEra)
 
 const { $api } = useNuxtApp()
 const { toast } = useToast();
-const { token } = useAuth();
+const { token, user } = useAuth();
 const config = useRuntimeConfig()
 const GMAPS_CB = '__gmapsReady__'
 
@@ -513,6 +609,13 @@ const placePickerMapEl = ref(null)
 let placePickerMap = null
 let placePickerMarker = null
 const pickedPlace = ref({ name: '', lat: null, lng: null })
+
+// --- Driver Modal ---
+const showDriverModal = ref(false)
+const selectedDriver = ref(null)
+const driverReviews = ref([])
+const loadingDriverReviews = ref(false)
+
 
 const headScripts = []
 if (process.client && !window.google?.maps) {
@@ -677,10 +780,11 @@ async function handleSearch() {
                 originAddress: route.startLocation?.address ? cleanAddr(route.startLocation.address) : null,
                 destinationAddress: route.endLocation?.address ? cleanAddr(route.endLocation.address) : null,
                 driver: {
+                    id: route.driver?.id,
                     name: `${route.driver?.firstName || ''} ${route.driver?.lastName || ''}`.trim() || 'ไม่ระบุชื่อ',
                     image: route.driver?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(route.driver?.firstName || 'U')}&background=random&size=64`,
-                    rating: 4.5,
-                    reviews: Math.floor(Math.random() * 50) + 5,
+                    rating: route.driver?.ratingAverage,
+                    reviews: route.driver?.ratingCount,
                     isVerified: !!route.driver?.isVerified
                 },
                 carDetails: route.vehicle
@@ -1366,6 +1470,28 @@ function formatDuration(input) {
     const m = Math.round(minutes % 60)
     return h ? (m ? `${h} ชม. ${m} นาที` : `${h} ชม.`) : `${m} นาที`
 }
+
+async function openDriverReview(driver) {
+  selectedDriver.value = driver
+  showDriverModal.value = true
+  loadingDriverReviews.value = true
+
+  try {
+    const res = await $api(`/reviews/received/${driver.id}`)
+    driverReviews.value = res || []
+  } catch (e) {
+    driverReviews.value = []
+  } finally {
+    loadingDriverReviews.value = false
+  }
+}
+
+function closeDriverModal() {
+  showDriverModal.value = false
+  selectedDriver.value = null
+  driverReviews.value = []
+}
+
 
 onMounted(() => {
     // โหลดเสร็จแล้วในหน้านี้อยู่แล้ว
