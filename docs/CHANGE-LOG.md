@@ -78,3 +78,18 @@ This project follows semantic versioning.
 
 ### Fixed
 - Hmr reload issue in frontend for docker dev
+
+
+
+## [1.0.6] - 2026-02-15 - (Narathaip)
+
+### Added
+- Admin Report Management module:
+  - Backend: CRUD endpoints (controller + service), Zod validation, routing
+  - API docs: Swagger documentation for report endpoints
+  - Frontend: composables + admin pages (list, detail, edit)
+- AdminSidebar: navigation link for Report Management
+
+### Changed
+- Report type classification simplified to Driver/Passenger
+- Note: Prisma models reused, no schema changes
