@@ -1,7 +1,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const reviewService = require('./src/services/review.service');
+const reviewService = require('../../../src/backend/src/services/review.service');
 
 async function main() {
     console.log('--- Checking Reviews ---');
