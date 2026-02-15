@@ -47,7 +47,7 @@
                                             <span v-else-if="trip.status === 'rejected'"
                                                 class="status-badge status-rejected">ปฏิเสธ</span>
                                             <span v-else-if="trip.status === 'cancelled'"
-                                                class="status-badge status-cancelled">ยกเลิก</span>
+                                                class="status-badge status-cancelled">ยกเลิกโดยผู้โดยสาร</span>
                                             <span v-else-if="trip.status === 'completed'"
                                                 class="status-badge status-completed">เสร็จสิ้น</span>
                                         </div>
@@ -69,15 +69,16 @@
                                         class="object-cover w-12 h-12 rounded-full" />
                                     <div class="flex-1">
                                         <h5 class="font-medium text-gray-900">{{ trip.driver.name }}</h5>
-                                        <div class="flex items-center">
+                                        <div class="flex items-center cursor-pointer hover:opacity-80" @click.stop="toggleTripDetails(trip.id)">
                                             <div class="flex text-sm text-yellow-400">
                                                 <span>
-                                                    {{ '★'.repeat(Math.round(trip.driver.rating)) }}{{ '☆'.repeat(5 -
-                                                        Math.round(trip.driver.rating)) }}
+                                                    {{ '★'.repeat(Math.round(trip.driver.ratingAverage)) }}{{ '☆'.repeat(5 -
+                                                        Math.round(trip.driver.ratingAverage)) }}
                                                 </span>
                                             </div>
-                                            <span class="ml-2 text-sm text-gray-600">{{ trip.driver.rating }} ({{
-                                                trip.driver.reviews }} รีวิว)</span>
+                                            <span class="ml-2 text-sm text-gray-600">
+                                                {{ (trip.driver.ratingAverage || 0).toFixed(1) }} ({{ trip.driver.ratingCount }} รีวิว)
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -141,14 +142,151 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- ===== รีวิวเส้นทาง ===== -->
+                                    <div class="pt-4 mt-4 border-t border-gray-200">
+                                        <h5 class="mb-3 font-medium text-gray-900">
+                                            รีวิวเส้นทาง
+                                        </h5>
+
+                                        <!-- loading -->
+                                        <div v-if="loadingReviews[trip.routeId]" class="text-sm text-gray-500">
+                                            กำลังโหลดรีวิว...
+                                        </div>
+
+                                        <!-- empty -->
+                                        <div v-else-if="!routeReviews[trip.routeId] || routeReviews[trip.routeId].length === 0"
+                                            class="text-sm text-gray-500">
+                                            ยังไม่มีรีวิวสำหรับเส้นทางนี้
+                                        </div>
+
+                                        <!-- list -->
+                                        <div v-else class="space-y-4">
+                                            <div v-for="review in routeReviews[trip.routeId]" :key="review.id"
+                                                class="p-4 mb-3 border border-gray-200 rounded-lg bg-gray-50">
+                                                <div class="flex items-start space-x-3">
+                                                    <!-- Avatar -->
+                                                    <img :src="review.reviewer?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.firstName || 'User')}&background=random`"
+                                                        alt="Reviewer" class="object-cover w-10 h-10 rounded-full" />
+
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center justify-between">
+                                                            <h6 class="text-sm font-semibold text-gray-900">
+                                                                {{ review.reviewer?.firstName }} {{ review.reviewer?.lastName }}
+                                                            </h6>
+                                                            <span class="text-xs text-gray-500">
+                                                                {{ dayjs(review.createdAt).format('D MMM BB') }}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- stars -->
+                                                        <div class="flex items-center mt-1 text-xs text-yellow-400">
+                                                            <span>
+                                                                {{ '★'.repeat(review.rating) }}
+                                                                {{ '☆'.repeat(5 - review.rating) }}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- comment -->
+                                                        <p class="mt-2 text-sm text-gray-700">
+                                                            {{ review.comment }}
+                                                        </p>
+
+                                                        <!-- images -->
+                                                        <div v-if="review.images && review.images.length"
+                                                            class="grid grid-cols-3 gap-2 mt-3">
+                                                            <img v-for="(img, i) in review.images.slice(0, 6)" :key="i"
+                                                                :src="img" alt="Review image"
+                                                                class="object-cover w-full rounded-md cursor-pointer aspect-square hover:opacity-90" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== รีวิวคนขับ ทั้งหมด ===== -->
+                                    <div class="pt-4 mt-4 border-t border-gray-200">
+                                        <!-- list -->
+                                        <div class="space-y-4">
+                                            <div v-for="review in driverReviews[trip.driver.id]" :key="review.id"
+                                                class="p-4 mb-3 border border-gray-200 rounded-lg bg-gray-50">
+                                                <div class="flex items-start space-x-3">
+                                                    <!-- Avatar -->
+                                                    <img :src="review.reviewer?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.firstName || 'User')}&background=random`"
+                                                        alt="Reviewer" class="object-cover w-10 h-10 rounded-full" />
+
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center justify-between">
+                                                            <h6 class="text-sm font-semibold text-gray-900">
+                                                                {{ review.reviewer?.firstName }} {{ review.reviewer?.lastName }}
+                                                            </h6>
+                                                            <span class="text-xs text-gray-500">
+                                                                {{ dayjs(review.createdAt).format('D MMM BB') }}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- stars -->
+                                                        <div class="flex items-center mt-1 text-xs text-yellow-400">
+                                                            <span>
+                                                                {{ '★'.repeat(review.rating) }}
+                                                                {{ '☆'.repeat(5 - review.rating) }}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- comment -->
+                                                        <p class="mt-2 text-sm text-gray-700">
+                                                            {{ review.comment }}
+                                                        </p>
+
+                                                        <!-- images -->
+                                                        <div v-if="review.images && review.images.length"
+                                                            class="grid grid-cols-3 gap-2 mt-3">
+                                                            <img v-for="(img, i) in review.images.slice(0, 6)" :key="i"
+                                                                :src="img" alt="Review image"
+                                                                class="object-cover w-full rounded-md cursor-pointer aspect-square hover:opacity-90" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="flex justify-end space-x-3" :class="{ 'mt-4': selectedTripId !== trip.id }">
+<<<<<<< Updated upstream
                                     <!-- PENDING: ยกเลิกได้ -->
                                     <button v-if="trip.status === 'pending'" @click.stop="openCancelModal(trip)"
                                         class="px-4 py-2 text-sm text-red-600 transition duration-200 border border-red-300 rounded-md hover:bg-red-50">
                                         ยกเลิกการจอง
                                     </button>
+=======
+                                    <!-- ALL TAB: แสดงเฉพาะปุ่มรีวิวและรายงาน -->
+                                    <template v-if="activeTab === 'all'">
+                                        <div v-if="trip.status === 'completed'">
+                                            <button
+                                                @click.stop="!trip.hasReview && openReviewModal(trip)"
+                                                :disabled="trip.hasReview"
+                                                class="px-4 py-2 text-sm text-white transition duration-200 rounded-md"
+                                                :class="trip.hasReview
+                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                : 'bg-blue-600 hover:bg-blue-700'"
+                                            >
+                                                {{ trip.hasReview ? 'รีวิวแล้ว' : 'รีวิว' }}
+                                            </button>
+                                            <button @click.stop="openReportModal(trip)"
+                                                class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-red-600 rounded-md hover:bg-red-700">
+                                                รายงาน
+                                            </button>
+                                        </div>
+                                        <div v-else-if="['pending', 'confirmed'].includes(trip.status)">
+                                            <button v-if="trip.status === 'pending'" @click.stop="openCancelModal(trip)"
+                                                class="px-4 py-2 text-sm text-red-600 transition duration-200 border border-red-300 rounded-md hover:bg-red-50">
+                                                ยกเลิกการจอง
+                                        </button>
+                                        </div>
+                                    </template>
+>>>>>>> Stashed changes
 
                                     <!-- CONFIRMED: เพิ่มปุ่มยกเลิก + คงปุ่มแชท -->
                                     <template v-else-if="trip.status === 'confirmed'">
@@ -239,7 +377,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 import buddhistEra from 'dayjs/plugin/buddhistEra'
@@ -256,7 +394,7 @@ const { user } = useAuth() // ใช้ useAuth() ที่มีอยู่จ
 
 
 // --- State Management ---
-const activeTab = ref('pending')
+const activeTab = ref('all')
 const selectedTripId = ref(null)
 const isLoading = ref(false)
 const mapContainer = ref(null)
@@ -264,6 +402,13 @@ let map = null
 let currentPolyline = null
 let currentMarkers = []
 const allTrips = ref([])
+
+const routeReviews = reactive({}) // { routeId: Review[] }
+const loadingReviews = reactive({}) // loading state per route
+
+// Driver reviews
+const driverReviews = reactive({}) // { driverId: Review[] }
+const loadingDriverReviews = reactive({}) // loading state per driver
 
 let gmap = null // Google Map instance
 let activePolyline = null
@@ -277,12 +422,12 @@ let stopMarkers = []
 const GMAPS_CB = '__gmapsReady__'
 
 const tabs = [
+    { status: 'all', label: 'ทั้งหมด' },
     { status: 'pending', label: 'รอดำเนินการ' },
     { status: 'confirmed', label: 'ยืนยันแล้ว' },
     { status: 'rejected', label: 'ปฏิเสธ' },
-    { status: 'cancelled', label: 'ยกเลิก' },
-    { status: 'completed', label: 'เสร็จสิ้น' },
-    { status: 'all', label: 'ทั้งหมด' }
+    { status: 'cancelled', label: 'ยกเลิกโดยผู้โดยสาร' },
+    { status: 'completed', label: 'เสร็จสิ้น' }
 ]
 
 definePageMeta({ middleware: 'auth' })
@@ -352,8 +497,8 @@ async function fetchMyTrips() {
                 image:
                     b.route.driver.profilePicture ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(b.route.driver.firstName || 'U')}&background=random&size=64`,
-                rating: 4.5,
-                reviews: Math.floor(Math.random() * 50) + 5
+                ratingAverage: b.route.driver.ratingAverage || 0,
+                ratingCount: b.route.driver.ratingCount || 0
             }
 
             const carDetails = []
@@ -539,12 +684,45 @@ const toggleTripDetails = (tripId) => {
     const tripForMap = allTrips.value.find((trip) => trip.id === tripId)
     if (tripForMap) {
         updateMap(tripForMap)
+        fetchRouteReviews(tripForMap.routeId)
+        fetchDriverReviews(tripForMap.driver.id)
     }
 
     if (selectedTripId.value === tripId) {
         selectedTripId.value = null
     } else {
         selectedTripId.value = tripId
+    }
+}
+
+async function fetchRouteReviews(routeId) {
+    if (routeReviews[routeId]) return // already cached
+    loadingReviews[routeId] = true
+
+    try {
+        const res = await $api(`/reviews/route/${routeId}`)
+        routeReviews[routeId] = res || []
+    } catch (err) {
+        console.error('Failed to load reviews', err)
+        routeReviews[routeId] = []
+    } finally {
+        loadingReviews[routeId] = false
+    }
+}
+
+async function fetchDriverReviews(driverId) {
+    if (driverReviews[driverId]) return // already cached
+    loadingDriverReviews[driverId] = true
+
+    try {
+        const res = await $api(`/reviews/received/${driverId}`)
+        // res is { success: true, data: Review[] } based on controller
+        driverReviews[driverId] = res.data || []
+    } catch (err) {
+        console.error('Failed to load driver reviews', err)
+        driverReviews[driverId] = []
+    } finally {
+        loadingDriverReviews[driverId] = false
     }
 }
 
@@ -821,6 +999,152 @@ function initializeMap() {
     placesService = new google.maps.places.PlacesService(gmap)
     mapReady.value = true
 }
+<<<<<<< Updated upstream
+=======
+
+// --- Review / Report Modal State ---
+const showReviewModal = ref(false)
+const reviewTrip = ref(null)
+const reviewRating = ref(5)
+const reviewText = ref('')
+const reviewImages = ref([])
+
+function openReviewModal(trip) {
+    reviewTrip.value = trip
+    reviewRating.value = 5
+    reviewText.value = ''
+    reviewImages.value.forEach(it => it.url && URL.revokeObjectURL(it.url))
+    reviewImages.value = []
+    showReviewModal.value = true
+}
+
+function closeReviewModal() {
+    showReviewModal.value = false
+    setTimeout(() => { reviewTrip.value = null }, 200)
+}
+
+function handleReviewFiles(e) {
+    const files = Array.from(e.target.files || [])
+    const remaining = 2 - reviewImages.value.length
+    files.slice(0, remaining).forEach(f => {
+        reviewImages.value.push({ file: f, url: URL.createObjectURL(f) })
+    })
+    e.target.value = ''
+}
+
+function removeReviewImage(idx) {
+    const it = reviewImages.value[idx]
+    if (it?.url) URL.revokeObjectURL(it.url)
+    reviewImages.value.splice(idx, 1)
+}
+
+async function submitReview() {
+    if (!reviewTrip.value) return
+
+    try {
+        const fd = new FormData()
+        fd.append('bookingId', reviewTrip.value.id)
+        fd.append('rating', String(reviewRating.value))
+        fd.append('comment', reviewText.value || '')
+
+        if (reviewImages.value.length) {
+            reviewImages.value.forEach((item) => {
+                if (item.file) {
+                    fd.append('images', item.file)
+                }
+            })
+        }
+
+        // send review to backend
+        await $api('/reviews', {
+            method: 'POST',
+            body: fd
+        })
+
+        toast.success('ขอบคุณสำหรับรีวิว!', 'รีวิวของคุณถูกส่งแล้ว')
+
+        const tripInList = allTrips.value.find(
+            trip => trip.id === reviewTrip.value.id
+        )
+
+        if (tripInList) {
+            tripInList.hasReview = true
+        }
+
+        // reset state ของ modal
+        reviewRating.value = 5
+        reviewText.value = ''
+        reviewImages.value.forEach(it => it.url && URL.revokeObjectURL(it.url))
+        reviewImages.value = []
+
+        closeReviewModal()
+        await fetchMyTrips()
+
+    } catch (err) {
+        console.error('Error creating review:', err)
+        toast.error(
+            'ไม่สามารถส่งรีวิวได้',
+            err?.data?.message || 'โปรดลองอีกครั้ง'
+        )
+    }
+}
+
+async function checkCanReview(bookingId) {
+    const res = await $api(`/reviews/booking/${bookingId}`)
+    canReview.value = !res.hasReview
+}
+
+// --- Report Modal State ---
+const showReportModal = ref(false)
+const reportTrip = ref(null)
+const reportText = ref('')
+const reportImages = ref([])
+
+function openReportModal(trip) {
+    reportTrip.value = trip
+    reportText.value = ''
+    reportImages.value.forEach(it => it.url && URL.revokeObjectURL(it.url))
+    reportImages.value = []
+    showReportModal.value = true
+}
+
+function closeReportModal() {
+    showReportModal.value = false
+    setTimeout(() => { reportTrip.value = null }, 200)
+}
+
+function handleReportFiles(e) {
+    const files = Array.from(e.target.files || [])
+    const remaining = 2 - reportImages.value.length
+    files.slice(0, remaining).forEach(f => {
+        reportImages.value.push({ file: f, url: URL.createObjectURL(f) })
+    })
+    e.target.value = ''
+}
+
+function removeReportImage(idx) {
+    const it = reportImages.value[idx]
+    if (it?.url) URL.revokeObjectURL(it.url)
+    reportImages.value.splice(idx, 1)
+}
+
+async function submitReport() {
+    if (!reportTrip.value) return
+    try {
+        const fd = new FormData()
+        fd.append('routeId', reportTrip.value.routeId)
+        fd.append('text', reportText.value || '')
+        reportImages.value.forEach((it) => fd.append('images', it.file))
+
+        await $api('/reports', { method: 'POST', body: fd })
+        toast.success('ขอบคุณที่แจ้งรายงาน', 'ทีมงานจะตรวจสอบในเร็วๆ นี้')
+        closeReportModal()
+    } catch (err) {
+        console.error('Failed to submit report', err)
+        toast.error('ไม่สามารถส่งรายงานได้', err?.data?.message || 'โปรดลองอีกครั้ง')
+    }
+}
+>>>>>>> Stashed changes
 </script>
 
 <style scoped>
@@ -888,6 +1212,11 @@ function initializeMap() {
 .status-cancelled {
     background-color: #f3f4f6;
     color: #6b7280;
+}
+
+.status-completed {
+    background-color: #d1fae5;
+    color: #065f46;
 }
 
 @keyframes slide-in-from-top {

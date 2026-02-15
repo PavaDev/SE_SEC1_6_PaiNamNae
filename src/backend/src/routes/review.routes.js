@@ -4,10 +4,20 @@ const { protect } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
 const { createReviewSchema } = require('../validations/review.validation');
 
+const upload = require('../middlewares/upload.middleware');
+const parseReviewBody = require('../middlewares/parseReviewBody');
+
 const router = express.Router();
 
 // Create a review
-router.post('/', protect, validate({ body: createReviewSchema }), reviewController.createReview);
+router.post(
+    '/',
+    protect,
+    upload.fields([{ name: 'images', maxCount: 2 }]),
+    parseReviewBody,
+    validate({ body: createReviewSchema }),
+    reviewController.createReview
+);
 
 // Get reviews given by a user
 router.get('/given/:userId', protect, reviewController.getGivenReviews);

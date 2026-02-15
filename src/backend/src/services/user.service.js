@@ -53,6 +53,8 @@ const searchUsers = async (opts = {}) => {
                 phoneNumber: true, profilePicture: true,
                 role: true, isVerified: true, isActive: true,
                 createdAt: true, updatedAt: true,
+                ratingAverage: true,
+                ratingCount: true,
             }
         })
     ]);
@@ -120,7 +122,9 @@ const getUserPublicById = async (id) => {
         select: {
             id: true, firstName: true, lastName: true,
             profilePicture: true, role: true, isVerified: true,
-            createdAt: true
+            createdAt: true,
+            ratingAverage: true,
+            ratingCount: true,
         }
     });
     if (!user) throw new ApiError(404, 'User not found');

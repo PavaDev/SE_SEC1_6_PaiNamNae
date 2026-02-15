@@ -195,27 +195,56 @@
                                             <!-- list -->
                                             <div v-else class="space-y-4">
                                                 <div
-                                                v-for="review in routeReviews[route.id]"
-                                                :key="review.id"
-                                                class="p-3 border border-gray-200 rounded-md bg-gray-50"
+                                                    v-for="review in routeReviews[route.id]"
+                                                    :key="review.id"
+                                                    class="p-4 mb-3 border border-gray-200 rounded-lg bg-gray-50"
                                                 >
-                                                <!-- stars -->
-                                                <div class="flex items-center mb-1 text-yellow-400">
-                                                    <span>
-                                                    {{ '★'.repeat(review.rating) }}
-                                                    {{ '☆'.repeat(5 - review.rating) }}
-                                                    </span>
-                                                </div>
+                                                    <div class="flex items-start space-x-3">
+                                                    <!-- Avatar -->
+                                                    <img
+                                                        :src="review.reviewer?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.firstName || 'User')}&background=random`"
+                                                        alt="Reviewer"
+                                                        class="object-cover w-10 h-10 rounded-full"
+                                                    />
 
-                                                <!-- comment -->
-                                                <p class="text-sm text-gray-700">
-                                                    {{ review.comment }}
-                                                </p>
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center justify-between">
+                                                        <h6 class="text-sm font-semibold text-gray-900">
+                                                            {{ review.reviewer?.firstName }} {{ review.reviewer?.lastName }}
+                                                        </h6>
+                                                        <span class="text-xs text-gray-500">
+                                                            {{ dayjs(review.createdAt).format('D MMM BB') }}
+                                                        </span>
+                                                        </div>
 
-                                                <!-- date -->
-                                                <p class="mt-1 text-xs text-gray-500">
-                                                    {{ new Date(review.createdAt).toLocaleString() }}
-                                                </p>
+                                                        <!-- stars -->
+                                                        <div class="flex items-center mt-1 text-xs text-yellow-400">
+                                                        <span>
+                                                            {{ '★'.repeat(review.rating) }}
+                                                            {{ '☆'.repeat(5 - review.rating) }}
+                                                        </span>
+                                                        </div>
+
+                                                        <!-- comment -->
+                                                        <p class="mt-2 text-sm text-gray-700">
+                                                        {{ review.comment }}
+                                                        </p>
+
+                                                        <!-- images -->
+                                                        <div
+                                                        v-if="review.images && review.images.length"
+                                                        class="grid grid-cols-3 gap-2 mt-3"
+                                                        >
+                                                        <img
+                                                            v-for="(img, i) in review.images.slice(0, 6)"
+                                                            :key="i"
+                                                            :src="img"
+                                                            alt="Review image"
+                                                            class="object-cover w-full rounded-md cursor-pointer aspect-square hover:opacity-90"
+                                                        />
+                                                        </div>
+                                                    </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -262,9 +291,9 @@
                                             <span v-else-if="trip.status === 'confirmed'"
                                                 class="status-badge status-confirmed">ยืนยันแล้ว</span>
                                             <span v-else-if="trip.status === 'rejected'"
-                                                class="status-badge status-rejected">ปฏิเสธ</span>
+                                                class="status-badge status-rejected">ปฏิเสธผู้โดยสาร</span>
                                             <span v-else-if="trip.status === 'cancelled'"
-                                                class="status-badge status-cancelled">ยกเลิก</span>
+                                                class="status-badge status-cancelled">ยกเลิกโดยผู้โดยสาร</span>
                                         </div>
                                         <p class="mt-1 text-sm text-gray-600">จุดนัดพบ: {{ trip.pickupPoint }}</p>
                                         <p class="text-sm text-gray-600">
@@ -469,7 +498,7 @@ const { $api } = useNuxtApp()
 const { toast } = useToast()
 
 // --- State Management ---
-const activeTab = ref('pending')
+const activeTab = ref('myRoutes')
 const selectedTripId = ref(null)
 const isLoading = ref(false)
 const mapContainer = ref(null)
@@ -493,11 +522,12 @@ const loadingReviews = reactive({}) // loading state per route
 let stopMarkers = []
 
 const tabs = [
+    { status: 'myRoutes', label: 'เส้นทางของฉัน' },
     { status: 'pending', label: 'รอดำเนินการ' },
     { status: 'confirmed', label: 'ยืนยันแล้ว' },
-    { status: 'rejected', label: 'ปฏิเสธ' },
-    { status: 'cancelled', label: 'ยกเลิก' },
-    { status: 'myRoutes', label: 'เส้นทางของฉัน' },
+    { status: 'rejected', label: 'ปฏิเสธผู้โดยสาร' },
+    { status: 'cancelled', label: 'ยกเลิกโดยผู้โดยสาร' }
+    
 ]
 
 definePageMeta({ middleware: 'auth' })
@@ -529,8 +559,8 @@ async function fetchReviews(routeId) {
     loadingReviews[routeId] = true
 
     try {
-        const res = await $fetch(`/api/reviews/route/${routeId}`)
-        routeReviews[routeId] = res.data || []
+        const res = await $api(`/reviews/route/${routeId}`)
+        routeReviews[routeId] = res || []
     } catch (err) {
         console.error('Failed to load reviews', err)
         routeReviews[routeId] = []
@@ -642,6 +672,7 @@ async function fetchMyRoutes() {
                     destinationAddress: end?.address ? cleanAddr(end.address) : null,
                     durationText: (typeof r.duration === 'string' ? formatDuration(r.duration) : r.duration) || (r.durationSeconds ? `${Math.round(r.durationSeconds / 60)} นาที` : '-'),
                     distanceText: (typeof r.distance === 'string' ? formatDistance(r.distance) : r.distance) || (r.distanceMeters ? `${(r.distanceMeters / 1000).toFixed(1)} กม.` : '-'),
+                    routeId: r.id, // Add routeId to link booking to route
                 })
             }
 
@@ -875,6 +906,16 @@ const openConfirmModal = (trip, action) => {
             variant: 'danger',
         }
     } else if (action === 'completeRoute') {
+        // Check if there are any pending bookings for this route
+        const routeId = trip.id
+        const pendingForThisRoute = allTrips.value.filter(t => t.routeId === routeId && t.status === 'pending')
+
+        if (pendingForThisRoute.length > 0) {
+            activeTab.value = 'pending'
+            toast.warning('มีคำขอที่ยังไม่ได้จัดการ', 'กรุณาตอบรับหรือปฏิเสธผู้โดยสารก่อนยืนยันจบการเดินทาง')
+            return
+        }
+
         modalContent.value = {
             title: 'ยืนยันการสิ้นสุดการเดินทาง',
             message: `คุณต้องการยืนยันว่าการเดินทางนี้เสร็จสิ้นแล้วใช่หรือไม่?`,
@@ -1094,6 +1135,11 @@ watch(activeTab, () => {
 .status-cancelled {
     background-color: #f3f4f6;
     color: #6b7280;
+}
+
+.status-completed {
+    background-color: #d1fae5;
+    color: #065f46;
 }
 
 @keyframes slide-in-from-top {

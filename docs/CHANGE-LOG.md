@@ -58,3 +58,29 @@ This project follows semantic versioning.
 
 ### Fixed
 - Hmr reload issue in frontend for docker dev
+
+
+## [1.0.7] - 2026-02-16 - (Pavarit)
+
+### Added
+- **Booking & Trip Management**
+  - Driver rating and review on `myTrip` page
+  - Driver reviews section in trip details
+  - Self-booking prevention on `findTrip` page (drivers cannot book their own routes)
+- **Admin Dashboard**
+  - Route Reviews section in Route Details page
+  - Individual User Review Modal in User Management list
+  - Star action button in User table for quick review access
+  - Included `ratingAverage` and `ratingCount` in the administrative user fetch API
+
+### Changed
+- **User Interface & UX**
+  - Navigation bar visibility: "Create Trip" is now restricted to drivers only
+  - Enhanced Admin modal aesthetics with `backdrop-blur` transparent backgrounds
+- **Logic & Performance**
+  - Optimized review fetching mechanisms and API response mapping
+  - Refactored `myTrip` data mapping to utilize professional backend rating data
+
+### Fixed
+- **Admin Components**
+  - Resolved data rendering issues in the User Review Modal caused by incorrect API pathing

@@ -217,6 +217,11 @@
                                             title="ลบ" aria-label="ลบ">
                                             <i class="text-lg fa-regular fa-trash-can"></i>
                                         </button>
+                                        <button @click="onViewReviews(u)"
+                                            class="p-2 text-gray-500 transition-colors cursor-pointer hover:text-yellow-500"
+                                            title="ดูรีวิว" aria-label="ดูรีวิว">
+                                            <i class="text-lg fa-regular fa-star"></i>
+                                        </button>
                                     </td>
                                 </tr>
 
@@ -275,7 +280,76 @@
         <!-- Confirm Delete Modal -->
         <ConfirmModal :show="showDelete" :title="`ลบผู้ใช้${deletingUser?.email ? ' : ' + deletingUser.email : ''}`"
             message="การลบนี้เป็นการลบถาวร ข้อมูลทั้งหมดจะถูกลบและไม่สามารถกู้คืนได้ คุณต้องการดำเนินการต่อหรือไม่?"
-            confirmText="ลบถาวร" cancelText="ยกเลิก" variant="danger" @confirm="confirmDelete" @cancel="cancelDelete" />
+            confirmText="ลบถาวร" cancelText="Cancel" variant="danger" @confirm="confirmDelete" @cancel="cancelDelete" />
+
+        <!-- User Reviews Modal -->
+        <Transition name="modal-fade">
+            <div v-if="showReviewModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-white/30">
+                <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col modal-content border border-white/50">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">รีวิวของ {{ selectedUserForReviews?.firstName }} {{ selectedUserForReviews?.lastName }}</h3>
+                            <div class="flex text-yellow-400">
+                                <span v-for="star in 5" :key="star">{{ star <= Math.round(selectedUserForReviews?.ratingAverage || 0) ? '★' : '☆' }}</span>
+                                <span class="ml-2 text-gray-600">
+                                    ({{ selectedUserForReviews?.ratingAverage?.toFixed(1) || '0.0' }})
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-500">ทั้งหมด {{ userReviews.length }} รายการ</p>
+                        </div>
+                        <button @click="closeReviewModal" class="text-gray-400 hover:text-gray-600">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <div v-if="isLoadingUserReviews" class="py-12 text-center text-gray-500">
+                            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
+                            <p>กำลังโหลดรีวิว...</p>
+                        </div>
+                        
+                        <div v-else-if="userReviews.length === 0" class="py-12 text-center text-gray-500">
+                            <i class="fa-regular fa-comment-dots text-4xl mb-3 text-gray-300"></i>
+                            <p>ไม่พบรายการรีวิว</p>
+                        </div>
+
+                        <div v-else class="space-y-6">
+                            <div v-for="review in userReviews" :key="review.id" class="p-4 border border-gray-100 rounded-xl bg-gray-50/50">
+                                <div class="flex items-start gap-4">
+                                    <img :src="review.reviewer?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.firstName || 'U')}&background=random`" 
+                                        class="w-10 h-10 rounded-full border border-gray-200" />
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-medium text-gray-900">{{ review.reviewer?.firstName }} {{ review.reviewer?.lastName }}</span>
+                                            <span class="text-xs text-gray-400">{{ dayjs(review.createdAt).format('D MMM BBBB') }}</span>
+                                        </div>
+                                        <div class="flex items-center mt-0.5 text-yellow-400 text-sm">
+                                            <span v-for="i in 5" :key="i">{{ i <= review.rating ? '★' : '☆' }}</span>
+                                        </div>
+                                        <p class="mt-2 text-sm text-gray-700 leading-relaxed">{{ review.comment }}</p>
+                                        
+                                        <!-- Review Images -->
+                                        <div v-if="review.images && review.images.length" class="grid grid-cols-4 gap-2 mt-3">
+                                            <img v-for="(img, idx) in review.images" :key="idx" :src="img" 
+                                                class="w-full aspect-square object-cover rounded-md border border-gray-200" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                        <button @click="closeReviewModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            ปิดหน้าต่าง
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
     </div>
 </template>
 
@@ -298,8 +372,13 @@ definePageMeta({ middleware: ['admin-auth'] })
 const { toast } = useToast()
 
 const isLoading = ref(false)
+const isLoadingUserReviews = ref(false)
 const loadError = ref('')
 const users = ref([])
+
+const showReviewModal = ref(false)
+const selectedUserForReviews = ref(null)
+const userReviews = ref([])
 
 // เก็บ id ที่กำลัง toggle อยู่ เพื่อ disable สวิตช์/กันคลิกซ้ำ
 const togglingIds = ref(new Set())
@@ -545,6 +624,51 @@ async function deleteUser(id) {
     }
 
     return body
+}
+/* --------------------------------------------- */
+
+/* ---------- User Reviews Modal Logic ---------- */
+function onViewReviews(user) {
+    selectedUserForReviews.value = user
+    showReviewModal.value = true
+    fetchUserReviews(user.id)
+}
+
+function closeReviewModal() {
+    showReviewModal.value = false
+    selectedUserForReviews.value = null
+    userReviews.value = []
+}
+
+async function fetchUserReviews(userId) {
+    isLoadingUserReviews.value = true
+    try {
+        const config = useRuntimeConfig()
+        const token = useCookie('token').value || (process.client ? localStorage.getItem('token') : '')
+        
+        const res = await fetch(`${config.public.apiBase}/reviews/received/${userId}`, {
+            headers: {
+                Accept: 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            credentials: 'include'
+        })
+        
+        if (res.status === 404) {
+            userReviews.value = []
+            return
+        }
+        
+        const body = await res.json()
+        if (res.ok) {
+            userReviews.value = body.data || []
+        }
+    } catch (err) {
+        console.error('Failed to fetch user reviews:', err)
+        userReviews.value = []
+    } finally {
+        isLoadingUserReviews.value = false
+    }
 }
 /* --------------------------------------------- */
 
