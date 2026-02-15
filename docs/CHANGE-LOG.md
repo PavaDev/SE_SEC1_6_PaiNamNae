@@ -118,3 +118,4 @@ This project follows semantic versioning.
 ### Fixed
 - **Admin Components**
   - Resolved data rendering issues in the User Review Modal caused by incorrect API pathing
+  - MyTrip page buttons display issues

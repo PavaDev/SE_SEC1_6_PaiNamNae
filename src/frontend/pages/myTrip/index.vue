@@ -254,11 +254,6 @@
                                 </div>
 
                                 <div class="flex justify-end space-x-3" :class="{ 'mt-4': selectedTripId !== trip.id }">
-                                    <!-- PENDING: ยกเลิกได้ -->
-                                    <button v-if="trip.status === 'pending'" @click.stop="openCancelModal(trip)"
-                                        class="px-4 py-2 text-sm text-red-600 transition duration-200 border border-red-300 rounded-md hover:bg-red-50">
-                                        ยกเลิกการจอง
-                                    </button>
                                     <!-- ALL TAB: แสดงเฉพาะปุ่มรีวิวและรายงาน -->
                                     <template v-if="activeTab === 'all'">
                                         <div v-if="trip.status === 'completed'">
@@ -288,65 +283,35 @@
                                     <!-- CONFIRMED: เพิ่มปุ่มยกเลิก + คงปุ่มแชท -->
                                     <template v-else-if="trip.status === 'confirmed'">
                                         <button @click.stop="openCancelModal(trip)"
-
-                                    <!-- ALL TAB: แสดงเฉพาะปุ่มรีวิวและรายงาน -->
-                                    <template v-if="activeTab === 'all'">
-                                        <button
-                                            @click.stop="!trip.hasReview && openReviewModal(trip)"
-                                            :disabled="trip.hasReview"
-                                            class="px-4 py-2 text-sm text-white transition duration-200 rounded-md"
-                                            :class="trip.hasReview
-                                                ? 'bg-gray-400 cursor-not-allowed'
-                                                : 'bg-blue-600 hover:bg-blue-700'"
-                                        >
-                                        {{ trip.hasReview ? 'รีวิวแล้ว' : 'รีวิว' }}
-                                        </button>
-                                        <button @click.stop="openReportModal(trip)"
-                                            class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-red-600 rounded-md hover:bg-red-700">
-                                            รายงาน
-                                        </button>
-                                    </template>
-
-                                    <!-- กรณีอื่น ๆ: แสดงปุ่มตามสถานะ -->
-                                    <template v-else>
-                                        <!-- PENDING: ยกเลิกได้ -->
-                                        <button v-if="trip.status === 'pending'" @click.stop="openCancelModal(trip)"
                                             class="px-4 py-2 text-sm text-red-600 transition duration-200 border border-red-300 rounded-md hover:bg-red-50">
                                             ยกเลิกการจอง
                                         </button>
-
-                                        <!-- CONFIRMED: เพิ่มปุ่มยกเลิก + คงปุ่มแชท -->
-                                        <template v-else-if="trip.status === 'confirmed'">
-                                            <button @click.stop="openCancelModal(trip)"
-                                                class="px-4 py-2 text-sm text-red-600 transition duration-200 border border-red-300 rounded-md hover:bg-red-50">
-                                                ยกเลิกการจอง
-                                            </button>
-                                            <button
-                                                class="px-4 py-2 text-sm text-white transition duration-200 bg-blue-600 rounded-md hover:bg-blue-700">
-                                                แชทกับผู้ขับ
-                                            </button>
-                                        </template>
-
-                                        <!-- REJECTED / CANCELLED: ลบได้ -->
-                                        <button v-else-if="['rejected', 'cancelled'].includes(trip.status)"
-                                            @click.stop="openConfirmModal(trip, 'delete')"
-                                            class="px-4 py-2 text-sm text-gray-600 transition duration-200 border border-gray-300 rounded-md hover:bg-gray-50">
-                                            ลบรายการ
-                                        </button>
-
-                                        <!-- COMPLETED: แสดงปุ่มรีวิวและรายงาน -->
-                                        <template v-else-if="trip.status === 'completed'">
-                                           
-                                        </template>
-
-                                        <!-- ปุ่มสำหรับ DRIVER: กดจบงาน (แสดงเฉพาะถ้าเป็นคนขับและสถานะ confirmed/pending) -->
                                         <button
-                                            v-if="isDriver(trip) && ['confirmed', 'pending'].includes(trip.status)"
-                                            @click.stop="openConfirmModal(trip, 'complete')"
-                                            class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
-                                            โปรดทราบ: ฉันคือคนขับ
+                                            class="px-4 py-2 text-sm text-white transition duration-200 bg-blue-600 rounded-md hover:bg-blue-700">
+                                            แชทกับผู้ขับ
                                         </button>
                                     </template>
+
+                                    <!-- REJECTED / CANCELLED: ลบได้ -->
+                                    <button v-else-if="['rejected', 'cancelled'].includes(trip.status)"
+                                        @click.stop="openConfirmModal(trip, 'delete')"
+                                        class="px-4 py-2 text-sm text-gray-600 transition duration-200 border border-gray-300 rounded-md hover:bg-gray-50">
+                                        ลบรายการ
+                                    </button>
+
+                                    <!-- COMPLETED: แสดงสถานะ (อาจจะเพิ่มปุ่มรีวิวทีหลัง) -->
+                                    <span v-else-if="trip.status === 'completed'"
+                                        class="px-4 py-2 text-sm text-green-600 border border-green-200 rounded-md bg-green-50">
+                                        การเดินทางเสร็จสิ้น
+                                    </span>
+
+                                    <!-- ปุ่มสำหรับ DRIVER: กดจบงาน (แสดงเฉพาะถ้าเป็นคนขับและสถานะ confirmed/pending) -->
+                                    <button
+                                        v-if="isDriver(trip) && ['confirmed', 'pending'].includes(trip.status)"
+                                        @click.stop="openConfirmModal(trip, 'complete')"
+                                        class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
+                                        โปรดทราบ: ฉันคือคนขับ
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -401,100 +366,136 @@
             :confirmText="modalContent.confirmText" :variant="modalContent.variant" @confirm="handleConfirmAction"
             @cancel="closeConfirmModal" />
 
-        <!-- Review Modal -->
-        <transition name="modal-fade">
-            <div v-if="showReviewModal && reviewTrip" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeReviewModal">
-                <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">รีวิว {{ reviewTrip.driver.name }}</h3>
-                        <button @click="closeReviewModal" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+        <!-- รีวิว Modal -->
+        <div v-if="showReviewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            @click.self="closeReviewModal">
+            <div class="w-full max-w-lg p-6 bg-white rounded-xl shadow-2xl animate-in slide-in-from-top duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight">ให้คะแนนและรีวิว</h3>
+                    <button @click="closeReviewModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex items-center justify-center space-x-2">
+                        <button v-for="i in 5" :key="i" @click="reviewRating = i"
+                            class="text-4xl transition-transform duration-200 hover:scale-110 focus:outline-none"
+                            :class="i <= reviewRating ? 'text-yellow-400' : 'text-gray-200'">
+                            ★
                         </button>
                     </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700">ให้คะแนน</label>
-                            <div class="flex items-center space-x-2 text-2xl text-yellow-400">
-                                <button v-for="s in 5" :key="s" type="button" @click="reviewRating = s" class="focus:outline-none">
-                                    <span>{{ s <= reviewRating ? '★' : '☆' }}</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700">รีวิว</label>
-                            <textarea v-model="reviewText" rows="4" placeholder="เขียนรีวิวให้ผู้ขับ..." class="w-full p-3 text-sm text-gray-900 border border-gray-300 rounded-md bg-white"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700">รูปประกอบ (สูงสุด 2 รูป)</label>
-                            <div class="flex items-center gap-3">
-                                <div class="flex space-x-2">
-                                    <div v-for="(img, idx) in reviewImages" :key="idx" class="relative">
-                                        <img :src="img.url" class="object-cover w-20 h-14 rounded-md border">
-                                        <button type="button" @click="removeReviewImage(idx)" class="absolute top-0 right-0 px-1 text-white bg-red-500 rounded-full">×</button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <input type="file" accept="image/*" @change="handleReviewFiles" :disabled="reviewImages.length >= 2" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 mt-6">
-                        <button @click="closeReviewModal" class="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">ยกเลิก</button>
-                        <button @click="submitReview" :disabled="!reviewText && reviewImages.length === 0" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400">ส่งรีวิว</button>
-                    </div>
+                    <p class="mt-2 text-center text-sm font-medium text-gray-600">
+                        {{ ['ให้ปรับปรุง', 'พอใช้', 'ดี', 'ดีมาก', 'ยอดเยี่ยม'][reviewRating - 1] }}
+                    </p>
                 </div>
-            </div>
-        </transition>
 
-        <!-- Report Modal -->
-        <transition name="modal-fade">
-            <div v-if="showReportModal && reportTrip" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="closeReportModal">
-                <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">รายงาน {{ reportTrip.driver.name }}</h3>
-                        <button @click="closeReportModal" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">เขียนความพึงพอใจของคุณ</label>
+                    <textarea v-model="reviewText" rows="4"
+                        placeholder="บอกความประทับใจหรือสิ่งที่อยากให้ปรับปรุง..."
+                        class="w-full px-4 py-3 leading-relaxed border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all placeholder-gray-400"></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">รูปภาพประกอบ (สูงสุด 2 รูป)</label>
+                    <div class="flex flex-wrap gap-3">
+                        <div v-for="(img, idx) in reviewImages" :key="idx" class="relative w-24 h-24 group">
+                            <img :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            <button @click="removeReviewImage(idx)"
+                                class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <label v-if="reviewImages.length < 2"
+                            class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500">
+                            <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                        </button>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700">เหตุผลการรายงาน</label>
-                            <textarea v-model="reportText" rows="4" placeholder="อธิบายปัญหาหรือเหตุผล..." class="w-full p-3 text-sm text-gray-900 border border-gray-300 rounded-md bg-white"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700">รูปประกอบ (สูงสุด 2 รูป)</label>
-                            <div class="flex items-center gap-3">
-                                <div class="flex space-x-2">
-                                    <div v-for="(img, idx) in reportImages" :key="idx" class="relative">
-                                        <img :src="img.url" class="object-cover w-20 h-14 rounded-md border">
-                                        <button type="button" @click="removeReportImage(idx)" class="absolute top-0 right-0 px-1 text-white bg-red-500 rounded-full">×</button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <input type="file" accept="image/*" @change="handleReportFiles" :disabled="reportImages.length >= 2" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 mt-6">
-                        <button @click="closeReportModal" class="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">ยกเลิก</button>
-                        <button @click="submitReport" :disabled="!reportText && reportImages.length === 0" class="px-4 py-2 text-sm text-white bg-red-600 rounded-md hover:bg-red-700 disabled:bg-gray-400">ส่งรายงาน</button>
+                            <span class="text-[10px] font-medium">เพิ่มรูป</span>
+                            <input type="file" class="hidden" @change="handleReviewFiles" accept="image/*" multiple />
+                        </label>
                     </div>
                 </div>
+
+                <div class="flex gap-3">
+                    <button @click="closeReviewModal"
+                        class="flex-1 px-4 py-3 text-sm font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button @click="submitReview"
+                        class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+                        ส่งความเห็น
+                    </button>
+                </div>
             </div>
-        </transition>
+        </div>
+
+        <!-- รายงาน Modal -->
+        <div v-if="showReportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            @click.self="closeReportModal">
+            <div class="w-full max-w-lg p-6 bg-white rounded-xl shadow-2xl animate-in slide-in-from-top duration-300">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-red-600 leading-tight flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        รายงานปัญหาการเดินทาง
+                    </h3>
+                    <button @click="closeReportModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">รายละเอียดปัญหาที่พบ</label>
+                    <textarea v-model="reportText" rows="5"
+                        placeholder="โปรดระบุปัญหาที่คุณพบ เพื่อให้ทีมงานสามารถตรวจสอบได้..."
+                        class="w-full px-4 py-3 leading-relaxed border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all placeholder-gray-400"></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">หลักฐานรูปภาพประกอบ (สูงสุด 2 รูป)</label>
+                    <div class="flex flex-wrap gap-3">
+                        <div v-for="(img, idx) in reportImages" :key="idx" class="relative w-24 h-24 group">
+                            <img :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            <button @click="removeReportImage(idx)"
+                                class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <label v-if="reportImages.length < 2"
+                            class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-red-400 hover:bg-red-50 transition-all text-gray-400 hover:text-red-500">
+                            <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span class="text-[10px] font-medium">เพิ่มรูป</span>
+                            <input type="file" class="hidden" @change="handleReportFiles" accept="image/*" multiple />
+                        </label>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500 italic">การแจ้งข้อมูลเท็จอาจส่งผลต่อการถูกระงับบัญชีผู้ใช้งาน</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button @click="closeReportModal"
+                        class="flex-1 px-4 py-3 text-sm font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        ยกเลิก
+                    </button>
+                    <button @click="submitReport"
+                        class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-[0.98]">
+                        ส่งรายงาน
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -524,7 +525,6 @@ let map = null
 let currentPolyline = null
 let currentMarkers = []
 const allTrips = ref([])
-const canReview = ref(true)
 
 const routeReviews = reactive({}) // { routeId: Review[] }
 const loadingReviews = reactive({}) // loading state per route
