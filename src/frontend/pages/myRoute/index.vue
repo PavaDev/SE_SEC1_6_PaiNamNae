@@ -505,6 +505,9 @@ const mapContainer = ref(null)
 const allTrips = ref([])
 const myRoutes = ref([])
 
+const routeReviews = reactive({}) // { routeId: Review[] }
+const loadingReviews = reactive({}) // loading state per route
+
 // ---------- Google Maps states ----------
 let gmap = null
 let activePolyline = null
@@ -754,7 +757,13 @@ const toggleTripDetails = (id) => {
     const item = activeTab.value === 'myRoutes'
         ? myRoutes.value.find(r => r.id === id)
         : allTrips.value.find(t => t.id === id)
-    if (item) updateMap(item)
+    
+    if (item) {
+        updateMap(item)
+        if (activeTab.value === 'myRoutes') {
+            fetchReviews(id)
+        }
+    }
 
     selectedTripId.value = (selectedTripId.value === id) ? null : id
 }
