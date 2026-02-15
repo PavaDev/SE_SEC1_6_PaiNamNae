@@ -514,10 +514,6 @@ let geocoder = null
 let placesService = null
 const mapReady = ref(false)
 const GMAPS_CB = '__gmapsReady__'
-
-const routeReviews = reactive({}) // { routeId: Review[] }
-const loadingReviews = reactive({}) // loading state per route
-
 // NEW: เก็บหมุดจุดแวะ
 let stopMarkers = []
 
@@ -761,10 +757,6 @@ const toggleTripDetails = (id) => {
     if (item) updateMap(item)
 
     selectedTripId.value = (selectedTripId.value === id) ? null : id
-
-    if (selectedTripId.value) {
-    fetchReviews(id)
-  }
 }
 
 // ---------- Google Maps helpers ----------
