@@ -2,11 +2,11 @@ const { z } = require('zod');
 
 const createReportSchema = z.object({
     type: z.enum(['DRIVER', 'PASSENGER'], { message: 'Invalid report type' }),
-    title: z.string().min(5, 'Title must be at least 5 characters').max(200, 'Title must be at most 200 characters'),
-    description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description must be at most 2000 characters'),
+    category: z.enum(['VEHICLE_ISSUE', 'PASSENGER_ISSUE', 'ROAD_ISSUE', 'SAFETY_ISSUE', 'PAYMENT_ISSUE', 'OTHER'], { message: 'Invalid category' }),
+    description: z.string().min(5, 'Description must be at least 5 characters').max(2000, 'Description must be at most 2000 characters'),
+    routeId: z.string().optional(),
+    bookingId: z.string().optional(),
     targetUserId: z.string().optional(),
-    targetObjectId: z.string().optional(),
-    attachmentUrl: z.string().url('Invalid attachment URL').optional(),
 });
 
 const updateReportStatusSchema = z.object({
@@ -20,6 +20,8 @@ const listReportsQuerySchema = z.object({
     q: z.string().optional(),
     type: z.enum(['DRIVER', 'PASSENGER']).optional(),
     status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'RESOLVED']).optional(),
+    reporterSearch: z.string().optional(),
+    targetUserSearch: z.string().optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
     sortBy: z.string().optional(),
@@ -30,9 +32,14 @@ const idParamSchema = z.object({
     id: z.string().min(1, 'ID is required'),
 });
 
+const bookingIdParamSchema = z.object({
+    bookingId: z.string().min(1, 'Booking ID is required'),
+});
+
 module.exports = {
     createReportSchema,
     updateReportStatusSchema,
     listReportsQuerySchema,
     idParamSchema,
+    bookingIdParamSchema,
 };

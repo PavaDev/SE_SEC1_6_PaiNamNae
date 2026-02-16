@@ -156,3 +156,42 @@ This project follows semantic versioning.
 
 ### Fixed
 - File upload handling: Proper FormData construction for backend submission
+
+## [1.0.11] - 2026-02-17 - (Pavarit)
+### Added
+- **Report System (Prisma)**
+  - New `Report` model in `schema.prisma` with relationships to `User` (Reporter & Target), `Route`, and `Booking`
+  - Backend `ReportService` implemented with Prisma (replacing legacy mock data)
+  - Support for `ReportCategory` (Vehicle, Passenger, Safety, Payment, etc.)
+  - Support for `ReportStatus` (Pending, Approved, Rejected, Resolved)
+- **Enhanced Report Tracking (Passenger & Driver)**
+  - "Track Status" button replaces "Report" once a report is submitted
+  - Tabbed View in `myTrip` Progress Modal for switching between Trip Details and Report Status
+  - Professional Report Status timeline/card with admin feedback and timestamps
+  - Background synchronization of report states using `/api/reports/me`
+
+### Changed
+- Unified passenger and driver reporting logic to use a single backend API contract
+- Localized Thai status and category labels across the application
+
+## [1.0.12] - 2026-02-17 - (Pavarit)
+### Added
+- **UI/UX Polishing**
+  - **Skeleton Loaders** for `myTrip` and `myRoute` lists to improve perceived performance during data fetching
+
+### Changed
+- Cleared legacy hardcoded mock data in `allTrips` to prevent incorrect data flashing on load
+
+### Fixed
+- Resolved fetching bug in `myTrip` where review data was not loaded for the auto-selected first trip on initial mount
+
+## [1.0.13] - 2026-02-17 - (Pavarit)
+### Added
+- **Admin Report Management Refinements**
+  - **Flexible Search**: Allows searching for reporters/users by First Name, Last Name, Username, or Email
+  - **Target User Search**: Dedicated filter to specifically find reports submitted against a particular person
+  - Thai localization for Report Type (คนขับ/ผู้โดยสาร) and Status badges in the admin table
+
+### Changed
+- Streamlined Admin UI by removing mandatory User ID requirements from search labels for better practicality
+- Improved Report Detail view to show full Target User names instead of raw IDs

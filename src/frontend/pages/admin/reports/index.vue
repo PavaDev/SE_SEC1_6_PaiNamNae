@@ -13,17 +13,6 @@
                     <div class="flex items-center gap-3">
                         <h1 class="text-2xl font-semibold text-gray-800">Report Management</h1>
                     </div>
-
-                    <!-- Right: Quick Search -->
-                    <div class="flex items-center gap-2">
-                        <input v-model.trim="filters.q" @keyup.enter="applyFilters" type="text"
-                            placeholder="ค้นหา : ID / ผู้รายงาน"
-                            class="max-w-full px-3 py-2 border border-gray-300 rounded-md w-72 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        <button @click="applyFilters"
-                            class="px-4 py-2 text-white bg-blue-600 rounded-md cursor-pointer hover:bg-blue-700">
-                            ค้นหา
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Advanced Filters -->
@@ -36,8 +25,8 @@
                             <select v-model="filters.type"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500">
                                 <option value="">ทั้งหมด</option>
-                                <option value="DRIVER">Driver</option>
-                                <option value="PASSENGER">Passenger</option>
+                                <option value="DRIVER">คนขับ</option>
+                                <option value="PASSENGER">ผู้โดยสาร</option>
                             </select>
                         </div>
 
@@ -54,29 +43,43 @@
                             </select>
                         </div>
 
-                        <!-- Date From (4/24) -->
+                        <!-- Reporter (4/24) -->
                         <div class="lg:col-span-4">
+                            <label class="block mb-1 text-xs font-medium text-gray-600">ผู้รายงาน (ชื่อ/Email)</label>
+                            <input v-model.trim="filters.reporterSearch" type="text" placeholder="ชื่อ / Email"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500" />
+                        </div>
+
+                        <!-- Target User (4/24) -->
+                        <div class="lg:col-span-4">
+                            <label class="block mb-1 text-xs font-medium text-gray-600">ผู้ถูกรายงาน (ชื่อ/Email)</label>
+                            <input v-model.trim="filters.targetUserSearch" type="text" placeholder="ชื่อ / Email"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500" />
+                        </div>
+
+                        <!-- Date From (4/24) -->
+                        <div class="lg:col-span-3">
                             <label class="block mb-1 text-xs font-medium text-gray-600">วันที่เริ่มต้น</label>
                             <input v-model="filters.dateFrom" type="date"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500" />
                         </div>
 
-                        <!-- Date To (4/24) -->
-                        <div class="lg:col-span-4">
+                        <!-- Date To (3/24) -->
+                        <div class="lg:col-span-3">
                             <label class="block mb-1 text-xs font-medium text-gray-600">วันที่สิ้นสุด</label>
                             <input v-model="filters.dateTo" type="date"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500" />
                         </div>
 
-                        <!-- Actions (4/24) -->
-                        <div class="flex items-end justify-end gap-2 mt-1 lg:col-span-4 lg:mt-0">
+                        <!-- Actions (2/24) -->
+                        <div class="flex items-end justify-end gap-2 mt-1 lg:col-span-2 lg:mt-0">
                             <button @click="clearFilters"
                                 class="px-3 py-2 text-gray-700 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                                ล้างตัวกรอง
+                                ล้าง
                             </button>
                             <button @click="applyFilters"
                                 class="px-4 py-2 text-white bg-blue-600 rounded-md cursor-pointer hover:bg-blue-700">
-                                ใช้ตัวกรอง
+                                กรอง
                             </button>
                         </div>
                     </div>
@@ -101,7 +104,7 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">ID</th>
+                                    <!-- <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">ID</th> -->
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">
                                         ผู้รายงาน</th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">ประเภท
@@ -119,9 +122,9 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <tr v-for="report in reports" :key="report.id"
                                     class="transition-opacity hover:bg-gray-50">
-                                    <td class="px-4 py-3">
+                                    <!-- <td class="px-4 py-3">
                                         <div class="font-medium text-gray-900">#{{ report.id }}</div>
-                                    </td>
+                                    </td> -->
                                     <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">
                                             <img :src="report.reporterAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.reporterName || 'U')}&background=random&size=64`"
@@ -272,6 +275,8 @@ const filters = reactive({
     q: '',
     type: '',
     status: '',
+    reporterSearch: '',
+    targetUserSearch: '',
     dateFrom: '',
     dateTo: ''
 })
@@ -300,6 +305,7 @@ const pageButtons = computed(() => {
 function typeBadge(type) {
     const badges = {
         'DRIVER': 'bg-blue-100 text-blue-700',
+        'PASSENGER': 'bg-green-100 text-green-700',
         'USER': 'bg-green-100 text-green-700',
         'BOOKING': 'bg-purple-100 text-purple-700',
         'OTHER': 'bg-gray-100 text-gray-700'
@@ -358,6 +364,8 @@ async function fetchReports(page = 1) {
                 q: filters.q || undefined,
                 type: filters.type || undefined,
                 status: filters.status || undefined,
+                reporterSearch: filters.reporterSearch || undefined,
+                targetUserSearch: filters.targetUserSearch || undefined,
                 dateFrom: filters.dateFrom || undefined,
                 dateTo: filters.dateTo || undefined
             },
@@ -394,6 +402,8 @@ function clearFilters() {
     filters.q = ''
     filters.type = ''
     filters.status = ''
+    filters.reporterSearch = ''
+    filters.targetUserSearch = ''
     filters.dateFrom = ''
     filters.dateTo = ''
     pagination.page = 1

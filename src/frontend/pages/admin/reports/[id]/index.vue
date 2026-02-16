@@ -78,7 +78,7 @@
                             </div>
                             <div v-if="report.targetUserId">
                                 <p class="text-sm text-gray-600 mb-1">ผู้ที่ถูกรายงาน</p>
-                                <p class="font-medium text-gray-900">{{ report.targetUserId }}</p>
+                                <p class="font-medium text-gray-900">{{ report.targetUser.firstName }} {{ report.targetUser.lastName }}</p>
                             </div>
                             <div v-if="report.targetObjectId">
                                 <p class="text-sm text-gray-600 mb-1">ID สิ่งที่ถูกรายงาน</p>

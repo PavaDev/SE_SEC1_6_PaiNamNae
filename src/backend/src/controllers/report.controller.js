@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const reportService = require('../services/report.service');
 const ApiError = require('../utils/ApiError');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const adminListReports = asyncHandler(async (req, res) => {
     const result = await reportService.searchReports(req.query);
@@ -43,16 +44,27 @@ const deleteReport = asyncHandler(async (req, res) => {
 });
 
 const createReport = asyncHandler(async (req, res) => {
-    const { type, title, description, targetUserId, targetObjectId, attachmentUrl } = req.body;
-    
+    const { type, category, description, routeId, bookingId, targetUserId } = req.body;
+
+    // Upload images to Cloudinary if present
+    let imageUrls = [];
+    if (req.files && req.files.images) {
+        const uploads = req.files.images.map(file =>
+            uploadToCloudinary(file.buffer, 'reports')
+        );
+        const results = await Promise.all(uploads);
+        imageUrls = results.map(r => r.url);
+    }
+
     const reportData = {
         reporterId: req.user.sub,
         type,
-        title,
+        category,
         description,
-        targetUserId,
-        targetObjectId,
-        attachmentUrl
+        images: imageUrls.length > 0 ? imageUrls : null,
+        routeId: routeId || null,
+        bookingId: bookingId || null,
+        targetUserId: targetUserId || null,
     };
 
     const newReport = await reportService.createReport(reportData);
@@ -64,10 +76,30 @@ const createReport = asyncHandler(async (req, res) => {
     });
 });
 
+const getMyReports = asyncHandler(async (req, res) => {
+    const reports = await reportService.getReportsByUser(req.user.sub);
+    res.status(200).json({
+        success: true,
+        message: "My reports retrieved",
+        data: reports
+    });
+});
+
+const getReportForBooking = asyncHandler(async (req, res) => {
+    const report = await reportService.getReportByBookingId(req.params.bookingId, req.user.sub);
+    res.status(200).json({
+        success: true,
+        hasReport: !!report,
+        data: report
+    });
+});
+
 module.exports = {
     adminListReports,
     getReportById,
     updateReportStatus,
     deleteReport,
-    createReport
+    createReport,
+    getMyReports,
+    getReportForBooking,
 };

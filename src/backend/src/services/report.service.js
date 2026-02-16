@@ -1,66 +1,48 @@
 const prisma = require('../utils/prisma');
 const ApiError = require('../utils/ApiError');
 
-// Mock data for reports
-const mockReports = [
-    {
-        id: '1',
-        reporterId: 'user-1',
-        reporterName: 'สมชาย ใจดี',
-        reporterEmail: 'somchai@example.com',
-        reporterAvatar: 'https://ui-avatars.com/api/?name=somchai&background=random&size=64',
-        type: 'DRIVER',
-        status: 'PENDING',
-        title: 'พฤติกรรมไม่สุภาพของผู้ขับ',
-        description: 'ผู้ขับใช้ถ้อยคำหยาบคายต่อผู้โดยสาร',
-        targetUserId: 'driver-2',
-        targetObjectId: 'route-1',
-        attachmentUrl: null,
-        adminNotes: null,
-        resolvedAt: null,
-        resolvedBy: null,
-        createdAt: new Date('2024-02-13'),
-        updatedAt: new Date('2024-02-13'),
+const reportInclude = {
+    reporter: {
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            profilePicture: true,
+        },
     },
-    {
-        id: '2',
-        reporterId: 'user-2',
-        reporterName: 'ชนิดา ขยัน',
-        reporterEmail: 'chanida@example.com',
-        reporterAvatar: 'https://ui-avatars.com/api/?name=chanida&background=random&size=64',
-        type: 'PASSENGER',
-        status: 'APPROVED',
-        title: 'พฤติกรรมไม่สุภาพของผู้ใช้',
-        description: 'ผู้ใช้ส่งข้อความที่ไม่เหมาะสมหรือหยาบคาย',
-        targetUserId: 'user-4',
-        targetObjectId: null,
-        attachmentUrl: null,
-        adminNotes: 'ดำเนินการเรียกเก็บค่าปรับจากคนขับ',
-        resolvedAt: new Date('2024-02-14'),
-        resolvedBy: 'admin-1',
-        createdAt: new Date('2024-02-12'),
-        updatedAt: new Date('2024-02-14'),
+    targetUser: {
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            profilePicture: true,
+        },
     },
-    {
-        id: '3',
-        reporterId: 'user-3',
-        reporterName: 'วิทยา สมุด',
-        reporterEmail: 'witthaya@example.com',
-        reporterAvatar: 'https://ui-avatars.com/api/?name=witthaya&background=random&size=64',
-        type: 'DRIVER',
-        status: 'REJECTED',
-        title: 'ประมาณค่าโดยสารสูงเกินไป',
-        description: 'ผู้ขับคิดค่าโดยสารสูงกว่าที่ตกลงไว้',
-        targetUserId: 'user-4',
-        targetObjectId: null,
-        attachmentUrl: null,
-        adminNotes: 'ตรวจสอบแล้วไม่พบหลักฐานชัดเจน',
-        resolvedAt: new Date('2024-02-11'),
-        resolvedBy: 'admin-2',
-        createdAt: new Date('2024-02-10'),
-        updatedAt: new Date('2024-02-11'),
-    }
-];
+    route: {
+        select: {
+            id: true,
+            startLocation: true,
+            endLocation: true,
+            departureTime: true,
+        },
+    },
+    booking: {
+        select: {
+            id: true,
+            status: true,
+            numberOfSeats: true,
+        },
+    },
+    resolvedBy: {
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+        },
+    },
+};
 
 const searchReports = async (opts = {}) => {
     const {
@@ -69,101 +51,166 @@ const searchReports = async (opts = {}) => {
         q,
         type,
         status,
+        reporterId,
+        reporterSearch,
         dateFrom,
         dateTo,
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
     } = opts;
 
-    // Filter mock data
-    let filtered = [...mockReports];
+    const where = {};
 
-    if (type) {
-        filtered = filtered.filter(r => r.type === type);
+    if (type) where.type = type;
+    if (status) where.status = status;
+
+    if (reporterSearch) {
+        where.reporter = {
+            OR: [
+                { firstName: { contains: reporterSearch, mode: 'insensitive' } },
+                { lastName: { contains: reporterSearch, mode: 'insensitive' } },
+                { email: { contains: reporterSearch, mode: 'insensitive' } },
+                { username: { contains: reporterSearch, mode: 'insensitive' } },
+                { id: { contains: reporterSearch, mode: 'insensitive' } },
+            ],
+        };
     }
 
-    if (status) {
-        filtered = filtered.filter(r => r.status === status);
+    if (opts.targetUserSearch) {
+        const ts = opts.targetUserSearch;
+        where.targetUser = {
+            OR: [
+                { firstName: { contains: ts, mode: 'insensitive' } },
+                { lastName: { contains: ts, mode: 'insensitive' } },
+                { email: { contains: ts, mode: 'insensitive' } },
+                { username: { contains: ts, mode: 'insensitive' } },
+                { id: { contains: ts, mode: 'insensitive' } },
+            ],
+        };
     }
 
-    if (dateFrom) {
-        const from = new Date(dateFrom);
-        filtered = filtered.filter(r => new Date(r.createdAt) >= from);
-    }
-
-    if (dateTo) {
-        const to = new Date(dateTo);
-        to.setHours(23, 59, 59, 999);
-        filtered = filtered.filter(r => new Date(r.createdAt) <= to);
+    if (dateFrom || dateTo) {
+        where.createdAt = {};
+        if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+        if (dateTo) {
+            const to = new Date(dateTo);
+            to.setHours(23, 59, 59, 999);
+            where.createdAt.lte = to;
+        }
     }
 
     if (q) {
-        const query = q.toLowerCase();
-        filtered = filtered.filter(r => 
-            r.id.toLowerCase().includes(query) ||
-            r.title.toLowerCase().includes(query) ||
-            r.description.toLowerCase().includes(query) ||
-            r.reporterName.toLowerCase().includes(query) ||
-            r.reporterEmail.toLowerCase().includes(query)
-        );
+        where.OR = [
+            { id: { contains: q, mode: 'insensitive' } },
+            { description: { contains: q, mode: 'insensitive' } },
+            { reporter: { firstName: { contains: q, mode: 'insensitive' } } },
+            { reporter: { lastName: { contains: q, mode: 'insensitive' } } },
+            { reporter: { email: { contains: q, mode: 'insensitive' } } },
+            { reporter: { username: { contains: q, mode: 'insensitive' } } },
+        ];
     }
 
-    const total = filtered.length;
-    const skip = (page - 1) * limit;
-    const data = filtered.slice(skip, skip + limit);
+    const [data, total] = await Promise.all([
+        prisma.report.findMany({
+            where,
+            include: reportInclude,
+            orderBy: { [sortBy]: sortOrder },
+            skip: (page - 1) * limit,
+            take: limit,
+        }),
+        prisma.report.count({ where }),
+    ]);
+
+    // flatten reporter info for admin convenience
+    const formatted = data.map(r => ({
+        ...r,
+        reporterName: `${r.reporter?.firstName || ''} ${r.reporter?.lastName || ''}`.trim(),
+        reporterEmail: r.reporter?.email || '',
+        reporterAvatar: r.reporter?.profilePicture || null,
+    }));
 
     return {
-        data,
+        data: formatted,
         pagination: {
             page,
             limit,
             total,
             totalPages: Math.ceil(total / limit),
-        }
+        },
     };
 };
 
 const getReportById = async (id) => {
-    return mockReports.find(r => r.id === id) || null;
+    return prisma.report.findUnique({
+        where: { id },
+        include: reportInclude,
+    });
 };
 
 const createReport = async (reportData) => {
-    const newReport = {
-        id: `${Date.now()}`,
-        ...reportData,
-        status: 'PENDING',
-        adminNotes: null,
-        resolvedAt: null,
-        resolvedBy: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    };
-    mockReports.push(newReport);
-    return newReport;
+    return prisma.report.create({
+        data: {
+            reporterId: reportData.reporterId,
+            type: reportData.type,
+            category: reportData.category,
+            description: reportData.description,
+            images: reportData.images || null,
+            routeId: reportData.routeId || null,
+            bookingId: reportData.bookingId || null,
+            targetUserId: reportData.targetUserId || null,
+        },
+        include: reportInclude,
+    });
 };
 
 const updateReportStatus = async (id, status, adminNotes, adminId) => {
-    const report = mockReports.find(r => r.id === id);
+    const report = await prisma.report.findUnique({ where: { id } });
     if (!report) {
         throw new ApiError(404, 'Report not found');
     }
 
-    report.status = status;
-    if (adminNotes) report.adminNotes = adminNotes;
-    if (status === 'RESOLVED') {
-        report.resolvedAt = new Date();
-        report.resolvedBy = adminId;
-    }
-    report.updatedAt = new Date();
+    const updateData = {
+        status,
+        adminNotes: adminNotes || report.adminNotes,
+    };
 
-    return report;
+    if (status === 'RESOLVED' || status === 'APPROVED' || status === 'REJECTED') {
+        updateData.resolvedAt = new Date();
+        updateData.resolvedById = adminId;
+    }
+
+    return prisma.report.update({
+        where: { id },
+        data: updateData,
+        include: reportInclude,
+    });
 };
 
 const deleteReport = async (id) => {
-    const index = mockReports.findIndex(r => r.id === id);
-    if (index === -1) {
+    const report = await prisma.report.findUnique({ where: { id } });
+    if (!report) {
         throw new ApiError(404, 'Report not found');
     }
-    const [deleted] = mockReports.splice(index, 1);
-    return deleted;
+    return prisma.report.delete({ where: { id } });
+};
+
+const getReportsByUser = async (userId) => {
+    return prisma.report.findMany({
+        where: { reporterId: userId },
+        include: reportInclude,
+        orderBy: { createdAt: 'desc' },
+    });
+};
+
+const getReportByBookingId = async (bookingId, reporterId) => {
+    const where = { bookingId };
+    if (reporterId) where.reporterId = reporterId;
+
+    return prisma.report.findFirst({
+        where,
+        include: reportInclude,
+        orderBy: { createdAt: 'desc' },
+    });
 };
 
 module.exports = {
@@ -171,5 +218,7 @@ module.exports = {
     getReportById,
     createReport,
     updateReportStatus,
-    deleteReport
+    deleteReport,
+    getReportsByUser,
+    getReportByBookingId,
 };

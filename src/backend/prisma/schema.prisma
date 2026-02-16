@@ -60,6 +60,27 @@ enum NotificationType {
   ROUTE
 }
 
+enum ReportType {
+  DRIVER
+  PASSENGER
+}
+
+enum ReportCategory {
+  VEHICLE_ISSUE
+  PASSENGER_ISSUE
+  ROAD_ISSUE
+  SAFETY_ISSUE
+  PAYMENT_ISSUE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RESOLVED
+}
+
 model User {
   id                    String   @id @default(cuid())
   username              String   @unique
@@ -90,6 +111,9 @@ model User {
   bookings              Booking[]           @relation("PassengerBookings")
   givenReviews          Review[]            @relation("GivenReviews")
   receivedReviews       Review[]            @relation("ReceivedReviews")
+  reportsMade           Report[]            @relation("ReporterReports")
+  reportsReceived       Report[]            @relation("ReportedUser")
+  resolvedReports       Report[]            @relation("ResolvedReports")
 
   ratingAverage         Float               @default(0)
   ratingCount           Int                 @default(0)
@@ -193,6 +217,7 @@ model Route {
   updatedAt     DateTime @updatedAt
 
   bookings        Booking[]
+  reports         Report[]
 
   @@index([driverId])
   @@index([vehicleId])
@@ -216,7 +241,8 @@ model Booking {
   dropoffLocation Json          @db.Json
   createdAt       DateTime      @default(now())
 
-  review Review?
+  review   Review?
+  reports  Report[]
 }
 
 model Review {
@@ -236,4 +262,42 @@ model Review {
   images      Json?    @db.Json
 
   createdAt   DateTime @default(now())
+}
+
+model Report {
+  id              String         @id @default(cuid())
+
+  reporterId      String
+  reporter        User           @relation("ReporterReports", fields: [reporterId], references: [id])
+
+  type            ReportType
+  category        ReportCategory
+  status          ReportStatus   @default(PENDING)
+
+  description     String
+  images          Json?          @db.Json
+
+  routeId         String?
+  route           Route?         @relation(fields: [routeId], references: [id])
+
+  bookingId       String?
+  booking         Booking?       @relation(fields: [bookingId], references: [id])
+
+  targetUserId    String?
+  targetUser      User?          @relation("ReportedUser", fields: [targetUserId], references: [id])
+
+  adminNotes      String?
+  resolvedAt      DateTime?
+  resolvedById    String?
+  resolvedBy      User?          @relation("ResolvedReports", fields: [resolvedById], references: [id])
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([reporterId])
+  @@index([routeId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
 }
