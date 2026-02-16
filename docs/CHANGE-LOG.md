@@ -121,8 +121,8 @@ This project follows semantic versioning.
   - MyTrip page buttons display issues
 
 
-
 ## [1.0.8] - 2026-02-16 - (Narathaip)
+
 ### Added 
 - **Passenger Trip Progress & Reporting (MyTrip)**
   - Trip Status Progress Modal: 3-step journey tracking (Pending → Confirmed → Completed)
@@ -139,6 +139,7 @@ This project follows semantic versioning.
 
 
 ## [1.0.9] - 2026-02-16 - (Narathaip)
+
 ### Added
 - **Driver Route Reporting (MyRoute)**
   - Driver Report Modal with full form interface
@@ -157,7 +158,15 @@ This project follows semantic versioning.
 ### Fixed
 - File upload handling: Proper FormData construction for backend submission
 
+
+## [1.0.10] - 2026-02-17 - (Panya)
+
+### Added
+- Add review test case at folder test/backend 
+
+
 ## [1.0.11] - 2026-02-17 - (Pavarit)
+
 ### Added
 - **Report System (Prisma)**
   - New `Report` model in `schema.prisma` with relationships to `User` (Reporter & Target), `Route`, and `Booking`
@@ -174,7 +183,9 @@ This project follows semantic versioning.
 - Unified passenger and driver reporting logic to use a single backend API contract
 - Localized Thai status and category labels across the application
 
+
 ## [1.0.12] - 2026-02-17 - (Pavarit)
+
 ### Added
 - **UI/UX Polishing**
   - **Skeleton Loaders** for `myTrip` and `myRoute` lists to improve perceived performance during data fetching
@@ -185,7 +196,9 @@ This project follows semantic versioning.
 ### Fixed
 - Resolved fetching bug in `myTrip` where review data was not loaded for the auto-selected first trip on initial mount
 
+
 ## [1.0.13] - 2026-02-17 - (Pavarit)
+
 ### Added
 - **Admin Report Management Refinements**
   - **Flexible Search**: Allows searching for reporters/users by First Name, Last Name, Username, or Email
