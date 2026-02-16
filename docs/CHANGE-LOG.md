@@ -119,3 +119,40 @@ This project follows semantic versioning.
 - **Admin Components**
   - Resolved data rendering issues in the User Review Modal caused by incorrect API pathing
   - MyTrip page buttons display issues
+
+
+
+## [1.0.8] - 2026-02-16 - (Narathaip)
+### Added 
+- **Passenger Trip Progress & Reporting (MyTrip)**
+  - Trip Status Progress Modal: 3-step journey tracking (Pending → Confirmed → Completed)
+  - Report button with SVG document icon in header (right-aligned)
+  - Report status display with color-coded badges (Pending/Approved/Rejected/Resolved)
+  - Mock trip data: 4 sample trips with various statuses for testing
+  - Auto-select functionality: First trip auto-selected on page load
+  - Helper functions: `getStatusDotClass()`, `getStatusText()`, `getStatusDescription()`, `getReportStatusText()`
+  - TripStatusProgressIcon component: Reusable progress visualization
+
+### Changed
+- Report button behavior: Changed from conditional rendering to always-visible with disabled state
+- Disabled icon rendering: Switched from Font Awesome to inline SVG for consistency
+
+
+## [1.0.9] - 2026-02-16 - (Narathaip)
+### Added
+- **Driver Route Reporting (MyRoute)**
+  - Driver Report Modal with full form interface
+  - Report category dropdown: 6 issue types (vehicle_issue, passenger_issue, road_issue, safety_issue, payment_issue, other)
+  - Text input field for detailed description (optional)
+  - Image upload capability: Max 2 images per report with preview and removal
+  - Image validation: File type and count validation before submission
+  - Driver report functions: `openDriverReportModal()`, `closeDriverReportModal()`, `handleDriverReportFiles()`, `removeDriverReportImage()`, `submitDriverReport()`
+  - Form validation: Category selection required before submission
+  - Report Modal state management: `showDriverReportModal`, `reportedRoute`, `driverReportCategory`, `driverReportText`, `driverReportImages`
+
+### Changed
+- Consistent styling with passenger report system
+- Report button styling: Red button positioned with Edit/Complete actions
+
+### Fixed
+- File upload handling: Proper FormData construction for backend submission
