@@ -214,3 +214,11 @@ This project follows semantic versioning.
 
 ### Fixed
 - Resolved nuxt & prisma
+
+
+## [1.0.15] - 2026-02-17 - (Narathaip)
+### Added 
+- Quick status buttons (3 buttons:Pending/Approved/Rejected)
+
+### Fixed
+- Reporter avatar not displaying
