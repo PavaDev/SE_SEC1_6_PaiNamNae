@@ -121,8 +121,8 @@ This project follows semantic versioning.
   - MyTrip page buttons display issues
 
 
-
 ## [1.0.8] - 2026-02-16 - (Narathaip)
+
 ### Added 
 - **Passenger Trip Progress & Reporting (MyTrip)**
   - Trip Status Progress Modal: 3-step journey tracking (Pending → Confirmed → Completed)
@@ -156,3 +156,9 @@ This project follows semantic versioning.
 
 ### Fixed
 - File upload handling: Proper FormData construction for backend submission
+
+
+## [1.0.10] - 2026-02-17 - (Panya)
+
+### Added
+- Add review test case at folder test/backend 
