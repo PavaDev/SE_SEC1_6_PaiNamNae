@@ -119,3 +119,9 @@ This project follows semantic versioning.
 - **Admin Components**
   - Resolved data rendering issues in the User Review Modal caused by incorrect API pathing
   - MyTrip page buttons display issues
+
+
+## [1.0.10] - 2026-02-14 - (Panya)
+
+### Added
+- Add review test case at folder test/backend 
