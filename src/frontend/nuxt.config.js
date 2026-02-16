@@ -18,18 +18,11 @@ export default defineNuxtConfig({
 
   plugins: ["~/plugins/api.client.js"],
 
-  // build: {
-  //   rollupOptions: {
-  //     external: ['lodash.debounce']
-  //   }
-  // },
-
   vite: {
     plugins: [tailwindcssVite()],
   },
 
   css: [
-    'leaflet/dist/leaflet.css',
     '~/assets/css/input.css',
   ],
 
