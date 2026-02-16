@@ -208,3 +208,9 @@ This project follows semantic versioning.
 ### Changed
 - Streamlined Admin UI by removing mandatory User ID requirements from search labels for better practicality
 - Improved Report Detail view to show full Target User names instead of raw IDs
+
+
+## [1.0.14] - 2026-02-17 - (Narathaip)
+
+### Fixed
+- Resolved nuxt & prisma
