@@ -24,8 +24,35 @@
                             </h3>
                         </div>
 
-                        <div v-if="isLoading" class="p-12 text-center text-gray-500">
-                            <p>กำลังโหลดข้อมูล...</p>
+                        <!-- Loading Skeleton -->
+                        <div v-if="isLoading" class="divide-y divide-gray-200">
+                            <div v-for="i in 3" :key="i" class="p-6 animate-pulse">
+                                <!-- Card Header -->
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <div class="h-6 w-3/4 bg-gray-200 rounded mb-2"></div>
+                                        <div class="h-4 w-1/2 bg-gray-100 rounded"></div>
+                                    </div>
+                                    <div class="h-6 w-24 bg-gray-200 rounded-full"></div>
+                                </div>
+                                <!-- Info Row (mimics seats/stats or passenger profile) -->
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full"></div>
+                                    <div class="flex-1 space-y-2">
+                                        <div class="h-4 w-1/3 bg-gray-200 rounded"></div>
+                                        <div class="h-3 w-1/4 bg-gray-100 rounded"></div>
+                                    </div>
+                                    <div class="text-right space-y-2">
+                                        <div class="h-5 w-16 bg-gray-200 rounded ml-auto"></div>
+                                        <div class="h-3 w-12 bg-gray-100 rounded ml-auto"></div>
+                                    </div>
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="flex justify-end space-x-2">
+                                    <div class="h-9 w-24 bg-gray-100 rounded px-4 py-2"></div>
+                                    <div class="h-9 w-24 bg-gray-200 rounded px-4 py-2"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- ===== แท็บ: เส้นทางของฉัน ===== -->
@@ -262,9 +289,10 @@
                                     
                                     <!-- ปุ่ม Report สำหรับคนขับ -->
                                     <button
-                                        @click.stop="openDriverReportModal(route)"
-                                        class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-red-600 rounded-md hover:bg-red-700">
-                                        รายงาน
+                                        @click.stop="route.hasReport ? openDriverReportStatusModal(route) : openDriverReportModal(route)"
+                                        class="px-4 py-2 ml-2 text-sm text-white transition duration-200 rounded-md"
+                                        :class="route.hasReport ? 'bg-orange-500 hover:bg-orange-600' : 'bg-red-600 hover:bg-red-700'">
+                                        {{ route.hasReport ? 'ติดตามสถานะ' : 'รายงาน' }}
                                     </button>
                                     
                                     <!-- ปุ่มกดจบงานสำหรับคนขับ -->
@@ -365,18 +393,6 @@
                                                         stroke-width="2" d="M16 7V5a2 2 0 00-2-2H8a2 2 0 00-2 2v2" />
                                                 </svg>
                                             </button>
-                                        </div>
-
-                                        <div class="flex items-center mt-1">
-                                            <div class="flex text-sm text-yellow-400">
-                                                <span>
-                                                    {{ '★'.repeat(Math.round(trip.passenger.rating)) }}{{ '☆'.repeat(5 -
-                                                        Math.round(trip.passenger.rating)) }}
-                                                </span>
-                                            </div>
-                                            <span class="ml-2 text-sm text-gray-600">
-                                                {{ trip.passenger.rating }} ({{ trip.passenger.reviews }} รีวิว)
-                                            </span>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -512,12 +528,12 @@
                     <select v-model="driverReportCategory"
                         class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">-- เลือกหัวข้อ --</option>
-                        <option value="vehicle_issue">ปัญหาเรื่องรถ</option>
-                        <option value="passenger_issue">ปัญหาเรื่องผู้โดยสาร</option>
-                        <option value="road_issue">ปัญหาเรื่องถนน/สภาพแวดล้อม</option>
-                        <option value="safety_issue">ปัญหาด้านความปลอดภัย</option>
-                        <option value="payment_issue">ปัญหาเรื่องการชำระเงิน</option>
-                        <option value="other">อื่นๆ</option>
+                        <option value="VEHICLE_ISSUE">ปัญหาเรื่องรถ</option>
+                        <option value="PASSENGER_ISSUE">ปัญหาเรื่องผู้โดยสาร</option>
+                        <option value="ROAD_ISSUE">ปัญหาเรื่องถนน/สภาพแวดล้อม</option>
+                        <option value="SAFETY_ISSUE">ปัญหาด้านความปลอดภัย</option>
+                        <option value="PAYMENT_ISSUE">ปัญหาเรื่องการชำระเงิน</option>
+                        <option value="OTHER">อื่นๆ</option>
                     </select>
                 </div>
 
@@ -566,6 +582,108 @@
                 </div>
             </div>
         </div>
+
+        <!-- Driver Report Status Modal -->
+        <div v-if="showDriverReportStatusModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            @click.self="showDriverReportStatusModal = false">
+            <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top duration-300">
+                <!-- Header -->
+                <div class="bg-orange-600 px-6 py-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            สถานะการแจ้งรายงาน
+                        </h3>
+                        <button @click="showDriverReportStatusModal = false" class="text-white/80 hover:text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="reportedRouteData" class="p-6 space-y-6">
+                    <!-- Summary Card -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-blue-900">สรุปการรายงาน</h4>
+                            <span 
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm"
+                                :class="{
+                                    'bg-yellow-100 text-yellow-800 border border-yellow-200': reportedRouteData.status === 'PENDING',
+                                    'bg-green-100 text-green-800 border border-green-200': ['APPROVED', 'RESOLVED'].includes(reportedRouteData.status),
+                                    'bg-red-100 text-red-800 border border-red-200': reportedRouteData.status === 'REJECTED'
+                                }"
+                            >
+                                {{ getReportStatusText(reportedRouteData.status) }}
+                            </span>
+                        </div>
+
+                        <div class="space-y-3 text-sm text-blue-800">
+                            <div class="flex justify-between border-b border-blue-100 pb-2">
+                                <span class="opacity-75">หัวข้อข้อปัญหา:</span>
+                                <span class="font-semibold">{{ getCategoryText(reportedRouteData.category) }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-blue-100 pb-2">
+                                <span class="opacity-75">วันที่แจ้ง:</span>
+                                <span class="font-semibold">{{ reportedRouteData.createdAt ? dayjs(reportedRouteData.createdAt).format('D MMM BBBB HH:mm น.') : '-' }}</span>
+                            </div>
+                            <div class="pt-1">
+                                <span class="opacity-75 block mb-1">รายละเอียดที่แจ้ง:</span>
+                                <p class="text-gray-700 bg-white/50 p-3 rounded-lg border border-blue-100 italic">
+                                    "{{ reportedRouteData.description }}"
+                                </p>
+                            </div>
+                            <div v-if="reportedRouteData.images?.length" class="pt-2">
+                                <span class="opacity-75 block mb-2">รูปภาพประกอบ:</span>
+                                <div class="flex gap-2">
+                                    <img v-for="(img, idx) in reportedRouteData.images" :key="idx" :src="img" 
+                                        class="w-20 h-20 object-cover rounded-lg border-2 border-white shadow-sm hover:scale-105 transition-transform cursor-pointer" 
+                                        @click="window.open(img, '_blank')"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Response -->
+                    <div class="bg-white border-2 border-gray-100 rounded-xl p-5 shadow-sm">
+                        <h4 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 013 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            การตอบรับจากทีมงาน
+                        </h4>
+                        <div v-if="reportedRouteData.status !== 'PENDING'" class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <p class="text-sm text-gray-700 leading-relaxed">
+                                {{ reportedRouteData.adminNotes || 'ได้รับการตรวจสอบเรียบร้อยแล้ว' }}
+                            </p>
+                            <div v-if="reportedRouteData.resolvedAt" class="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center text-[10px] text-gray-400">
+                                <span>ตรวจสอบเมื่อ: {{ dayjs(reportedRouteData.resolvedAt).format('D MMM BBBB HH:mm') }}</span>
+                                <span class="text-green-600 font-bold">VERIFIED BY TEAM</span>
+                            </div>
+                        </div>
+                        <div v-else class="flex flex-col items-center py-6 text-center">
+                            <div class="w-12 h-12 bg-yellow-50 rounded-full flex items-center justify-center mb-3">
+                                <svg class="w-6 h-6 text-yellow-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <p class="text-sm text-gray-500">รายงานของคุณกำลังรอการตรวจสอบ<br>เราจะเร่งดำเนินการให้เร็วที่สุด</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <button @click="showDriverReportStatusModal = false"
+                            class="w-full px-4 py-3 text-sm font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                            ปิด
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -593,7 +711,9 @@ const myRoutes = ref([])
 
 // --- Driver Report Modal State ---
 const showDriverReportModal = ref(false)
+const showDriverReportStatusModal = ref(false)
 const reportedRoute = ref(null)
+const reportedRouteData = ref(null)
 const driverReportCategory = ref('')
 const driverReportText = ref('')
 const driverReportImages = ref([])
@@ -805,6 +925,8 @@ async function fetchMyRoutes() {
                 })),
                 durationText: (typeof r.duration === 'string' ? formatDuration(r.duration) : r.duration) || (r.durationSeconds ? `${Math.round(r.durationSeconds / 60)} นาที` : '-'),
                 distanceText: (typeof r.distance === 'string' ? formatDistance(r.distance) : r.distance) || (r.distanceMeters ? `${(r.distanceMeters / 1000).toFixed(1)} กม.` : '-'),
+                hasReport: false,
+                reportData: null
             })
         }
 
@@ -837,6 +959,9 @@ async function fetchMyRoutes() {
     } finally {
         isLoading.value = false
     }
+
+    // Check report status for routes in background
+    checkReportsForRoutes()
 }
 
 const getTripCount = (status) => {
@@ -871,6 +996,12 @@ function openDriverReportModal(route) {
     showDriverReportModal.value = true
 }
 
+function openDriverReportStatusModal(route) {
+    reportedRoute.value = route
+    reportedRouteData.value = route.reportData
+    showDriverReportStatusModal.value = true
+}
+
 function closeDriverReportModal() {
     showDriverReportModal.value = false
     setTimeout(() => { reportedRoute.value = null }, 200)
@@ -894,25 +1025,82 @@ function removeDriverReportImage(idx) {
 async function submitDriverReport() {
     if (!reportedRoute.value) return
     if (!driverReportCategory.value) {
-        alert('กรุณาเลือกหัวข้อปัญหา')
+        toast.error('กรุณาเลือกหัวข้อปัญหา', 'กรุณาเลือกหัวข้อปัญหาที่พบ')
         return
     }
     try {
         const fd = new FormData()
-        fd.append('routeId', reportedRoute.value.id)
+        fd.append('type', 'DRIVER')
         fd.append('category', driverReportCategory.value)
-        fd.append('text', driverReportText.value || '')
+        fd.append('description', driverReportText.value || 'ไม่ได้ระบุรายละเอียด')
+        fd.append('routeId', reportedRoute.value.id)
         driverReportImages.value.forEach((it) => {
             if (it.file) fd.append('images', it.file)
         })
 
-        await $api('/reports/driver', { method: 'POST', body: fd })
+        await $api('/reports', { method: 'POST', body: fd })
         toast.success('ขอบคุณที่แจ้งรายงาน', 'ทีมงานจะตรวจสอบในเร็วๆ นี้')
+
+        // update route in place
+        const routeInList = myRoutes.value.find(r => r.id === reportedRoute.value.id)
+        if (routeInList) {
+            routeInList.hasReport = true
+            routeInList.reportData = { 
+                status: 'PENDING', 
+                category: driverReportCategory.value, 
+                description: driverReportText.value || 'ไม่ได้ระบุรายละเอียด',
+                createdAt: new Date(),
+                adminNotes: null 
+            }
+        }
+
         closeDriverReportModal()
+        checkReportsForRoutes() // background sync
     } catch (err) {
         console.error('Failed to submit driver report', err)
         toast.error('ไม่สามารถส่งรายงานได้', err?.data?.message || 'โปรดลองอีกครั้ง')
     }
+}
+
+async function checkReportsForRoutes() {
+    // Get all reports made by current user
+    try {
+        const res = await $api('/reports/me')
+        const reports = res.data || res || []
+        
+        // Match reports with routes
+        myRoutes.value.forEach(route => {
+            const report = reports.find(r => r.routeId === route.id && r.type === 'DRIVER')
+            if (report) {
+                route.hasReport = true
+                route.reportData = report
+            }
+        })
+    } catch (e) {
+        console.error('Failed to check reports for routes', e)
+    }
+}
+
+function getReportStatusText(status) {
+    const reportStatus = {
+        PENDING: 'รอการตรวจสอบ',
+        APPROVED: 'รับเรื่องแล้ว',
+        REJECTED: 'ไม่พบปัญหา',
+        RESOLVED: 'ดำเนินการแก้ไขแล้ว'
+    }
+    return reportStatus[status] || 'ไม่ทราบสถานะ'
+}
+
+function getCategoryText(cat) {
+    const cats = {
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถ',
+        PASSENGER_ISSUE: 'ปัญหาเกี่ยวกับผู้โดยสาร',
+        ROAD_ISSUE: 'ปัญหาระหว่างเส้นทาง',
+        SAFETY_ISSUE: 'ความปลอดภัย/พฤติกรรม',
+        PAYMENT_ISSUE: 'ปัญหาการชำระเงิน',
+        OTHER: 'อื่น ๆ'
+    }
+    return cats[cat] || cat || 'ทั่วไป'
 }
 
 // ---------- Google Maps helpers ----------

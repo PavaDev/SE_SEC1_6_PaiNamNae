@@ -2,7 +2,8 @@ const express = require('express');
 const reportController = require('../controllers/report.controller');
 const validate = require('../middlewares/validate');
 const { protect, requireAdmin } = require('../middlewares/auth');
-const { createReportSchema, updateReportStatusSchema, listReportsQuerySchema, idParamSchema } = require('../validations/report.validation');
+const upload = require('../middlewares/upload.middleware');
+const { createReportSchema, updateReportStatusSchema, listReportsQuerySchema, idParamSchema, bookingIdParamSchema } = require('../validations/report.validation');
 
 const router = express.Router();
 
@@ -44,10 +45,26 @@ router.delete(
 );
 
 // --- User Routes ---
-// POST /api/reports (Create a new report)
+// GET /api/reports/me (user's own reports)
+router.get(
+    '/me',
+    protect,
+    reportController.getMyReports
+);
+
+// GET /api/reports/booking/:bookingId (check if report exists for booking)
+router.get(
+    '/booking/:bookingId',
+    protect,
+    validate({ params: bookingIdParamSchema }),
+    reportController.getReportForBooking
+);
+
+// POST /api/reports (Create a new report with image upload)
 router.post(
     '/',
     protect,
+    upload.fields([{ name: 'images', maxCount: 2 }]),
     validate({ body: createReportSchema }),
     reportController.createReport
 );

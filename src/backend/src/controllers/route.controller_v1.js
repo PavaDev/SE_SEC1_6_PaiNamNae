@@ -81,8 +81,8 @@ const createRoute = asyncHandler(async (req, res) => {
   const directions = await getDirections({
     origin: payload.startLocation,
     destination: payload.endLocation,
-    waypoints: routeFields.waypoints || [],           // ✅
-    optimizeWaypoints: routeFields.optimizeWaypoints, // ✅
+    waypoints: routeFields.waypoints || [],
+    optimizeWaypoints: routeFields.optimizeWaypoints,
     alternatives: false,
     departureTime: payload.departureTime.toISOString()
   });
