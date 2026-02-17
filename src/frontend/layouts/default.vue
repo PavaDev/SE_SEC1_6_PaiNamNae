@@ -76,7 +76,7 @@
                         <div v-if="token" class="relative">
                             <button ref="bellBtn" class="relative text-gray-600 hover:text-blue-600"
                                 @click="onBellClick" aria-haspopup="true" :aria-expanded="openNotif ? 'true' : 'false'">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <svg :class="['w-5 h-5', { 'bell-shake': bellShake }]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 17h5l-1.405-1.405C18.21 14.79 18 13.918 18 13V9a6 6 0 10-12 0v4c0 .918-.21 1.79-.595 2.595L4 17h5m6 0a3 3 0 11-6 0h6z" />
                                 </svg>
@@ -398,6 +398,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRuntimeConfig, useCookie } from '#app'
 import { useAuth } from '~/composables/useAuth'
+import { useSocket } from '~/composables/useSocket'
 
 const { token, user, logout } = useAuth()
 
@@ -557,6 +558,26 @@ onUnmounted(() => {
     document.removeEventListener('keydown', onKey)
 })
 
+// --- Socket.IO: real-time notification listener ---
+const { onEvent } = useSocket()
+const bellShake = ref(false)
+
+onEvent('notification:new', (data) => {
+  // Prepend the new notification to the list
+  const newNotif = {
+    id: data.id || Date.now(),
+    title: data.title || 'การแจ้งเตือนใหม่',
+    body: data.body || data.message || '',
+    createdAt: data.createdAt || new Date().toISOString(),
+    readAt: null
+  }
+  notifications.value.unshift(newNotif)
+
+  // Trigger bell shake animation
+  bellShake.value = true
+  setTimeout(() => { bellShake.value = false }, 1000)
+})
+
 /* ใส่ฟอนต์ Kanit แบบเดิม */
 useHead({
     link: [
@@ -611,5 +632,22 @@ useHead({
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+@keyframes bell-shake {
+    0%, 100% { transform: rotate(0); }
+    10% { transform: rotate(14deg); }
+    20% { transform: rotate(-14deg); }
+    30% { transform: rotate(10deg); }
+    40% { transform: rotate(-10deg); }
+    50% { transform: rotate(6deg); }
+    60% { transform: rotate(-6deg); }
+    70% { transform: rotate(2deg); }
+    80% { transform: rotate(-2deg); }
+    90% { transform: rotate(0); }
+}
+
+.bell-shake {
+    animation: bell-shake 0.8s ease-in-out;
 }
 </style>

@@ -3,6 +3,7 @@ const reviewService = require("../services/review.service");
 const ApiError = require("../utils/ApiError");
 
 const { uploadToCloudinary } = require('../utils/cloudinary');
+const { getIO } = require('../socket');
 
 const createReview = asyncHandler(async (req, res) => {
     const userId = req.user.sub;
@@ -16,6 +17,26 @@ const createReview = asyncHandler(async (req, res) => {
     }
 
     const review = await reviewService.createReview(userId, reviewData);
+
+    // --- Socket.IO: notify driver about the new review ---
+    try {
+        const io = getIO();
+        const driverId = review.revieweeId;
+        if (driverId) {
+            io.to(`user:${driverId}`).emit('notification:new', {
+                type: 'review',
+                title: 'มีรีวิวใหม่',
+                body: `คุณได้รับรีวิว ${review.rating} ดาว`,
+                routeId: review.booking?.routeId || reviewData.routeId || null,
+                bookingId: review.bookingId,
+                rating: review.rating,
+                createdAt: new Date().toISOString(),
+            });
+        }
+    } catch (err) {
+        console.error('Socket.IO emit error (review):', err.message);
+    }
+
     res.status(201).json({ success: true, data: review });
 });
 
