@@ -2,11 +2,14 @@
 
 ## Project Name
 <project name>
-
+- Pai Nam Nae
 ## Team Members
-- Name – Role
-- Name – Role
-- Name – Role
+- Arimeta Ritidet – Team leader
+- Narathip Phromprakai – Front-End
+- Panya Suriwan – Tester
+- Pavarit Kulkaew - Back-End
+- Kunyanat Naladta -Writer
+- Yasinthon JongKlang - Tester
 
 ## AI Tools Used
 
