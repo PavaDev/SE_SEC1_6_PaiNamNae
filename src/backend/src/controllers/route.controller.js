@@ -4,6 +4,7 @@ const vehicleService = require("../services/vehicle.service");
 const ApiError = require("../utils/ApiError");
 const verifService = require("../services/driverVerification.service");
 const { getDirections } = require("../utils/googleMaps");
+const { getIO } = require("../socket");
 
 const getAllRoutes = asyncHandler(async (req, res) => {
   const routes = await routeService.getAllRoutes();
@@ -125,6 +126,14 @@ const createRoute = asyncHandler(async (req, res) => {
   }
 
   const newRoute = await routeService.createRoute(payload);
+
+  // --- Socket.IO: notify /findTrip listeners ---
+  try {
+    const io = getIO();
+    const fullRoute = await routeService.getRouteById(newRoute.id);
+    io.to('trips').emit('trip:created', fullRoute);
+  } catch (e) { console.error('Socket emit error (createRoute):', e.message); }
+
   res.status(201).json({
     success: true,
     message: "Route created successfully",
@@ -480,7 +489,32 @@ const completeRoute = asyncHandler(async (req, res) => {
   const driverId = req.user.sub;
   const { id } = req.params;
 
+  // Fetch route with bookings before completing
+  const routeBefore = await routeService.getRouteById(id);
   const result = await routeService.completeRoute(id, driverId);
+
+  // --- Socket.IO: notify passengers + update trip list ---
+  try {
+    const io = getIO();
+    // Update trip list
+    io.to('trips').emit('trip:completed', { routeId: id });
+    // Notify each confirmed passenger
+    if (routeBefore && routeBefore.bookings) {
+      const confirmedBookings = routeBefore.bookings.filter(b => b.status === 'CONFIRMED');
+      for (const booking of confirmedBookings) {
+        io.to(`user:${booking.passengerId}`).emit('booking:tripCompleted', {
+          routeId: id,
+          bookingId: booking.id,
+        });
+        io.to(`user:${booking.passengerId}`).emit('notification:new', {
+          type: 'ROUTE',
+          title: 'การเดินทางสิ้นสุดแล้ว',
+          body: 'คนขับได้สิ้นสุดการเดินทางแล้ว',
+        });
+      }
+    }
+  } catch (e) { console.error('Socket emit error (completeRoute):', e.message); }
+
   res.status(200).json({
     success: true,
     message: "Route completed successfully",

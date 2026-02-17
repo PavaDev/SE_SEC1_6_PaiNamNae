@@ -17,28 +17,35 @@
                         <h1 class="text-2xl font-semibold text-gray-800">รายละเอียดรายงาน #{{ reportId }}</h1>
                     </div>
                     
-                    <!--  Quick Status Change Buttons (แค่ 3 ปุ่ม) -->
-                    <div v-if="report" class="flex gap-2">
+                    <!--  Quick Status Change Buttons (4 สถานะ) -->
+                    <div v-if="report" class="flex flex-wrap gap-2">
                         <button @click="quickUpdateStatus('PENDING')" 
                             :disabled="report.status === 'PENDING'"
-                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="report.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700 hover:bg-yellow-50'">
+                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed border"
+                            :class="report.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'">
                             <i class="fa-solid fa-hourglass-end mr-1"></i>
                             รอพิจารณา
                         </button>
                         <button @click="quickUpdateStatus('APPROVED')" 
                             :disabled="report.status === 'APPROVED'"
-                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="report.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-green-50'">
+                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed border"
+                            :class="report.status === 'APPROVED' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'">
                             <i class="fa-solid fa-circle-check mr-1"></i>
                             อนุมัติ
                         </button>
                         <button @click="quickUpdateStatus('REJECTED')" 
                             :disabled="report.status === 'REJECTED'"
-                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="report.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 hover:bg-red-50'">
+                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed border"
+                            :class="report.status === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'">
                             <i class="fa-solid fa-circle-xmark mr-1"></i>
                             ปฏิเสธ
+                        </button>
+                        <button @click="quickUpdateStatus('RESOLVED')" 
+                            :disabled="report.status === 'RESOLVED'"
+                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed border"
+                            :class="report.status === 'RESOLVED' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'">
+                            <i class="fa-solid fa-check-double mr-1"></i>
+                            แก้ไขแล้ว
                         </button>
                     </div>
                 </div>
@@ -103,6 +110,10 @@
                                 <p class="font-medium text-gray-900">{{ report.type }}</p>
                             </div>
                             <div>
+                                <p class="text-sm text-gray-600 mb-1">หมวดหมู่</p>
+                                <p class="font-medium text-gray-900">{{ categoryLabelTh(report.category) }}</p>
+                            </div>
+                            <div>
                                 <p class="text-sm text-gray-600 mb-1">วันที่รายงาน</p>
                                 <p class="font-medium text-gray-900">{{ formatDate(report.createdAt) }}</p>
                             </div>
@@ -135,26 +146,28 @@
                     </div>
 
                     <!-- Resolved Info -->
-                    <div v-if="report.status === 'RESOLVED'" class="py-6">
+                    <div v-if="['APPROVED', 'REJECTED', 'RESOLVED'].includes(report.status) || report.resolvedAt" class="py-6">
                         <div class="grid grid-cols-2 gap-6">
                             <div>
-                                <p class="text-sm text-gray-600 mb-1">แก้ไขเมื่อ</p>
+                                <p class="text-sm text-gray-600 mb-1">ดำเนินการตรวจสอบเมื่อ</p>
                                 <p class="font-medium text-gray-900">{{ formatDate(report.resolvedAt) }}</p>
                             </div>
                             <div v-if="report.resolvedBy">
-                                <p class="text-sm text-gray-600 mb-1">แก้ไขโดย</p>
-                                <p class="font-medium text-gray-900">{{ report.resolvedBy }}</p>
+                                <p class="text-sm text-gray-600 mb-1">ดำเนินการโดย</p>
+                                <p class="font-medium text-gray-900">
+                                    {{ report.resolvedBy.firstName }} {{ report.resolvedBy.lastName }}
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons (Optional: Keep at bottom for advanced edit) -->
-                <div v-if="report && report.status !== 'RESOLVED'" class="flex gap-3">
+                <!-- Action Buttons -->
+                <div v-if="report" class="flex gap-3">
                     <button @click="goToEdit"
                         class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                         <i class="fas fa-edit mr-2"></i>
-                        แก้ไขสถานะ (ขั้นสูง)
+                        แก้ไขรายงาน (ขั้นสูง)
                     </button>
                     <button @click="askDelete"
                         class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
@@ -311,6 +324,19 @@ function statusLabelTh(status) {
         'RESOLVED': 'แก้ไขแล้ว'
     }
     return labels[status] || status
+}
+
+function categoryLabelTh(cat) {
+    const labels = {
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        SAFETY_ISSUE: 'พฤติกรรมการขับขี่ที่ไม่ปลอดภัย',
+        PAYMENT_ISSUE: 'ปัญหาเรื่องการจ่ายเงิน',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสาร/ผู้ร่วมทริป',
+        NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
+        ROAD_ISSUE: 'ปัญหาเรื่องถนน/สภาพแวดล้อม',
+        OTHER: 'อื่น ๆ'
+    }
+    return labels[cat] || cat || '-'
 }
 
 function formatDate(iso) {
