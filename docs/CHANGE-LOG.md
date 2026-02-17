@@ -162,7 +162,7 @@ This project follows semantic versioning.
 ## [1.0.10] - 2026-02-17 - (Panya)
 
 ### Added
-- Add review test case at folder test/backend 
+- Add review tests case at folder tests/backend 
 
 
 ## [1.0.11] - 2026-02-17 - (Pavarit)
@@ -253,3 +253,15 @@ This project follows semantic versioning.
 
 ### Changed
 - `Route` Swagger API endpint documentation 
+
+
+## [1.0.18] - 2026-02-17 - (Panya)
+
+### Added
+- Add report and admin report status test case at folder tests/backend
+
+
+## [1.0.19] - 2026-02-17 - (Panya)
+
+### Changed
+- Update report and admin report status test case
