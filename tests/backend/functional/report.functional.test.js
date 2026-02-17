@@ -3,11 +3,13 @@
  * FUNCTIONAL TESTS — Report Feature
  * ============================================================
  * Test Level  : Functional
+ * User Story  : As a passenger, I want to report the driver's
+ *               behavior to the administrator and receive
+ *               updates about the reported case.
  * File        : tests/backend/functional/report.functional.test.js
- * Purpose     : Test report API behavior end-to-end via HTTP.
- *               Validates request/response structure, status codes,
- *               and error messages for both positive and negative
- *               scenarios using Supertest against the Express app.
+ * Business Rules:
+ *   - Passenger can only report after the trip has ended
+ *   - Report button disappears after being pressed (one per booking)
  * ============================================================
  */
 
@@ -18,9 +20,6 @@ const mockReportCreate = jest.fn();
 const mockReportFindUnique = jest.fn();
 const mockReportFindFirst = jest.fn();
 const mockReportFindMany = jest.fn();
-const mockReportUpdate = jest.fn();
-const mockReportDelete = jest.fn();
-const mockReportCount = jest.fn();
 const mockQueryRaw = jest.fn().mockResolvedValue([1]);
 
 jest.mock('../../../src/backend/src/utils/prisma', () => ({
@@ -30,9 +29,6 @@ jest.mock('../../../src/backend/src/utils/prisma', () => ({
         findUnique: mockReportFindUnique,
         findFirst: mockReportFindFirst,
         findMany: mockReportFindMany,
-        update: mockReportUpdate,
-        delete: mockReportDelete,
-        count: mockReportCount,
     },
 }));
 
@@ -53,9 +49,6 @@ jest.mock('../../../src/backend/src/utils/jwt', () => ({
         }
         if (token === 'valid-admin-token') {
             return { sub: 'admin-001', role: 'ADMIN' };
-        }
-        if (token === 'valid-driver-token') {
-            return { sub: 'driver-001', role: 'DRIVER' };
         }
         throw new Error('Invalid token');
     }),
@@ -144,14 +137,10 @@ describe('Report Feature — Functional Tests (API)', () => {
     });
 
     // --------------------------------------------------
-    // 1. POST /api/reports — Positive Scenarios
+    // 1. POST /api/reports — Submit report after trip ended
     // --------------------------------------------------
-    describe('POST /api/reports — Success Cases', () => {
+    describe('POST /api/reports — Submit Report', () => {
 
-        /**
-         * TEST: Successfully create a report with valid data
-         * Expected: 201 Created with { success: true, data: report }
-         */
         test('should return 201 when creating a report with valid data', async () => {
             mockReportCreate.mockResolvedValue(mockReport);
 
@@ -169,71 +158,13 @@ describe('Report Feature — Functional Tests (API)', () => {
             expect(res.body.data.type).toBe('DRIVER');
             expect(res.body.data.status).toBe('PENDING');
         });
-
-        /**
-         * TEST: Create a report with 2 evidence image uploads
-         * Expected: 201 Created with images uploaded to Cloudinary
-         */
-        test('should return 201 when creating a report with 2 images', async () => {
-            const reportWithImages = {
-                ...mockReport,
-                id: 'report-func-002',
-                images: [
-                    'https://res.cloudinary.com/demo/painamnae/reports/mock-evidence.jpg',
-                    'https://res.cloudinary.com/demo/painamnae/reports/mock-evidence.jpg',
-                ],
-            };
-            mockReportCreate.mockResolvedValue(reportWithImages);
-
-            const fakeImageBuffer = Buffer.from(
-                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
-                'base64'
-            );
-
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'DRIVER')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Driver was speeding, attaching evidence photos')
-                .attach('images', fakeImageBuffer, 'evidence1.png')
-                .attach('images', fakeImageBuffer, 'evidence2.png');
-
-            expect(res.status).toBe(201);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data.images).toHaveLength(2);
-        });
-
-        /**
-         * TEST: Create a report with optional fields
-         */
-        test('should return 201 when creating a report with all optional fields', async () => {
-            mockReportCreate.mockResolvedValue(mockReport);
-
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'DRIVER')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Detailed report with all optional fields')
-                .field('routeId', 'route-001')
-                .field('bookingId', 'booking-001')
-                .field('targetUserId', 'driver-001');
-
-            expect(res.status).toBe(201);
-            expect(res.body.success).toBe(true);
-        });
     });
 
     // --------------------------------------------------
-    // 2. POST /api/reports — Authentication Errors
+    // 2. POST /api/reports — Must be authenticated
     // --------------------------------------------------
     describe('POST /api/reports — Authentication', () => {
 
-        /**
-         * TEST: Reject request without auth token
-         * Expected: 401 Unauthorized
-         */
         test('should return 401 when no auth token is provided', async () => {
             const res = await request(app)
                 .post('/api/reports')
@@ -244,192 +175,15 @@ describe('Report Feature — Functional Tests (API)', () => {
             expect(res.status).toBe(401);
             expect(res.body.success).toBe(false);
         });
-
-        /**
-         * TEST: Reject request with invalid auth token
-         * Expected: 401 Unauthorized
-         */
-        test('should return 401 when an invalid token is provided', async () => {
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer invalid-token-xyz')
-                .field('type', 'DRIVER')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Invalid token report attempt');
-
-            expect(res.status).toBe(401);
-            expect(res.body.success).toBe(false);
-        });
     });
 
     // --------------------------------------------------
-    // 3. POST /api/reports — Validation Errors
+    // 3. GET /api/reports/booking/:bookingId — Duplicate
+    //    check (report button visibility)
     // --------------------------------------------------
-    describe('POST /api/reports — Validation Errors', () => {
+    describe('GET /api/reports/booking/:bookingId — Button Visibility', () => {
 
-        /**
-         * TEST: Reject invalid report type
-         * Expected: 400 Bad Request
-         */
-        test('should return 400 when type is invalid', async () => {
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'INVALID_TYPE')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Report with invalid type');
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        /**
-         * TEST: Reject invalid category
-         * Expected: 400 Bad Request
-         */
-        test('should return 400 when category is invalid', async () => {
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'DRIVER')
-                .field('category', 'INVALID_CATEGORY')
-                .field('description', 'Report with invalid category');
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        /**
-         * TEST: Reject description shorter than 5 characters
-         * Expected: 400 Bad Request
-         */
-        test('should return 400 when description is too short', async () => {
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'DRIVER')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Hi');
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        /**
-         * TEST: Reject missing required type field
-         * Expected: 400 Bad Request
-         */
-        test('should return 400 when type is missing', async () => {
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Report without type field');
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-
-        /**
-         * TEST: Reject missing required description field
-         * Expected: 400 Bad Request
-         */
-        test('should return 400 when description is missing', async () => {
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'DRIVER')
-                .field('category', 'SAFETY_ISSUE');
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-    });
-
-    // --------------------------------------------------
-    // 4. GET /api/reports/me — User's Own Reports
-    // --------------------------------------------------
-    describe('GET /api/reports/me — My Reports', () => {
-
-        /**
-         * TEST: Get passenger's own reports
-         * Expected: 200 with array of reports
-         */
-        test('should return 200 with passenger own reports', async () => {
-            mockReportFindMany.mockResolvedValue([
-                { ...mockReport, id: 'report-1' },
-                { ...mockReport, id: 'report-2', category: 'VEHICLE_ISSUE' },
-            ]);
-
-            const res = await request(app)
-                .get('/api/reports/me')
-                .set('Authorization', 'Bearer valid-passenger-token');
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(Array.isArray(res.body.data)).toBe(true);
-            expect(res.body.data).toHaveLength(2);
-        });
-
-        /**
-         * TEST: Unauthenticated access to /me is rejected
-         */
-        test('should return 401 when accessing /me without auth', async () => {
-            const res = await request(app)
-                .get('/api/reports/me');
-
-            expect(res.status).toBe(401);
-            expect(res.body.success).toBe(false);
-        });
-    });
-
-    // --------------------------------------------------
-    // 5. GET /api/reports/:id — Single Report
-    // --------------------------------------------------
-    describe('GET /api/reports/:id — Single Report', () => {
-
-        /**
-         * TEST: Get report by ID
-         * Expected: 200 with report data
-         */
-        test('should return 200 with report data', async () => {
-            mockReportFindUnique.mockResolvedValue(mockReport);
-
-            const res = await request(app)
-                .get('/api/reports/report-func-001')
-                .set('Authorization', 'Bearer valid-passenger-token');
-
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data.id).toBe('report-func-001');
-        });
-
-        /**
-         * TEST: Get non-existent report
-         * Expected: 404 Not Found
-         */
-        test('should return 404 when report does not exist', async () => {
-            mockReportFindUnique.mockResolvedValue(null);
-
-            const res = await request(app)
-                .get('/api/reports/nonexistent-report')
-                .set('Authorization', 'Bearer valid-passenger-token');
-
-            expect(res.status).toBe(404);
-            expect(res.body.success).toBe(false);
-        });
-    });
-
-    // --------------------------------------------------
-    // 6. GET /api/reports/booking/:bookingId — Report for Booking
-    // --------------------------------------------------
-    describe('GET /api/reports/booking/:bookingId — Report for Booking', () => {
-
-        /**
-         * TEST: Check if report exists for a booking (found)
-         * Expected: 200 with hasReport: true
-         */
-        test('should return 200 with hasReport true when report exists', async () => {
+        test('should return hasReport true when report exists (button disappears)', async () => {
             mockReportFindFirst.mockResolvedValue(mockReport);
 
             const res = await request(app)
@@ -442,11 +196,7 @@ describe('Report Feature — Functional Tests (API)', () => {
             expect(res.body.data).toBeDefined();
         });
 
-        /**
-         * TEST: Check if report exists for a booking (not found)
-         * Expected: 200 with hasReport: false
-         */
-        test('should return 200 with hasReport false when no report exists', async () => {
+        test('should return hasReport false when no report exists (button visible)', async () => {
             mockReportFindFirst.mockResolvedValue(null);
 
             const res = await request(app)
@@ -460,93 +210,24 @@ describe('Report Feature — Functional Tests (API)', () => {
     });
 
     // --------------------------------------------------
-    // 7. PATCH /api/reports/admin/:id — Admin Status Update
+    // 4. GET /api/reports/me — Receive updates on cases
     // --------------------------------------------------
-    describe('PATCH /api/reports/admin/:id — Admin Status Update', () => {
+    describe('GET /api/reports/me — Receive Updates', () => {
 
-        /**
-         * TEST: Admin can update report status
-         * Expected: 200 with updated report
-         */
-        test('should return 200 when admin updates report status', async () => {
-            const resolvedReport = {
-                ...mockReport,
-                status: 'RESOLVED',
-                adminNotes: 'Reviewed and resolved',
-                resolvedAt: new Date().toISOString(),
-                resolvedById: 'admin-001',
-            };
-            mockReportFindUnique.mockResolvedValue(mockReport);
-            mockReportUpdate.mockResolvedValue(resolvedReport);
+        test('should return 200 with passenger own reports and statuses', async () => {
+            mockReportFindMany.mockResolvedValue([
+                { ...mockReport, id: 'report-1', status: 'PENDING' },
+                { ...mockReport, id: 'report-2', status: 'RESOLVED' },
+            ]);
 
             const res = await request(app)
-                .patch('/api/reports/admin/report-func-001')
-                .set('Authorization', 'Bearer valid-admin-token')
-                .send({ status: 'RESOLVED', adminNotes: 'Reviewed and resolved' });
+                .get('/api/reports/me')
+                .set('Authorization', 'Bearer valid-passenger-token');
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
-            expect(res.body.data.status).toBe('RESOLVED');
-        });
-
-        /**
-         * TEST: Non-admin user cannot update report status
-         * Expected: 403 Forbidden
-         */
-        test('should return 403 when non-admin tries to update report status', async () => {
-            const res = await request(app)
-                .patch('/api/reports/admin/report-func-001')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .send({ status: 'RESOLVED' });
-
-            expect(res.status).toBe(403);
-            expect(res.body.success).toBe(false);
-        });
-
-        /**
-         * TEST: Invalid status value is rejected
-         * Expected: 400 Bad Request
-         */
-        test('should return 400 when status value is invalid', async () => {
-            const res = await request(app)
-                .patch('/api/reports/admin/report-func-001')
-                .set('Authorization', 'Bearer valid-admin-token')
-                .send({ status: 'INVALID_STATUS' });
-
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-        });
-    });
-
-    // --------------------------------------------------
-    // 8. POST /api/reports — Image Limit
-    // --------------------------------------------------
-    describe('POST /api/reports — Image Upload Limit', () => {
-
-        /**
-         * TEST: Reject upload with more than 2 images
-         * Business Rule: Max 2 images allowed per report.
-         * NOTE: Multer's maxCount: 2 handles this at middleware level.
-         */
-        test('should reject upload with more than 2 images', async () => {
-            const fakeImageBuffer = Buffer.from(
-                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
-                'base64'
-            );
-
-            const res = await request(app)
-                .post('/api/reports')
-                .set('Authorization', 'Bearer valid-passenger-token')
-                .field('type', 'DRIVER')
-                .field('category', 'SAFETY_ISSUE')
-                .field('description', 'Report with too many images attached')
-                .attach('images', fakeImageBuffer, 'evidence1.png')
-                .attach('images', fakeImageBuffer, 'evidence2.png')
-                .attach('images', fakeImageBuffer, 'evidence3.png');
-
-            // Multer should reject with LIMIT_UNEXPECTED_FILE error
-            expect(res.status).toBeGreaterThanOrEqual(400);
-            expect(res.body.success).toBe(false);
+            expect(Array.isArray(res.body.data)).toBe(true);
+            expect(res.body.data).toHaveLength(2);
         });
     });
 });

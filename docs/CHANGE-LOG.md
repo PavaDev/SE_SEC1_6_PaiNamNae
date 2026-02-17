@@ -210,7 +210,13 @@ This project follows semantic versioning.
 - Improved Report Detail view to show full Target User names instead of raw IDs
 
 
-## [1.0.17] - 2026-02-17 - (Panya)
+## [1.0.18] - 2026-02-17 - (Panya)
 
 ### Added
 - Add report and admin report status test case at folder tests/backend
+
+
+## [1.0.19] - 2026-02-17 - (Panya)
+
+### Changed
+- Update report and admin report status test case
