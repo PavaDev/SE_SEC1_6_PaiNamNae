@@ -217,7 +217,6 @@ This project follows semantic versioning.
 
 
 ## [1.0.15] - 2026-02-17 - (Narathaip)
-
 ### Added 
 - Quick status buttons (3 buttons:Pending/Approved/Rejected)
 
