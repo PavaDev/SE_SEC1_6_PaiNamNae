@@ -162,7 +162,7 @@ This project follows semantic versioning.
 ## [1.0.10] - 2026-02-17 - (Panya)
 
 ### Added
-- Add review test case at folder test/backend 
+- Add review tests case at folder tests/backend 
 
 
 ## [1.0.11] - 2026-02-17 - (Pavarit)
@@ -208,3 +208,9 @@ This project follows semantic versioning.
 ### Changed
 - Streamlined Admin UI by removing mandatory User ID requirements from search labels for better practicality
 - Improved Report Detail view to show full Target User names instead of raw IDs
+
+
+## [1.0.17] - 2026-02-17 - (Panya)
+
+### Added
+- Add report and admin report status test case at folder tests/backend
