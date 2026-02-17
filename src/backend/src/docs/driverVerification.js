@@ -119,6 +119,9 @@
  *               licensePhotoUrl:
  *                 type: string
  *                 format: binary
+ *               selfiePhotoUrl:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: Verification updated successfully
