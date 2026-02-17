@@ -194,6 +194,63 @@
 
 /**
  * @swagger
+ * /api/routes/{id}/cancel:
+ *   patch:
+ *     summary: Cancel a route (Driver)
+ *     description: คนขับสามารถยกเลิกเส้นทางที่สร้างไว้ได้ พร้อมระบุเหตุผล
+ *     tags: [Routes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 example: "ติดธุระด่วน"
+ *     responses:
+ *       200:
+ *         description: Route cancelled successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Route not found
+ */
+
+/**
+ * @swagger
+ * /api/routes/{id}/complete:
+ *   patch:
+ *     summary: Mark route as completed (Driver)
+ *     description: คนขับยืนยันการเดินทางเสร็จสิ้น
+ *     tags: [Routes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Route marked as completed
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Route not found
+ */
+
+/**
+ * @swagger
  * /api/routes/{id}:
  *   delete:
  *     summary: Delete route (Driver)

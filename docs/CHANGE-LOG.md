@@ -162,7 +162,7 @@ This project follows semantic versioning.
 ## [1.0.10] - 2026-02-17 - (Panya)
 
 ### Added
-- Add review test case at folder test/backend 
+- Add review tests case at folder tests/backend 
 
 
 ## [1.0.11] - 2026-02-17 - (Pavarit)
@@ -224,21 +224,6 @@ This project follows semantic versioning.
 - Reporter avatar not displaying
 
 
-## [1.0.14] - 2026-02-17 - (Narathaip)
-
-### Fixed
-- Resolved nuxt & prisma
-
-
-## [1.0.15] - 2026-02-17 - (Narathaip)
-
-### Added 
-- Quick status buttons (3 buttons:Pending/Approved/Rejected)
-
-### Fixed
-- Reporter avatar not displaying
-
-
 ## [1.0.16] - 2026-02-17 - (Pavarit)
 
 ### Added
@@ -255,3 +240,27 @@ This project follows semantic versioning.
 
 ### Changed
 - Refactored `myTrip` progress modal to remove redundant tabs and fix layout overflow issues
+
+
+## [1.0.17] - 2026-02-17 - (Pavarit)
+
+### Added
+- **Swagger API Documentation**
+  - Add `Review` and `Report` API documentation
+- **AI Declaration**
+  - Add AI Declaration documentation
+
+### Changed
+- `Route` Swagger API endpint documentation 
+
+
+## [1.0.18] - 2026-02-17 - (Panya)
+
+### Added
+- Add report and admin report status test case at folder tests/backend
+
+
+## [1.0.19] - 2026-02-17 - (Panya)
+
+### Changed
+- Update report and admin report status test case
