@@ -58,6 +58,9 @@ const createReview = async (userId, data) => {
                 rating,
                 comment,
                 images
+            },
+            include: {
+                booking: { select: { routeId: true } }
             }
         });
 

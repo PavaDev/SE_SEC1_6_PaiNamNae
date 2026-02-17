@@ -111,6 +111,8 @@
                                     </th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">สถานะ
                                     </th>
+                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">หมวดหมู่
+                                    </th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">เนื้อหา
                                     </th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">วันที่
@@ -153,6 +155,9 @@
                                             <i class="mr-1" :class="statusIcon(report.status)"></i>
                                             {{ statusLabel(report.status) }}
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-700">
+                                        <div class="text-sm">{{ categoryLabelTh(report.category) }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-gray-700">
                                         <div class="max-w-xs truncate">{{ report.description }}</div>
@@ -252,6 +257,7 @@ import AdminHeader from '~/components/admin/AdminHeader.vue'
 import AdminSidebar from '~/components/admin/AdminSidebar.vue'
 import ConfirmModal from '~/components/ConfirmModal.vue'
 import { useToast } from '~/composables/useToast'
+import { useSocket } from '~/composables/useSocket'
 
 dayjs.locale('th')
 dayjs.extend(buddhistEra)
@@ -341,6 +347,19 @@ function statusLabel(status) {
         'RESOLVED': 'แก้ไขแล้ว'
     }
     return labels[status] || status
+}
+
+function categoryLabelTh(cat) {
+    const labels = {
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        SAFETY_ISSUE: 'พฤติกรรมการขับขี่ที่ไม่ปลอดภัย',
+        PAYMENT_ISSUE: 'ปัญหาเรื่องการจ่ายเงิน',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสาร/ผู้ร่วมทริป',
+        NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
+        ROAD_ISSUE: 'ปัญหาเรื่องถนน/สภาพแวดล้อม',
+        OTHER: 'อื่น ๆ'
+    }
+    return labels[cat] || cat || '-'
 }
 
 function formatDate(iso) {
@@ -576,6 +595,14 @@ onMounted(() => {
 
 onUnmounted(() => {
     cleanupGlobalScripts()
+})
+
+// --- Socket.IO: real-time report updates for admin ---
+const { onEvent } = useSocket()
+
+// When a new report is created, refresh the list
+onEvent('report:created', () => {
+  fetchReports(pagination.page)
 })
 </script>
 

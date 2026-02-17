@@ -562,12 +562,13 @@
 
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 import buddhistEra from 'dayjs/plugin/buddhistEra'
 import { useToast } from '~/composables/useToast';
 import { useAuth } from '~/composables/useAuth';
+import { useSocket } from '~/composables/useSocket';
 import { navigateTo } from '#app';
 
 dayjs.locale('th')
@@ -1511,6 +1512,96 @@ onMounted(() => {
         initAutocomplete()
         handleSearch()
     }
+})
+
+// --- Socket.IO: real-time trip list updates ---
+const { onEvent, joinRoom, leaveRoom } = useSocket()
+
+joinRoom('trips')
+
+onEvent('trip:created', (newTrip) => {
+  // Build a mapped route object matching the format used in routes.value
+  try {
+    const wp = newTrip.waypoints || {}
+    const baseList = (Array.isArray(wp.used) && wp.used.length ? wp.used
+      : Array.isArray(wp.requested) ? wp.requested : [])
+    const orderedList = (Array.isArray(wp.optimizedOrder) && wp.optimizedOrder.length === baseList.length)
+      ? wp.optimizedOrder.map(i => baseList[i]) : baseList
+
+    const stops = orderedList.map(p => {
+      const name = p?.name || ''
+      const address = cleanAddr(p?.address || '')
+      const fallback = (p?.lat != null && p?.lng != null) ? `(${p.lat.toFixed(6)}, ${p.lng.toFixed(6)})` : ''
+      const title = name || fallback
+      return address ? `${title} — ${address}` : title
+    }).filter(Boolean)
+
+    const stopsCoords = orderedList
+      .map(p => (p && typeof p.lat === 'number' && typeof p.lng === 'number')
+        ? { lat: p.lat, lng: p.lng, name: p.name || '', address: p.address || '' }
+        : null
+      ).filter(Boolean)
+
+    const mapped = {
+      id: newTrip.id,
+      availableSeats: newTrip.availableSeats,
+      price: newTrip.pricePerSeat,
+      departureTime: dayjs(newTrip.departureTime).format('HH:mm น.'),
+      date: dayjs(newTrip.departureTime).format('D MMMM BBBB'),
+      start: newTrip.startLocation,
+      end: newTrip.endLocation,
+      originName: newTrip.startLocation?.name || '',
+      destinationName: newTrip.endLocation?.name || '',
+      originAddress: newTrip.startLocation?.address ? cleanAddr(newTrip.startLocation.address) : null,
+      destinationAddress: newTrip.endLocation?.address ? cleanAddr(newTrip.endLocation.address) : null,
+      driver: {
+        id: newTrip.driver?.id,
+        name: `${newTrip.driver?.firstName || ''} ${newTrip.driver?.lastName || ''}`.trim() || 'ไม่ระบุชื่อ',
+        image: newTrip.driver?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(newTrip.driver?.firstName || 'U')}&background=random&size=64`,
+        rating: newTrip.driver?.ratingAverage,
+        reviews: newTrip.driver?.ratingCount,
+        isVerified: !!newTrip.driver?.isVerified
+      },
+      carDetails: newTrip.vehicle
+        ? [`${newTrip.vehicle.vehicleModel} (${newTrip.vehicle.vehicleType})`, ...(newTrip.vehicle.amenities || [])]
+        : ['ไม่มีข้อมูลรถ'],
+      conditions: newTrip.conditions,
+      photos: newTrip.vehicle?.photos || [],
+      durationText: formatDuration(newTrip.duration) || newTrip.duration || '-',
+      distanceText: formatDistance(newTrip.distance) || newTrip.distance || '-',
+      polyline: newTrip.routePolyline || null,
+      stops,
+      stopsCoords,
+    }
+    // Prepend new trip to the list if status is AVAILABLE
+    if (newTrip.status === 'AVAILABLE') {
+      routes.value.unshift(mapped)
+    }
+  } catch (e) {
+    console.error('Socket trip:created error:', e)
+  }
+})
+
+onEvent('trip:updated', (data) => {
+  const idx = routes.value.findIndex(r => r.id === data.routeId)
+  if (idx !== -1) {
+    routes.value[idx].availableSeats = data.availableSeats
+    // If route is FULL, remove from list (no longer available)
+    if (data.status && data.status !== 'AVAILABLE') {
+      routes.value.splice(idx, 1)
+    }
+  }
+})
+
+onEvent('trip:completed', (data) => {
+  const idx = routes.value.findIndex(r => r.id === data.routeId)
+  if (idx !== -1) {
+    routes.value.splice(idx, 1)
+  }
+})
+
+onUnmounted(() => {
+  leaveRoom('trips')
 })
 </script>
 

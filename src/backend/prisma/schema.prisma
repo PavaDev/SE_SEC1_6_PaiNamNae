@@ -71,6 +71,7 @@ enum ReportCategory {
   ROAD_ISSUE
   SAFETY_ISSUE
   PAYMENT_ISSUE
+  NO_SHOW
   OTHER
 }
 
