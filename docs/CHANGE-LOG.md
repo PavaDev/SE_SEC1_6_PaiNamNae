@@ -210,6 +210,51 @@ This project follows semantic versioning.
 - Improved Report Detail view to show full Target User names instead of raw IDs
 
 
+## [1.0.14] - 2026-02-17 - (Narathaip)
+
+### Fixed
+- Resolved nuxt & prisma
+
+
+## [1.0.15] - 2026-02-17 - (Narathaip)
+
+### Added 
+- Quick status buttons (3 buttons:Pending/Approved/Rejected)
+
+### Fixed
+- Reporter avatar not displaying
+
+
+## [1.0.16] - 2026-02-17 - (Pavarit)
+
+### Added
+- **Expand Report Status**
+  - Added `RESOLVED` (แก้ไขแล้ว) status to reports
+  - Integrated "RESOLVED" into quick action buttons, filters, and badges across the Admin Dashboard
+- **Role-Specific Report Categories**
+  - Tailored reporting options based on user role (Driver vs Passenger) for better context
+  - Added new `NO_SHOW` (ผู้โดยสารไม่มาพบตามจุดนัดหมาย) category for drivers
+- **Reporting System Enhancements**
+  - Automated Thai translation for report statuses in system notifications
+  - Added **Category** column to Admin Report list view
+  - Displayed detailed resolution info (Resolved By/At) in report details for all terminal states
+
+### Changed
+- Refactored `myTrip` progress modal to remove redundant tabs and fix layout overflow issues
+
+
+## [1.0.17] - 2026-02-17 - (Pavarit)
+
+### Added
+- **Swagger API Documentation**
+  - Add `Review` and `Report` API documentation
+- **AI Declaration**
+  - Add AI Declaration documentation
+
+### Changed
+- `Route` Swagger API endpint documentation 
+
+
 ## [1.0.18] - 2026-02-17 - (Panya)
 
 ### Added

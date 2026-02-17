@@ -29,14 +29,22 @@
                 <!-- Edit Form -->
                 <div v-else-if="report" class="bg-white border border-gray-300 rounded-lg shadow-sm p-6">
                     <!-- Current Status Badge -->
-                    <div class="mb-6 pb-6 border-b border-gray-200">
-                        <p class="text-sm text-gray-600 mb-3">สถานะปัจจุบัน</p>
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full gap-1"
-                                :class="statusBadgeClass(report.status)">
-                                <i :class="statusIconClass(report.status)"></i>
-                                {{ statusLabelTh(report.status) }}
-                            </span>
+                    <div class="mb-6 pb-6 border-b border-gray-200 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-3">สถานะปัจจุบัน</p>
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full gap-1"
+                                    :class="statusBadgeClass(report.status)">
+                                    <i :class="statusIconClass(report.status)"></i>
+                                    {{ statusLabelTh(report.status) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-3">หมวดหมู่</p>
+                            <p class="font-medium text-gray-900 border px-3 py-1 bg-gray-50 rounded-full inline-block text-sm">
+                                {{ categoryLabelTh(report.category) }}
+                            </p>
                         </div>
                     </div>
 
@@ -188,6 +196,19 @@ function statusLabelTh(status) {
         'RESOLVED': 'แก้ไขแล้ว'
     }
     return labels[status] || status
+}
+
+function categoryLabelTh(cat) {
+    const labels = {
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        SAFETY_ISSUE: 'พฤติกรรมการขับขี่ที่ไม่ปลอดภัย',
+        PAYMENT_ISSUE: 'ปัญหาเรื่องการจ่ายเงิน',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสาร/ผู้ร่วมทริป',
+        NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
+        ROAD_ISSUE: 'ปัญหาเรื่องถนน/สภาพแวดล้อม',
+        OTHER: 'อื่น ๆ'
+    }
+    return labels[cat] || cat || '-'
 }
 
 // --- Navigation ---
