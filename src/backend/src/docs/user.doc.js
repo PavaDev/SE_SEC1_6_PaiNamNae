@@ -180,13 +180,13 @@
  *         schema: { type: boolean }
  *       - in: query
  *         name: sortBy
- *         schema: { type: string, enum: [createdAt, lastLogin, email, username, firstName, lastName] }
+ *         schema: { type: string, enum: [createdAt, lastLogin, email, username, firstName, lastName, ratingAverage, ratingCount] }
  *       - in: query
  *         name: sortOrder
  *         schema: { type: string, enum: [asc, desc] }
  *     responses:
  *       200:
- *         description: Paginated users list
+ *         description: Paginated users list with rating data
  *       401:
  *         description: Unauthorized
  *       403:

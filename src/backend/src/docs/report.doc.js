@@ -138,41 +138,74 @@
 
 /**
  * @swagger
+ * /api/reports/me:
+ *   get:
+ *     summary: Get current user's own reports
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user's submitted reports
+ */
+
+/**
+ * @swagger
+ * /api/reports/booking/{bookingId}:
+ *   get:
+ *     summary: Check if a report exists for a specific booking
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Report details if found, otherwise empty object
+ */
+
+/**
+ * @swagger
  * /api/reports:
  *   post:
  *     summary: Create a new report (Authenticated user)
- *     description: ผู้ใช้สามารถสร้างรายงานเพื่อแจ้งปัญหา
+ *     description: ผู้ใช้สามารถสร้างรายงานเพื่อแจ้งปัญหา พร้อมแนบรูปภาพได้สูงสุด 2 รูป
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [type, title, description]
+ *             required: [category, description]
  *             properties:
- *               type:
+ *               category:
  *                 type: string
- *                 enum: ['DRIVER', 'USER', 'BOOKING', 'OTHER']
- *                 example: "DRIVER"
- *               title:
- *                 type: string
- *                 example: "พฤติกรรมไม่สุภาพของคนขับ"
+ *                 enum: [vehicle_issue, passenger_issue, road_issue, safety_issue, payment_issue, no_show, other]
+ *                 example: "passenger_issue"
  *               description:
  *                 type: string
- *                 example: "คนขับใช้ถ้อยคำหยาบคายต่อผู้โดยสาร"
+ *                 example: "ผู้โดยสารไม่เคารพกฎระเบียบในรถ"
  *               targetUserId:
  *                 type: string
  *                 description: ID ของผู้ที่ถูกรายงาน (optional)
- *               targetObjectId:
+ *               bookingId:
  *                 type: string
- *                 description: ID ของสิ่งที่ถูกรายงาน เช่น booking ID หรือ route ID
- *               attachmentUrl:
+ *                 description: ID ของการจองที่เกี่ยวข้อง
+ *               routeId:
  *                 type: string
- *                 format: url
- *                 description: URL ของไฟล์แนบ (optional)
+ *                 description: ID ของเส้นทางที่เกี่ยวข้อง
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: ไฟล์รูปภาพแนบ (สูงสุด 2 รูป)
  *     responses:
  *       201:
  *         description: Report created successfully
