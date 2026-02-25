@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const bookingService = require("../services/booking.service");
 const ApiError = require("../utils/ApiError");
+const { getIO } = require("../socket");
 
 const adminListBookings = asyncHandler(async (req, res) => {
   const result = await bookingService.searchBookingsAdmin(req.query);
@@ -28,6 +29,27 @@ const createBooking = asyncHandler(async (req, res) => {
   };
 
   const booking = await bookingService.createBooking(payload, passengerId);
+
+  // --- Socket.IO: notify driver + update trip list ---
+  try {
+    const io = getIO();
+    const fullBooking = await bookingService.getBookingById(booking.id);
+    // Notify driver of new booking
+    io.to(`user:${fullBooking.route.driverId}`).emit('booking:created', fullBooking);
+    // Update trip list for all passengers on /findTrip
+    io.to('trips').emit('trip:updated', {
+      routeId: fullBooking.routeId,
+      availableSeats: fullBooking.route.availableSeats,
+      status: fullBooking.route.status,
+    });
+    // Real-time notification for driver
+    io.to(`user:${fullBooking.route.driverId}`).emit('notification:new', {
+      type: 'BOOKING',
+      title: 'มีการจองใหม่ในเส้นทางของคุณ',
+      body: 'ผู้โดยสารได้ทำการจองที่นั่งในเส้นทางของคุณแล้ว',
+    });
+  } catch (e) { console.error('Socket emit error (createBooking):', e.message); }
+
   res.status(201).json({ success: true, data: booking });
 });
 
@@ -72,6 +94,35 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
     status,
     driverId
   );
+
+  // --- Socket.IO: notify passenger + update trip list ---
+  try {
+    const io = getIO();
+    const fullBooking = await bookingService.getBookingById(id);
+    // Notify passenger of status change
+    io.to(`user:${fullBooking.passengerId}`).emit('booking:statusChanged', {
+      bookingId: id,
+      status,
+      routeId: fullBooking.routeId,
+    });
+    // Update trip list (seats may have changed on REJECTED)
+    io.to('trips').emit('trip:updated', {
+      routeId: fullBooking.routeId,
+      availableSeats: fullBooking.route.availableSeats,
+      status: fullBooking.route.status,
+    });
+    // Real-time notification for passenger
+    const notifTitle = status === 'CONFIRMED' ? 'คำขอจองได้รับการยืนยัน' : 'คำขอจองถูกปฏิเสธ';
+    const notifBody = status === 'CONFIRMED'
+      ? 'คนขับได้ยืนยันการจองของคุณแล้ว'
+      : 'ขออภัย คนขับได้ปฏิเสธคำขอจองของคุณ';
+    io.to(`user:${fullBooking.passengerId}`).emit('notification:new', {
+      type: 'BOOKING',
+      title: notifTitle,
+      body: notifBody,
+    });
+  } catch (e) { console.error('Socket emit error (updateBookingStatus):', e.message); }
+
   res.status(200).json({ success: true, data: updated });
 });
 
@@ -80,7 +131,36 @@ const cancelBooking = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
 
+  // Fetch booking before cancel to get driver info
+  const bookingBefore = await bookingService.getBookingById(id);
   const cancelled = await bookingService.cancelBooking(id, passengerId, { reason });
+
+  // --- Socket.IO: notify driver + update trip list ---
+  try {
+    const io = getIO();
+    const routeAfter = await bookingService.getBookingById(id);
+    // Notify driver of cancellation
+    io.to(`user:${bookingBefore.route.driverId}`).emit('booking:cancelled', {
+      bookingId: id,
+      routeId: bookingBefore.routeId,
+      passengerId,
+    });
+    // Update trip list
+    if (routeAfter && routeAfter.route) {
+      io.to('trips').emit('trip:updated', {
+        routeId: bookingBefore.routeId,
+        availableSeats: routeAfter.route.availableSeats,
+        status: routeAfter.route.status,
+      });
+    }
+    // Real-time notification for driver
+    io.to(`user:${bookingBefore.route.driverId}`).emit('notification:new', {
+      type: 'BOOKING',
+      title: 'ผู้โดยสารยกเลิกการจอง',
+      body: 'ผู้โดยสารได้ยกเลิกการจองในเส้นทางของคุณ',
+    });
+  } catch (e) { console.error('Socket emit error (cancelBooking):', e.message); }
+
   res.status(200).json({ success: true, data: cancelled });
 });
 
