@@ -10,16 +10,16 @@ Test Teardown     Run Keyword If Test Failed    Capture Page Screenshot
 
 
 *** Variables ***
-${BASE_URL}            http://localhost:3001
+${BASE_URL}            https://kkucsseweb1669.cpkku.com
 ${BROWSER}             chrome
 
 # ── Credentials ──
 ${ADMIN_USER}          admin123
-${ADMIN_PASS}          123456789
-${DRIVER_USER}         Driver
-${DRIVER_PASS}         123456789
-${PASSENGER_USER}      ImYuu_
-${PASSENGER_PASS}      123456789
+${ADMIN_PASS}          adminpassword123456
+${DRIVER_USER}         driver
+${DRIVER_PASS}         88888888
+${PASSENGER_USER}      Hiyuki
+${PASSENGER_PASS}      Hiyuki687337
 
 # ── Timeouts ──
 ${TIMEOUT}             10s
