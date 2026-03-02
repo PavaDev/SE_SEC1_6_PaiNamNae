@@ -64,7 +64,9 @@
  *     responses:
  *       200:
  *         description: List of reviews given by the user
- */
+ *       401:
+ *         description: Unauthorized
+ */       
 
 /**
  * @swagger
@@ -82,6 +84,8 @@
  *     responses:
  *       200:
  *         description: List of reviews received by the user
+ *       401:
+ *         description: Unauthorized
  */
 
 /**
@@ -100,6 +104,8 @@
  *     responses:
  *       200:
  *         description: Review details
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Review not found
  */
@@ -120,6 +126,8 @@
  *     responses:
  *       200:
  *         description: Review details
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Review not found
  */

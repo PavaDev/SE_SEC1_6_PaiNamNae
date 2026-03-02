@@ -24,7 +24,7 @@
  *         schema: { type: string, example: "cmvehicle1234567890abcd" }
  *       - in: query
  *         name: status
- *         schema: { type: string, enum: [AVAILABLE, FULL, CANCELLED] }
+ *         schema: { type: string, enum: [AVAILABLE, FULL, CANCELLED, STARTED, COMPLETED] }
  *       - in: query
  *         name: startNearLat
  *         schema: { type: number, example: 16.4772 }
@@ -285,7 +285,7 @@
  *         schema: { type: string, example: "Khon Kaen" }
  *       - in: query
  *         name: status
- *         schema: { type: string, enum: [AVAILABLE, FULL, CANCELLED] }
+ *         schema: { type: string, enum: [AVAILABLE, FULL, CANCELLED, STARTED, COMPLETED] }
  *       - in: query
  *         name: driverId
  *         schema: { type: string }
@@ -438,7 +438,7 @@
  *               departureTime: { type: string, format: date-time }
  *               availableSeats: { type: integer }
  *               pricePerSeat: { type: number }
- *               status: { type: string, enum: [AVAILABLE, FULL, CANCELLED] }
+ *               status: { type: string, enum: [AVAILABLE, FULL, CANCELLED, STARTED, COMPLETED] }
  *               conditions: { type: string }
  *               waypoints: { type: array, items: { type: object } }
  *               optimizeWaypoints: { type: boolean }
@@ -465,6 +465,45 @@
  *     responses:
  *       200:
  *         description: Route deleted successfully
+ *       404:
+ *         description: Route not found
+ */
+
+/**
+ * @swagger
+ * /api/routes/active:
+ *   get:
+ *     summary: Get current active trip of the authenticated driver
+ *     tags: [Routes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active trip retrieved successfully
+ *       404:
+ *         description: No active trip found
+ */
+
+/**
+ * @swagger
+ * /api/routes/{id}/start:
+ *   patch:
+ *     summary: Mark route as started (Driver)
+ *     description: คนขับเริ่มต้นการเดินทาง
+ *     tags: [Routes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Route marked as started
+ *       403:
+ *         description: Forbidden
  *       404:
  *         description: Route not found
  */

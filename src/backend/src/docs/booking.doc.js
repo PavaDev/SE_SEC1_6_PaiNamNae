@@ -362,3 +362,77 @@
  *       404:
  *         description: Booking not found
  */
+
+/**
+ * @swagger
+ * /api/bookings/{id}/passenger-status:
+ *   patch:
+ *     summary: Update passenger status in trip (Driver)
+ *     description: คนขับสามารถอัปเดตสถานะผู้โดยสาร เช่น ขึ้นรถแล้ว / ไม่มา
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [WAITING, ON_BOARD, NO_SHOW, COMPLETED]
+ *                 example: ON_BOARD
+ *     responses:
+ *       200:
+ *         description: Passenger status updated successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Booking not found
+ */
+
+/**
+ * @swagger
+ * /api/bookings/{id}/notify-arrival:
+ *   patch:
+ *     summary: Notify passenger of arrival time (Driver)
+ *     description: คนขับแจ้งผู้โดยสารว่าจะถึงในอีกกี่นาที และส่ง WebSocket แจ้งเตือนแบบ real-time
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [minutes]
+ *             properties:
+ *               minutes:
+ *                 type: integer
+ *                 example: 10
+ *                 description: จำนวนเวลาที่จะถึง (นาที)
+ *     responses:
+ *       200:
+ *         description: Arrival notification sent successfully
+ *       400:
+ *         description: Invalid arrival time
+ *       403:
+ *         description: Forbidden (not your route)
+ *       404:
+ *         description: Booking not found
+ */
