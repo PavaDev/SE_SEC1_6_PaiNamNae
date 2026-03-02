@@ -167,11 +167,6 @@
                                         <div class="text-xs text-gray-500">อัปเดต {{ formatDate(report.updatedAt) }}</div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <button @click="onViewReport(report)"
-                                            class="p-2 text-gray-500 transition-colors cursor-pointer hover:text-emerald-600"
-                                            title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
-                                            <i class="text-lg fa-regular fa-eye"></i>
-                                        </button>
                                         <button @click="onEditReport(report)"
                                             class="p-2 text-gray-500 transition-colors cursor-pointer hover:text-blue-600"
                                             title="แก้ไข" aria-label="แก้ไข">
@@ -434,7 +429,7 @@ function onViewReport(report) {
 }
 
 function onEditReport(report) {
-    navigateTo(`/admin/reports/${report.id}/edit`).catch(() => { })
+    navigateTo(`/admin/reports/${report.id}`).catch(() => { })
 }
 
 /* ---------- Delete with Confirm Modal ---------- */

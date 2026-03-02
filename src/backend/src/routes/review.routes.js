@@ -13,7 +13,7 @@ const router = express.Router();
 router.post(
     '/',
     protect,
-    upload.fields([{ name: 'images', maxCount: 2 }]),
+    upload.fields([{ name: 'images', maxCount: 3 }]),
     parseReviewBody,
     validate({ body: createReviewSchema }),
     reviewController.createReview

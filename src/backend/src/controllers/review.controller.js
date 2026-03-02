@@ -24,12 +24,11 @@ const createReview = asyncHandler(async (req, res) => {
         const driverId = review.revieweeId;
         if (driverId) {
             io.to(`user:${driverId}`).emit('notification:new', {
-                type: 'review',
-                title: 'มีรีวิวใหม่',
-                body: `คุณได้รับรีวิว ${review.rating} ดาว`,
-                routeId: review.booking?.routeId || reviewData.routeId || null,
-                bookingId: review.bookingId,
-                rating: review.rating,
+                id: Date.now(), // or ideally get the ID from DB
+                type: 'SYSTEM',
+                title: 'คุณได้รับรีวิวใหม่',
+                body: `ได้รับรีวิว ${review.rating} ดาว จากผู้โดยสาร`,
+                metadata: { kind: 'NEW_REVIEW', reviewId: review.id, rating: review.rating, bookingId: review.bookingId },
                 createdAt: new Date().toISOString(),
             });
         }
@@ -72,7 +71,7 @@ const getReviewByBookingId = asyncHandler(async (req, res) => {
     const { bookingId } = req.params;
     const review = await reviewService.getReviewByBookingId(bookingId);
 
-    if (review) {
+    if (!review) {
         throw new ApiError(404, "Review not found");
     }
 

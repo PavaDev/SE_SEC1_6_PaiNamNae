@@ -87,6 +87,13 @@ router.get(
   routeController.getMyRoutes
 );
 
+// GET /routes/active
+router.get(
+  "/active",
+  protect,
+  routeController.getActiveTrip
+);
+
 // GET /routes/:id
 router.get(
   "/:id",
@@ -128,6 +135,15 @@ router.patch(
   requireDriverVerified,
   validate({ params: idParamSchema }),
   routeController.completeRoute
+);
+
+// PATCH /routes/:id/start
+router.patch(
+  "/:id/start",
+  protect,
+  requireDriverVerified,
+  validate({ params: idParamSchema }),
+  routeController.startTrip
 );
 
 // DELETE /routes/:id

@@ -208,11 +208,46 @@ const countUnread = async (ownerId) => {
     return { unread: total };
 };
 
+const createNotification = async (payload) => {
+    return prisma.notification.create({
+        data: payload,
+        select: baseSelect,
+    });
+};
+
+/**
+ * Emit a notification via Socket.IO
+ * @param {string} userId
+ * @param {object} notification
+ */
+const emitNotification = (userId, notification) => {
+    try {
+        const { getIO } = require('../socket');
+        const io = getIO();
+        io.to(`user:${userId}`).emit('notification:new', notification);
+    } catch (err) {
+        console.error('Socket notification emit error:', err.message);
+    }
+};
+
+/**
+ * Create a notification in DB and emit via socket
+ * @param {object} payload - Notification data (userId, type, title, body, etc.)
+ */
+const createAndEmitNotification = async (payload) => {
+    const created = await createNotification(payload);
+    emitNotification(payload.userId, created);
+    return created;
+};
+
 module.exports = {
     listMyNotifications,
     listNotificationsAdmin,
     getMyNotificationById,
     createNotificationByAdmin,
+    createNotification,
+    emitNotification,
+    createAndEmitNotification,
     markRead,
     markUnread,
     markAllRead,

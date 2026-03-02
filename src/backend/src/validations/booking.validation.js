@@ -75,4 +75,11 @@ module.exports = {
   idParamSchema,
   updateBookingStatusSchema,
   cancelBookingSchema,
+  updatePassengerStatusSchema: z.object({
+    status: z.enum(['IN_TRANSIT', 'COMPLETED', 'CANCELLED']),
+    reason: z.string().optional(),
+  }),
+  notifyArrivalSchema: z.object({
+    minutes: z.number().int().min(1).max(30),
+  }),
 };

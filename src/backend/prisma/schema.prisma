@@ -32,6 +32,8 @@ enum BookingStatus {
   CONFIRMED
   REJECTED
   CANCELLED
+  IN_TRANSIT
+  COMPLETED
 }
 
 enum CancelReason {
@@ -44,6 +46,7 @@ enum CancelReason {
   SAFETY_CONCERN               // กังวลด้านความปลอดภัย
   WEATHER_OR_FORCE_MAJEURE     // สภาพอากาศ/เหตุสุดวิสัย
   COMMUNICATION_ISSUE          // สื่อสารไม่สะดวก/ติดต่อไม่ได้
+  NO_SHOW                      // ผู้โดยสารไม่มาตามนัด
 }
 
 enum LicenseType {

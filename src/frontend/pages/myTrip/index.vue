@@ -421,10 +421,27 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block mb-2 text-sm font-semibold text-gray-700">รูปภาพประกอบ (สูงสุด 2 รูป)</label>
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">รูปภาพประกอบ (สูงสุด 3 ไฟล์ — รูป/วิดีโอ/เสียง)</label>
                     <div class="flex flex-wrap gap-3">
                         <div v-for="(img, idx) in reviewImages" :key="idx" class="relative w-24 h-24 group">
-                            <img :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            <!-- Preview for images -->
+                            <img v-if="img.type?.startsWith('image/')" :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            
+                            <!-- Icon for video -->
+                            <div v-else-if="img.type?.startsWith('video/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-slate-100 flex flex-col items-center justify-center text-slate-500">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
+                            <!-- Icon for audio -->
+                            <div v-else-if="img.type?.startsWith('audio/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-emerald-50 flex flex-col items-center justify-center text-emerald-600">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
+                            <!-- Fallback for generic file if type is missing but listed -->
+                            <img v-else :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+
                             <button @click="removeReviewImage(idx)"
                                 class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,13 +449,13 @@
                                 </svg>
                             </button>
                         </div>
-                        <label v-if="reviewImages.length < 2"
+                        <label v-if="reviewImages.length < 3"
                             class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500">
                             <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            <span class="text-[10px] font-medium">เพิ่มรูป</span>
-                            <input type="file" class="hidden" @change="handleReviewFiles" accept="image/*" multiple />
+                            <span class="text-[10px] font-medium">เพิ่มไฟล์</span>
+                            <input type="file" class="hidden" @change="handleReviewFiles" accept="image/*,video/*,audio/*" multiple />
                         </label>
                     </div>
                 </div>
@@ -496,10 +513,24 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block mb-2 text-sm font-semibold text-gray-700">หลักฐานรูปภาพประกอบ (สูงสุด 2 รูป)</label>
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">หลักฐานประกอบ (สูงสุด 3 ไฟล์)</label>
                     <div class="flex flex-wrap gap-3">
                         <div v-for="(img, idx) in reportImages" :key="idx" class="relative w-24 h-24 group">
-                            <img :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            <!-- Preview for images -->
+                            <img v-if="img.type.startsWith('image/')" :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            
+                            <!-- Icon for video -->
+                            <div v-else-if="img.type.startsWith('video/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-slate-100 flex flex-col items-center justify-center text-slate-500">
+                                <i class="fa-solid fa-video text-xl"></i>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
+                            <!-- Icon for audio -->
+                            <div v-else-if="img.type.startsWith('audio/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-emerald-50 flex flex-col items-center justify-center text-emerald-600">
+                                <i class="fa-solid fa-microphone text-xl"></i>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
                             <button @click="removeReportImage(idx)"
                                 class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -507,16 +538,16 @@
                                 </svg>
                             </button>
                         </div>
-                        <label v-if="reportImages.length < 2"
+                        <label v-if="reportImages.length < 3"
                             class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-red-400 hover:bg-red-50 transition-all text-gray-400 hover:text-red-500">
                             <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            <span class="text-[10px] font-medium">เพิ่มรูป</span>
-                            <input type="file" class="hidden" @change="handleReportFiles" accept="image/*" multiple />
+                            <span class="text-[10px] font-medium">เพิ่มไฟล์</span>
+                            <input type="file" class="hidden" @change="handleReportFiles" accept="image/*,video/*,audio/*" multiple />
                         </label>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500 italic">การแจ้งข้อมูลเท็จอาจส่งผลต่อการถูกระงับบัญชีผู้ใช้งาน</p>
+                    <p class="mt-2 text-xs text-gray-500 italic">รองรับรูปภาพ วิดีโอ และเสียง (รวมกันไม่เกิน 3 ไฟล์)</p>
                 </div>
 
                 <div class="flex gap-3">
@@ -1460,9 +1491,14 @@ function closeReviewModal() {
 
 function handleReviewFiles(e) {
     const files = Array.from(e.target.files || [])
-    const remaining = 2 - reviewImages.value.length
+    const remaining = 3 - reviewImages.value.length
     files.slice(0, remaining).forEach(f => {
-        reviewImages.value.push({ file: f, url: URL.createObjectURL(f) })
+        reviewImages.value.push({ 
+            file: f, 
+            url: URL.createObjectURL(f),
+            name: f.name,
+            type: f.type
+        })
     })
     e.target.value = ''
 }
@@ -1558,9 +1594,14 @@ function closeReportModal() {
 
 function handleReportFiles(e) {
     const files = Array.from(e.target.files || [])
-    const remaining = 2 - reportImages.value.length
+    const remaining = 3 - reportImages.value.length
     files.slice(0, remaining).forEach(f => {
-        reportImages.value.push({ file: f, url: URL.createObjectURL(f) })
+        reportImages.value.push({ 
+            file: f, 
+            url: URL.createObjectURL(f),
+            name: f.name,
+            type: f.type
+        })
     })
     e.target.value = ''
 }

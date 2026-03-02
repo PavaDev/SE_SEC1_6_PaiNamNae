@@ -64,7 +64,7 @@ router.get(
 router.post(
     '/',
     protect,
-    upload.fields([{ name: 'images', maxCount: 2 }]),
+    upload.fields([{ name: 'images', maxCount: 3 }]),
     validate({ body: createReportSchema }),
     reportController.createReport
 );
