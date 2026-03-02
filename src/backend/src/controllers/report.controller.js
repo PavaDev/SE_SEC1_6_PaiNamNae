@@ -52,10 +52,11 @@ const updateReportStatus = asyncHandler(async (req, res) => {
 
             io.to(`user:${updatedReport.reporterId}`).emit('report:statusChanged', payload);
             io.to(`user:${updatedReport.reporterId}`).emit('notification:new', {
-                type: 'report',
+                id: Date.now(),
+                type: 'SYSTEM',
                 title: 'อัปเดตสถานะรายงาน',
                 body: `รายงานของคุณถูกอัปเดตเป็น: ${thaiStatus}`,
-                reportId: updatedReport.id,
+                metadata: { kind: 'REPORT_STATUS_UPDATED', reportId: updatedReport.id, status: status },
                 createdAt: new Date().toISOString(),
             });
         }
@@ -129,10 +130,11 @@ const createReport = asyncHandler(async (req, res) => {
         if (newReport.targetUserId) {
             io.to(`user:${newReport.targetUserId}`).emit('report:created', reportPayload);
             io.to(`user:${newReport.targetUserId}`).emit('notification:new', {
-                type: 'report',
+                id: Date.now(),
+                type: 'SYSTEM',
                 title: 'มีรายงานใหม่เกี่ยวกับคุณ',
                 body: `หมวดหมู่: ${category}`,
-                reportId: newReport.id,
+                metadata: { kind: 'NEW_REPORT_TARGET', reportId: newReport.id, category: category },
                 createdAt: new Date().toISOString(),
             });
         }

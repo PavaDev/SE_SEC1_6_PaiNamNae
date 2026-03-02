@@ -1600,6 +1600,15 @@ onEvent('trip:completed', (data) => {
   }
 })
 
+// Bug 4 fix: redirect passenger to /current-trip when driver accepts their booking
+onEvent('booking:statusChanged', (data) => {
+  if (data.status === 'CONFIRMED') {
+    // The backend only sends this event to the specific passenger's socket room
+    // so we can safely redirect without further checks
+    navigateTo('/current-trip')
+  }
+})
+
 onUnmounted(() => {
   leaveRoom('trips')
 })

@@ -11,6 +11,8 @@ const {
   createBookingByAdminSchema,
   updateBookingByAdminSchema,
   cancelBookingSchema,
+  updatePassengerStatusSchema,
+  notifyArrivalSchema,
 } = require('../validations/booking.validation');
 
 const { requirePassengerNotSuspended } = require('../middlewares/suspension');
@@ -103,6 +105,24 @@ router.patch(
   protect,
   validate({ params: idParamSchema, body: cancelBookingSchema }),
   bookingController.cancelBooking
+);
+
+// PATCH /bookings/:id/passenger-status
+router.patch(
+  '/:id/passenger-status',
+  protect,
+  requireDriverVerified,
+  validate({ params: idParamSchema, body: updatePassengerStatusSchema }),
+  bookingController.updatePassengerStatus
+);
+
+// PATCH /bookings/:id/notify-arrival
+router.patch(
+  '/:id/notify-arrival',
+  protect,
+  requireDriverVerified,
+  validate({ params: idParamSchema, body: notifyArrivalSchema }),
+  bookingController.notifyArrival
 );
 
 // DELETE /bookings/:id

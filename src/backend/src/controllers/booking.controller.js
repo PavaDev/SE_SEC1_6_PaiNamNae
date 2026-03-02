@@ -117,9 +117,12 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
       ? 'คนขับได้ยืนยันการจองของคุณแล้ว'
       : 'ขออภัย คนขับได้ปฏิเสธคำขอจองของคุณ';
     io.to(`user:${fullBooking.passengerId}`).emit('notification:new', {
+      id: Date.now(),
       type: 'BOOKING',
       title: notifTitle,
       body: notifBody,
+      metadata: { kind: status === 'CONFIRMED' ? 'BOOKING_CONFIRMED' : 'BOOKING_REJECTED', bookingId: id },
+      createdAt: new Date().toISOString()
     });
   } catch (e) { console.error('Socket emit error (updateBookingStatus):', e.message); }
 
@@ -154,11 +157,18 @@ const cancelBooking = asyncHandler(async (req, res) => {
       });
     }
     // Real-time notification for driver
-    io.to(`user:${bookingBefore.route.driverId}`).emit('notification:new', {
-      type: 'BOOKING',
-      title: 'ผู้โดยสารยกเลิกการจอง',
-      body: 'ผู้โดยสารได้ยกเลิกการจองในเส้นทางของคุณ',
-    });
+    try {
+      const io = getIO();
+      io.to(`user:${bookingBefore.route.driverId}`).emit('notification:new', {
+        type: 'BOOKING',
+        title: 'ผู้โดยสารยกเลิกการจอง',
+        body: 'ผู้โดยสารได้ยกเลิกการจองในเส้นทางของคุณ',
+        metadata: { kind: 'BOOKING_CANCELLED', bookingId: id, routeId: bookingBefore.routeId, cancelledBy: 'PASSENGER' },
+        createdAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error('Socket.IO emit error:', err.message);
+    }
   } catch (e) { console.error('Socket emit error (cancelBooking):', e.message); }
 
   res.status(200).json({ success: true, data: cancelled });
@@ -177,6 +187,36 @@ const adminDeleteBooking = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: result });
 });
 
+const updatePassengerStatus = asyncHandler(async (req, res) => {
+  const driverId = req.user.sub;
+  const { id } = req.params;
+  const { status, reason } = req.body;
+
+  const updated = await bookingService.updatePassengerStatus(id, status, driverId, reason);
+
+  // --- Socket.IO: notify passenger ---
+  try {
+    const io = getIO();
+    io.to(`user:${updated.passengerId}`).emit('booking:passengerStatusChanged', {
+      bookingId: id,
+      status,
+      routeId: updated.routeId,
+    });
+  } catch (e) { console.error('Socket emit error (updatePassengerStatus):', e.message); }
+
+  res.status(200).json({ success: true, data: updated });
+});
+
+const notifyArrival = asyncHandler(async (req, res) => {
+  const driverId = req.user.sub;
+  const { id } = req.params;
+  const { minutes } = req.body;
+
+  const result = await bookingService.notifyArrival(id, minutes, driverId);
+
+  res.status(200).json({ success: true, message: 'แจ้งเตือนผู้โดยสารเรียบร้อยแล้ว', data: result });
+});
+
 module.exports = {
   adminListBookings,
   createBooking,
@@ -188,5 +228,7 @@ module.exports = {
   adminGetBookingById,
   adminCreateBooking,
   adminUpdateBooking,
-  adminDeleteBooking
+  adminDeleteBooking,
+  updatePassengerStatus,
+  notifyArrival,
 };

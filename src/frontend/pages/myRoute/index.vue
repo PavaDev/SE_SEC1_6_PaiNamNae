@@ -288,20 +288,20 @@
                                     </NuxtLink>
                                     
                                     <!-- ปุ่ม Report สำหรับคนขับ -->
-                                    <button
+                                    <!-- <button
                                         @click.stop="route.hasReport ? openDriverReportStatusModal(route) : openDriverReportModal(route)"
                                         class="px-4 py-2 ml-2 text-sm text-white transition duration-200 rounded-md"
                                         :class="route.hasReport ? 'bg-orange-500 hover:bg-orange-600' : 'bg-red-600 hover:bg-red-700'">
                                         {{ route.hasReport ? 'ติดตามสถานะ' : 'รายงาน' }}
-                                    </button>
+                                    </button> -->
                                     
-                                    <!-- ปุ่มกดจบงานสำหรับคนขับ -->
+                                    <!-- ปุ่มกดจบงานสำหรับคนขับ
                                     <button
                                         v-if="['available', 'full'].includes(route.status)"
                                         @click.stop="openConfirmModal(route, 'completeRoute')"
                                         class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
                                         สิ้นสุดการเดินทาง
-                                    </button>
+                                    </button> -->
                                 </div>
                             </div>
                         </div>
@@ -1402,8 +1402,19 @@ onEvent('report:created', (data) => {
 })
 
 // When admin updates a report status
-onEvent('report:statusChanged', (data) => {
-  fetchMyRoutes()
+onEvent('report:statusChanged', async (data) => {
+  // 1. Direct update for immediate UI feedback if modal is open
+  if (showDriverReportStatusModal.value && reportedRouteData.value && reportedRouteData.value.id === data.reportId) {
+    reportedRouteData.value = {
+      ...reportedRouteData.value,
+      status: data.status,
+      adminNotes: data.adminNotes,
+      resolvedAt: data.resolvedAt
+    }
+  }
+
+  // 2. Background refresh to keep the main list consistent
+  await fetchMyRoutes()
 })
 
 function initializeMap() {

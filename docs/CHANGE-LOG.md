@@ -252,4 +252,44 @@ This project follows semantic versioning.
   - Add AI Declaration documentation
 
 ### Changed
+<<<<<<< Updated upstream
 - `Route` Swagger API endpint documentation 
+=======
+- `Route` Swagger API endpint documentation 
+
+
+## [1.0.18] - 2026-02-17 - (Panya)
+
+### Added
+- Add report and admin report status test case at folder tests/backend
+
+
+## [1.0.19] - 2026-02-17 - (Panya)
+
+### Changed
+- Update report and admin report status test case
+
+
+## [2.0.0] - 2026-03-02 - (Pavarit)
+
+### Added
+- **Arrival Notification System**
+  - **Driver UI**: "แจ้งถึงในอีกกี่นาที" button on `current-trip` page for drivers
+  - **Passenger UI**: Real-time arrival notifications with countdown timer
+  - **Booking Service**: `notifyArrival` method to handle arrival notifications
+  - **Notification Service**: `sendArrivalNotification` method for WebSocket broadcasting
+  - **WebSocket Integration**: Real-time arrival updates to passengers
+  - **Quick Selection**: 5, 10, 15, 20, 25, 30 minute presets for arrival time
+  - **Validation**: Arrival time validation and submission error handling
+
+### Changed
+- **Current Trip Page**: Enhanced driver action buttons with arrival notification option
+- **Booking Status**: Added `NOTIFIED_ARRIVAL` status for tracking
+- **WebSocket Messages**: New `ARRIVAL_NOTIFICATION` event type for real-time updates
+- **UI/UX**: Arrival time picker modal with modern design and quick selection buttons
+
+### Fixed
+- **WebSocket Connectivity**: Fixed connection issues by removing hardcoded user IDs
+- **Booking Data**: Resolved issues with booking data fetching and display
+- **UI Responsiveness**: Improved layout for driver action buttons on mobile devices
+>>>>>>> Stashed changes
