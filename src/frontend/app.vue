@@ -4,20 +4,30 @@
             <NuxtPage />
         </NuxtLayout>
         <ToastWrapper />
-        <DriverChat v-if="isDriver" />
+        <BubbleChat v-if="showChatBubble" />
     </div>
 </template>
 
 <script setup>
 import ToastWrapper from '~/components/ToastWrapper.vue';
-import DriverChat from '~/components/DriverChat.vue';
+import BubbleChat from '~/components/BubbleChat.vue';
 import { useAuth } from '~/composables/useAuth';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router'
+import { useNotifications } from '~/composables/useNotifications'
 
+const route = useRoute();
 const { user } = useAuth();
-const isDriver = computed(() => {
-    // Show if logged in and role is DRIVER or for testing purposes show for all logged in users
-    // For now, let's show it if the user exists to let the user see the result
-    return !!user.value;
+const { init } = useNotifications();
+
+onMounted(() => {
+    init();
+});
+
+const showChatBubble = computed(() => {
+    // Show if logged in AND (on current-trip page OR on admin pages)
+    const isTripPage = route.path === '/current-trip';
+    const isAdminPage = route.path.startsWith('/admin');
+    return !!user.value && (isTripPage || isAdminPage);
 });
 </script>

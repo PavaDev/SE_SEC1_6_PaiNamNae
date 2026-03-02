@@ -28,9 +28,9 @@
                         <!-- ผู้โดยสาร: ลิงก์เดี่ยว ไม่มีดรอปดาวน์ -->
                         <div v-if="user && user.role === 'PASSENGER' && hasActiveTrip">
                             <NuxtLink to="/current-trip"
-                                class="flex items-center text-blue-600 font-bold transition-colors duration-200 hover:text-blue-700 mr-2"
-                                :class="{ 'hidden': $route.path === '/current-trip' }">
-                                <span class="relative flex h-2 w-2 mr-1">
+                                class="flex items-center px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-md hover:text-blue-600"
+                                :class="{ 'text-blue-600 border-b-2 border-blue-600': $route.path === '/current-trip', 'text-gray-600': $route.path !== '/current-trip' }">
+                                <span class="relative flex h-2 w-2 mr-1.5">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                                 </span>
@@ -303,9 +303,10 @@
 
                         <!-- ผู้โดยสาร: ลิงก์เดี่ยว -->
                         <NuxtLink v-if="user && user.role === 'PASSENGER' && hasActiveTrip" to="/current-trip"
-                            class="block px-3 py-2 text-blue-600 font-bold transition-colors duration-200 rounded-md hover:bg-blue-50"
+                            class="block px-3 py-2 font-bold transition-colors duration-200 rounded-md"
+                            :class="$route.path === '/current-trip' ? 'text-blue-600 bg-blue-50' : 'text-blue-600 hover:bg-blue-50'"
                             @click="closeMobileMenu">
-                            การเดินทางปัจจุบัน (Active)
+                            กำลังเดินทาง... (Active)
                         </NuxtLink>
                         <NuxtLink v-if="user && user.role === 'PASSENGER'" to="/myTrip"
                             class="block px-3 py-2 transition-colors duration-200 rounded-md"
@@ -333,9 +334,10 @@
                                     การเดินทางของฉัน
                                 </NuxtLink>
                                 <NuxtLink v-if="hasActiveTrip" to="/current-trip"
-                                    class="block px-3 py-2 text-blue-600 font-bold transition-colors duration-200 rounded-md hover:bg-blue-50"
+                                    class="block px-3 py-2 text-sm font-bold transition-colors duration-200 rounded-md"
+                                    :class="$route.path === '/current-trip' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'"
                                     @click="closeMobileMenu">
-                                    การเดินทางปัจจุบัน (Active)
+                                    จัดการทริปปัจจุบัน (Active)
                                 </NuxtLink>
                                 <NuxtLink to="/myRoute"
                                     class="block px-3 py-2 text-gray-500 transition-colors duration-200 rounded-md hover:text-blue-600 hover:bg-blue-50"

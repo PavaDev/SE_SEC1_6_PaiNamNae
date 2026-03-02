@@ -288,3 +288,16 @@ This project follows semantic versioning.
 - **WebSocket Connectivity**: Fixed connection issues by removing hardcoded user IDs
 - **Booking Data**: Resolved issues with booking data fetching and display
 - **UI Responsiveness**: Improved layout for driver action buttons on mobile devices
+
+
+## [2.0.1] - 2026-03-03 - (Narathaip)
+
+### Added
+- **Bubble Chat Notification Center**
+  - **Centralized Mediator**: Converted `DriverChat` to `BubbleChat` for trip status notifications (In-only).
+  - **Persistence Store**: Implemented `LocalStorage` notification history to ensure data persists after re-entering the session.
+  - **"Check Status" Button**: Added a dedicated button for passengers to monitor real-time driver updates.
+
+### Changed
+- **Communication Flow**: Optimized as a status mediator between Driver and Passenger based on the current trip lifecycle.
+- **Premium Visualization**: Enhanced notification card design with dedicated iconography for Arrival, Check-in, and Status updates.
