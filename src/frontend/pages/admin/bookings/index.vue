@@ -311,6 +311,7 @@ dayjs.extend(buddhistEra)
 definePageMeta({ middleware: ['admin-auth'] })
 
 const { toast } = useToast()
+const { $api } = useNuxtApp();
 
 const isLoading = ref(false)
 const loadError = ref('')
@@ -474,17 +475,10 @@ async function fetchBookings() {
     isLoading.value = true
     loadError.value = ''
     try {
-        const token = useCookie('token').value || (process.client ? localStorage.getItem('token') : '')
-        const res = await fetch('http://localhost:3000/api/bookings/admin', {
-            headers: {
-                Accept: 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-            },
+        const res = await $api('bookings/admin', {
             credentials: 'include'
         })
-        const body = await res.json()
-        if (!res.ok) throw new Error(body?.message || `Request failed: ${res.status}`)
-        bookingsAll.value = Array.isArray(body?.data) ? body.data : []
+        bookingsAll.value = Array.isArray(res) ? res : []
         // reset pagination when new data arrives
         pagination.page = 1
         applyFilters()
@@ -569,19 +563,10 @@ async function confirmDelete() {
     }
 }
 async function deleteBooking(id) {
-    const config = useRuntimeConfig()
-    const token = useCookie('token').value || (process.client ? localStorage.getItem('token') : '')
-    const res = await fetch(`${config.public.apiBase}/bookings/admin/${id}`, {
+    return await $api(`bookings/admin/${id}`, {
         method: 'DELETE',
-        headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         credentials: 'include',
     })
-    let body
-    try { body = await res.json() } catch {
-        const text = await res.text(); const err = new Error(text || 'Unexpected response from server'); err.status = res.status; throw err
-    }
-    if (!res.ok) { const err = new Error(body?.message || `Request failed with status ${res.status}`); err.status = res.status; err.payload = body; throw err }
-    return body
 }
 
 function normalizeDeleteError(err) {

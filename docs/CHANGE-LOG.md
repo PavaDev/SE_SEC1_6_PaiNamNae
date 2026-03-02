@@ -162,7 +162,7 @@ This project follows semantic versioning.
 ## [1.0.10] - 2026-02-17 - (Panya)
 
 ### Added
-- Add review test case at folder test/backend 
+- Add review tests case at folder tests/backend 
 
 
 ## [1.0.11] - 2026-02-17 - (Pavarit)
@@ -217,7 +217,6 @@ This project follows semantic versioning.
 
 
 ## [1.0.15] - 2026-02-17 - (Narathaip)
-
 ### Added 
 - Quick status buttons (3 buttons:Pending/Approved/Rejected)
 
@@ -252,9 +251,6 @@ This project follows semantic versioning.
   - Add AI Declaration documentation
 
 ### Changed
-<<<<<<< Updated upstream
-- `Route` Swagger API endpint documentation 
-=======
 - `Route` Swagger API endpint documentation 
 
 
@@ -292,4 +288,3 @@ This project follows semantic versioning.
 - **WebSocket Connectivity**: Fixed connection issues by removing hardcoded user IDs
 - **Booking Data**: Resolved issues with booking data fetching and display
 - **UI Responsiveness**: Improved layout for driver action buttons on mobile devices
->>>>>>> Stashed changes

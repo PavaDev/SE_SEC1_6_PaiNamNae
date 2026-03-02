@@ -25,6 +25,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/input.css',
   ],
+
   build: {
     transpile: ['leaflet']
   },

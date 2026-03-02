@@ -39,11 +39,11 @@ export default defineNuxtPlugin(() => {
     )
 
     socket.on('connect', () => {
-        console.log('🔌 Socket.IO connected:', socket.id)
+        // console.log('🔌 Socket.IO connected:', socket.id)
     })
 
     socket.on('connect_error', (err) => {
-        console.warn('🔌 Socket.IO connection error:', err.message)
+        // console.warn('🔌 Socket.IO connection error:', err.message)
     })
 
     return { provide: { socket } }
