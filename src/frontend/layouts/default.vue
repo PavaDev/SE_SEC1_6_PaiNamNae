@@ -26,11 +26,11 @@
                         </div>
 
                         <!-- ผู้โดยสาร: ลิงก์เดี่ยว ไม่มีดรอปดาวน์ -->
-                        <div v-if="user && user.role === 'PASSENGER' && hasActiveTrip">
+                        <div v-if="user && user.role === 'PASSENGER'">
                             <NuxtLink to="/current-trip"
                                 class="flex items-center px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-md hover:text-blue-600"
                                 :class="{ 'text-blue-600 border-b-2 border-blue-600': $route.path === '/current-trip', 'text-gray-600': $route.path !== '/current-trip' }">
-                                <span class="relative flex h-2 w-2 mr-1.5">
+                                <span v-if="hasActiveTrip" class="relative flex h-2 w-2 mr-1.5">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                     <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                                 </span>
@@ -95,7 +95,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 17h5l-1.405-1.405C18.21 14.79 18 13.918 18 13V9a6 6 0 10-12 0v4c0 .918-.21 1.79-.595 2.595L4 17h5m6 0a3 3 0 11-6 0h6z" />
                                 </svg>
-                                <span v-if="unreadCount > 0"
+                                <span v-if="unreadCount > 0 || tripUnread"
                                     class="absolute w-2 h-2 bg-red-500 rounded-full -top-1 -right-1"></span>
                             </button>
 
@@ -130,12 +130,10 @@
                                                     <span class="inline-block w-2 h-2 mt-1 rounded-full"
                                                         :class="n.readAt ? 'bg-gray-300' : 'bg-emerald-500'"></span>
 
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 truncate">{{ n.title
-                                                        }}</p>
-                                                        <p class="text-sm text-gray-600 line-clamp-2">{{ n.body }}</p>
-                                                        <p class="mt-1 text-xs text-gray-400">{{ timeAgo(n.createdAt) }}
-                                                        </p>
+                                                    <div class="flex-1 min-w-0" :class="n.isTripRelated ? 'cursor-pointer' : ''" @click="handleNotifClick(n)">
+                                                        <p class="text-sm font-medium text-gray-900 truncate">{{ n.title }}</p>
+                                                        <p class="text-sm text-gray-600 line-clamp-2" :class="n.isTripRelated ? 'text-blue-600 font-semibold' : ''">{{ n.body }}</p>
+                                                        <p class="mt-1 text-xs text-gray-400">{{ timeAgo(n.createdAt) }}</p>
                                                     </div>
 
                                                     <!-- เมนูสามจุด -->
@@ -443,12 +441,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRuntimeConfig, useCookie } from '#app'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRuntimeConfig, useCookie, useRoute } from '#app'
 import { useAuth } from '~/composables/useAuth'
 import { useSocket } from '~/composables/useSocket'
+import { useRouter } from 'vue-router'
+import { useNotifications } from '~/composables/useNotifications'
 
+const route = useRoute()
 const { token, user, logout } = useAuth()
+const router = useRouter()
+const { resetChat, hasUnread: tripUnread } = useNotifications()
 
 /* ====== เมนูบนสุดเดิม ====== */
 const isMobileMenuOpen = ref(false)
@@ -512,13 +515,21 @@ async function fetchUserNotifications() {
         })
 
         const raw = Array.isArray(res?.data) ? res.data : []
-        notifications.value = raw.map(it => ({
-            id: it.id,
-            title: it.title || '-',
-            body: it.body || '',
-            createdAt: it.createdAt || Date.now(),
-            readAt: it.readAt || null
-        }))
+        notifications.value = raw.map(it => {
+            const isTripRelated = it.type === 'BOOKING' || it.kind === 'ROUTE_COMPLETED' || it.kind === 'ARRIVAL_NOTIFICATION'
+            let body = it.body || ''
+            if (isTripRelated && !body.includes('(กดไปดู)')) {
+                body += ' (กดไปดู)'
+            }
+            return {
+                id: it.id,
+                title: it.title || '-',
+                body: body,
+                createdAt: it.createdAt || Date.now(),
+                readAt: it.readAt || null,
+                isTripRelated
+            }
+        })
     } catch (e) {
         console.error(e)
         notifications.value = []
@@ -546,6 +557,17 @@ async function markAsRead(n) {
         if (i > -1) notifications.value[i].readAt = new Date().toISOString()
     } finally {
         openMenuId.value = null
+    }
+}
+
+async function handleNotifClick(n) {
+    if (n.isTripRelated) {
+        openNotif.value = false
+        await navigateTo('/current-trip')
+    }
+    // Optional: mark as read when clicked
+    if (!n.readAt) {
+        await markAsRead(n)
     }
 }
 
@@ -603,18 +625,32 @@ onMounted(() => {
     }
 })
 
+// Watch route to re-check status if navigating to trip pages
+watch(() => route.path, (newPath) => {
+    if (token.value) checkActiveTrip()
+})
+
 const hasActiveTrip = ref(false)
 async function checkActiveTrip() {
+    if (!token.value) {
+        hasActiveTrip.value = false
+        return
+    }
     try {
         const apiBase = useRuntimeConfig().public.apiBase || 'http://localhost:3000/api'
         const tk = useCookie('token')?.value || (process.client ? localStorage.getItem('token') : '')
-        if (!tk) return
+        if (!tk) {
+            hasActiveTrip.value = false
+            return
+        }
         
         const res = await $fetch('/routes/active', {
             baseURL: apiBase,
-            headers: { Accept: 'application/json', Authorization: `Bearer ${tk}` }
+            headers: { Accept: 'application/json', Authorization: `Bearer ${tk}` },
+            query: { _t: Date.now() } // Burst cache to ensure real status
         })
-        hasActiveTrip.value = !!(res?.data || res)
+        // Ensure we check for data specifically if the response is a wrapper
+        hasActiveTrip.value = !!(res?.data)
     } catch (e) {
         hasActiveTrip.value = false
     }
@@ -632,19 +668,40 @@ const bellShake = ref(false)
 
 onEvent('notification:new', (data) => {
   // Prepend the new notification to the list
+  const isTripRelated = data.type === 'BOOKING' || data.kind === 'ROUTE_COMPLETED' || data.kind === 'ARRIVAL_NOTIFICATION'
+  const displayText = isTripRelated ? `${data.body || data.message || ''} (กดไปดู)` : (data.body || data.message || '')
+
   const newNotif = {
     id: data.id || Date.now(),
     title: data.title || 'การแจ้งเตือนใหม่',
-    body: data.body || data.message || '',
+    body: displayText,
     createdAt: data.createdAt || new Date().toISOString(),
-    readAt: null
+    readAt: null,
+    isTripRelated
   }
   notifications.value.unshift(newNotif)
 
   // Trigger bell shake animation
   bellShake.value = true
   setTimeout(() => { bellShake.value = false }, 1000)
+  
+  // IMMEDIATELY refresh active trip status if trip related
+  if (isTripRelated) {
+      checkActiveTrip()
+  }
 })
+
+// --- Nav Bar & Active Trip Sync ---
+onEvent('booking:statusChanged', () => checkActiveTrip())
+onEvent('trip:started', () => checkActiveTrip())
+onEvent('booking:passengerStatusChanged', () => checkActiveTrip())
+onEvent('booking:tripCompleted', () => {
+    hasActiveTrip.value = false
+    // we don't clear bell notifications here manually anymore; it will sync on next fetch
+    checkActiveTrip()
+})
+onEvent('booking:cancelled', () => checkActiveTrip())
+onEvent('trip:started', () => checkActiveTrip())
 
 /* ====== Driver Arrival Notification ====== */
 const showArrivalModal = ref(false)

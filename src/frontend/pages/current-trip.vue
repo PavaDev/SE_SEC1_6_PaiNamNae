@@ -26,7 +26,7 @@
         <p class="text-gray-500 animate-pulse">กำลังโหลดผลการเดินทาง...</p>
     </main>
 
-    <main v-else-if="!activeTrip" class="max-w-7xl mx-auto px-4 py-12 text-center">
+    <main v-else-if="!activeTrip && !isTripCompleted" class="max-w-7xl mx-auto px-4 py-12 text-center">
         <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md mx-auto">
             <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@
         </div>
     </main>
 
-    <div v-else class="max-w-7xl mx-auto flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-128px)] overflow-hidden">
+    <div v-else-if="activeTrip" class="max-w-7xl mx-auto flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-128px)] overflow-hidden">
         <!-- Sidebar: Info & Actions -->
         <div class="w-full lg:w-96 overflow-y-auto border-r border-gray-200 bg-white" :class="{'hidden lg:block': showMapOnMobile}">
             <!-- Trip Summary Card -->
@@ -581,7 +581,7 @@ const role = ref(null)
 const isTripCompleted = ref(false)
 const showMapOnMobile = ref(false)
 
-const { notifications, isOpen: isChatOpen } = useNotifications()
+const { notifications, isOpen: isChatOpen, resetChat } = useNotifications()
 
 const openBubbleChat = () => {
     isChatOpen.value = true
@@ -1108,6 +1108,7 @@ async function submitPassengerReport() {
 
 function closeReview() {
     isTripCompleted.value = false
+    resetChat()
     const target = role.value === 'DRIVER' ? '/myRoute' : '/myTrip'
     router.push(target)
 }
@@ -1160,6 +1161,12 @@ onEvent('booking:statusChanged', async (data) => {
         await fetchActiveTrip()
         nextTick(() => { if (mapDisplay.value && activeTrip.value) initMap() })
     }
+})
+
+onEvent('booking:tripCompleted', async () => {
+    isTripCompleted.value = true
+    // Optionally re-fetch to get final data before it's gone
+    await fetchActiveTrip()
 })
 
 useHead({
