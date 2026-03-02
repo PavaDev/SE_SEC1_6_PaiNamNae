@@ -301,3 +301,10 @@ This project follows semantic versioning.
 ### Changed
 - **Communication Flow**: Optimized as a status mediator between Driver and Passenger based on the current trip lifecycle.
 - **Premium Visualization**: Enhanced notification card design with dedicated iconography for Arrival, Check-in, and Status updates.
+
+
+## [2.0.3] - 2026-03-03 - (Panya)
+
+### Added
+- UAT for test driver send notification to passenger
+- API Integration for test driver send notification to passenger
