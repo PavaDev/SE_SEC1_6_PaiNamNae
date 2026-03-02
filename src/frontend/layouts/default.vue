@@ -26,6 +26,17 @@
                         </div>
 
                         <!-- ผู้โดยสาร: ลิงก์เดี่ยว ไม่มีดรอปดาวน์ -->
+                        <div v-if="user && user.role === 'PASSENGER' && hasActiveTrip">
+                            <NuxtLink to="/current-trip"
+                                class="flex items-center text-blue-600 font-bold transition-colors duration-200 hover:text-blue-700 mr-2"
+                                :class="{ 'hidden': $route.path === '/current-trip' }">
+                                <span class="relative flex h-2 w-2 mr-1">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                </span>
+                                กำลังเดินทาง...
+                            </NuxtLink>
+                        </div>
                         <div v-if="user && user.role === 'PASSENGER'">
                             <NuxtLink to="/myTrip"
                                 class="flex items-center text-gray-600 transition-colors duration-200 hover:text-blue-600"
@@ -54,6 +65,10 @@
                                         class="flex items-center block w-full px-4 py-2 text-left text-gray-700 transition-colors duration-200 hover:bg-blue-50 hover:text-blue-600">
                                         การเดินทางของฉัน
                                     </NuxtLink>
+                                    <NuxtLink v-if="hasActiveTrip" to="/current-trip"
+                                        class="flex items-center block w-full px-4 py-2 text-left text-blue-600 font-bold transition-colors duration-200 hover:bg-blue-50">
+                                        การเดินทางปัจจุบัน (Active)
+                                    </NuxtLink>
                                     <NuxtLink to="/myRoute"
                                         class="flex items-center block w-full px-4 py-2 text-left text-gray-700 transition-colors duration-200 hover:bg-blue-50 hover:text-blue-600">
                                         คำขอจองเส้นทางของฉัน
@@ -76,7 +91,7 @@
                         <div v-if="token" class="relative">
                             <button ref="bellBtn" class="relative text-gray-600 hover:text-blue-600"
                                 @click="onBellClick" aria-haspopup="true" :aria-expanded="openNotif ? 'true' : 'false'">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <svg :class="['w-5 h-5', { 'bell-shake': bellShake }]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 17h5l-1.405-1.405C18.21 14.79 18 13.918 18 13V9a6 6 0 10-12 0v4c0 .918-.21 1.79-.595 2.595L4 17h5m6 0a3 3 0 11-6 0h6z" />
                                 </svg>
@@ -287,6 +302,11 @@
                         </NuxtLink>
 
                         <!-- ผู้โดยสาร: ลิงก์เดี่ยว -->
+                        <NuxtLink v-if="user && user.role === 'PASSENGER' && hasActiveTrip" to="/current-trip"
+                            class="block px-3 py-2 text-blue-600 font-bold transition-colors duration-200 rounded-md hover:bg-blue-50"
+                            @click="closeMobileMenu">
+                            การเดินทางปัจจุบัน (Active)
+                        </NuxtLink>
                         <NuxtLink v-if="user && user.role === 'PASSENGER'" to="/myTrip"
                             class="block px-3 py-2 transition-colors duration-200 rounded-md"
                             :class="$route.path.startsWith('/myTrip') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'"
@@ -311,6 +331,11 @@
                                     class="block px-3 py-2 text-gray-500 transition-colors duration-200 rounded-md hover:text-blue-600 hover:bg-blue-50"
                                     @click="closeMobileMenu">
                                     การเดินทางของฉัน
+                                </NuxtLink>
+                                <NuxtLink v-if="hasActiveTrip" to="/current-trip"
+                                    class="block px-3 py-2 text-blue-600 font-bold transition-colors duration-200 rounded-md hover:bg-blue-50"
+                                    @click="closeMobileMenu">
+                                    การเดินทางปัจจุบัน (Active)
                                 </NuxtLink>
                                 <NuxtLink to="/myRoute"
                                     class="block px-3 py-2 text-gray-500 transition-colors duration-200 rounded-md hover:text-blue-600 hover:bg-blue-50"
@@ -388,7 +413,28 @@
             </div>
         </header>
 
-        <main>
+        <!-- Driver Arrival Notification Modal (Global) -->
+        <div v-if="showArrivalModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showArrivalModal = false"></div>
+            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                <div class="p-8 text-center bg-gradient-to-b from-blue-50 to-white">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">คนขับกำลังเดินทางมา!</h2>
+                    <p class="text-gray-600 mb-8">
+                        คุณ <span class="font-bold text-blue-600">{{ arrivalData?.driverName }}</span> กำลังจะมาถึงจุดนัดพบภายใน <span class="font-bold text-blue-600 text-lg">{{ arrivalData?.minutes }} นาที</span>
+                    </p>
+                    <button @click="showArrivalModal = false" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition">
+                        รับทราบ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <main class="flex-1">
             <NuxtPage />
         </main>
     </div>
@@ -398,6 +444,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRuntimeConfig, useCookie } from '#app'
 import { useAuth } from '~/composables/useAuth'
+import { useSocket } from '~/composables/useSocket'
 
 const { token, user, logout } = useAuth()
 
@@ -548,13 +595,62 @@ onMounted(() => {
     window.addEventListener('resize', handleResize)
     document.addEventListener('click', onClickOutside)
     document.addEventListener('keydown', onKey)
-    if (token.value) fetchUserNotifications()
+    if (token.value) {
+        fetchUserNotifications()
+        checkActiveTrip()
+    }
 })
+
+const hasActiveTrip = ref(false)
+async function checkActiveTrip() {
+    try {
+        const apiBase = useRuntimeConfig().public.apiBase || 'http://localhost:3000/api'
+        const tk = useCookie('token')?.value || (process.client ? localStorage.getItem('token') : '')
+        if (!tk) return
+        
+        const res = await $fetch('/routes/active', {
+            baseURL: apiBase,
+            headers: { Accept: 'application/json', Authorization: `Bearer ${tk}` }
+        })
+        hasActiveTrip.value = !!(res?.data || res)
+    } catch (e) {
+        hasActiveTrip.value = false
+    }
+}
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
     document.removeEventListener('click', onClickOutside)
     document.removeEventListener('keydown', onKey)
+})
+
+// --- Socket.IO: real-time notification listener ---
+const { onEvent } = useSocket()
+const bellShake = ref(false)
+
+onEvent('notification:new', (data) => {
+  // Prepend the new notification to the list
+  const newNotif = {
+    id: data.id || Date.now(),
+    title: data.title || 'การแจ้งเตือนใหม่',
+    body: data.body || data.message || '',
+    createdAt: data.createdAt || new Date().toISOString(),
+    readAt: null
+  }
+  notifications.value.unshift(newNotif)
+
+  // Trigger bell shake animation
+  bellShake.value = true
+  setTimeout(() => { bellShake.value = false }, 1000)
+})
+
+/* ====== Driver Arrival Notification ====== */
+const showArrivalModal = ref(false)
+const arrivalData = ref(null)
+
+onEvent('booking:driverArriving', (data) => {
+    arrivalData.value = data
+    showArrivalModal.value = true
 })
 
 /* ใส่ฟอนต์ Kanit แบบเดิม */
@@ -610,6 +706,24 @@ useHead({
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    line-clamp: 2;
     overflow: hidden;
+}
+
+@keyframes bell-shake {
+    0%, 100% { transform: rotate(0); }
+    10% { transform: rotate(14deg); }
+    20% { transform: rotate(-14deg); }
+    30% { transform: rotate(10deg); }
+    40% { transform: rotate(-10deg); }
+    50% { transform: rotate(6deg); }
+    60% { transform: rotate(-6deg); }
+    70% { transform: rotate(2deg); }
+    80% { transform: rotate(-2deg); }
+    90% { transform: rotate(0); }
+}
+
+.bell-shake {
+    animation: bell-shake 0.8s ease-in-out;
 }
 </style>

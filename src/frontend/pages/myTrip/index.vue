@@ -421,10 +421,27 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block mb-2 text-sm font-semibold text-gray-700">รูปภาพประกอบ (สูงสุด 2 รูป)</label>
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">รูปภาพประกอบ (สูงสุด 3 ไฟล์ — รูป/วิดีโอ/เสียง)</label>
                     <div class="flex flex-wrap gap-3">
                         <div v-for="(img, idx) in reviewImages" :key="idx" class="relative w-24 h-24 group">
-                            <img :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            <!-- Preview for images -->
+                            <img v-if="img.type?.startsWith('image/')" :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            
+                            <!-- Icon for video -->
+                            <div v-else-if="img.type?.startsWith('video/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-slate-100 flex flex-col items-center justify-center text-slate-500">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
+                            <!-- Icon for audio -->
+                            <div v-else-if="img.type?.startsWith('audio/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-emerald-50 flex flex-col items-center justify-center text-emerald-600">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
+                            <!-- Fallback for generic file if type is missing but listed -->
+                            <img v-else :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+
                             <button @click="removeReviewImage(idx)"
                                 class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,13 +449,13 @@
                                 </svg>
                             </button>
                         </div>
-                        <label v-if="reviewImages.length < 2"
+                        <label v-if="reviewImages.length < 3"
                             class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all text-gray-400 hover:text-blue-500">
                             <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            <span class="text-[10px] font-medium">เพิ่มรูป</span>
-                            <input type="file" class="hidden" @change="handleReviewFiles" accept="image/*" multiple />
+                            <span class="text-[10px] font-medium">เพิ่มไฟล์</span>
+                            <input type="file" class="hidden" @change="handleReviewFiles" accept="image/*,video/*,audio/*" multiple />
                         </label>
                     </div>
                 </div>
@@ -480,11 +497,10 @@
                     <select v-model="passengerReportCategory"
                         class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">-- เลือกหัวข้อ --</option>
-                        <option value="VEHICLE_ISSUE">ปัญหาเรื่องรถ</option>
-                        <option value="PASSENGER_ISSUE">ปัญหาเรื่องผู้โดยสาร</option>
-                        <option value="ROAD_ISSUE">ปัญหาเรื่องถนน/สภาพแวดล้อม</option>
-                        <option value="SAFETY_ISSUE">ปัญหาด้านความปลอดภัย</option>
-                        <option value="PAYMENT_ISSUE">ปัญหาเรื่องการชำระเงิน</option>
+                        <option value="VEHICLE_ISSUE">ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง</option>
+                        <option value="SAFETY_ISSUE">พฤติกรรมการขับขี่ที่ไม่ปลอดภัย</option>
+                        <option value="PAYMENT_ISSUE">ปัญหาเรื่องการจ่ายเงิน</option>
+                        <option value="PASSENGER_ISSUE">พฤติกรรมผู้โดยสารร่วมทริปที่ไม่เหมาะสม</option>
                         <option value="OTHER">อื่นๆ</option>
                     </select>
                 </div>
@@ -497,10 +513,24 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block mb-2 text-sm font-semibold text-gray-700">หลักฐานรูปภาพประกอบ (สูงสุด 2 รูป)</label>
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">หลักฐานประกอบ (สูงสุด 3 ไฟล์)</label>
                     <div class="flex flex-wrap gap-3">
                         <div v-for="(img, idx) in reportImages" :key="idx" class="relative w-24 h-24 group">
-                            <img :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            <!-- Preview for images -->
+                            <img v-if="img.type.startsWith('image/')" :src="img.url" class="object-cover w-full h-full rounded-lg border border-gray-100 shadow-sm" />
+                            
+                            <!-- Icon for video -->
+                            <div v-else-if="img.type.startsWith('video/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-slate-100 flex flex-col items-center justify-center text-slate-500">
+                                <i class="fa-solid fa-video text-xl"></i>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
+                            <!-- Icon for audio -->
+                            <div v-else-if="img.type.startsWith('audio/')" class="w-full h-full rounded-lg border border-gray-100 shadow-sm bg-emerald-50 flex flex-col items-center justify-center text-emerald-600">
+                                <i class="fa-solid fa-microphone text-xl"></i>
+                                <span class="text-[8px] mt-1 truncate px-1 w-full text-center">{{ img.name }}</span>
+                            </div>
+
                             <button @click="removeReportImage(idx)"
                                 class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -508,16 +538,16 @@
                                 </svg>
                             </button>
                         </div>
-                        <label v-if="reportImages.length < 2"
+                        <label v-if="reportImages.length < 3"
                             class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-red-400 hover:bg-red-50 transition-all text-gray-400 hover:text-red-500">
                             <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            <span class="text-[10px] font-medium">เพิ่มรูป</span>
-                            <input type="file" class="hidden" @change="handleReportFiles" accept="image/*" multiple />
+                            <span class="text-[10px] font-medium">เพิ่มไฟล์</span>
+                            <input type="file" class="hidden" @change="handleReportFiles" accept="image/*,video/*,audio/*" multiple />
                         </label>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500 italic">การแจ้งข้อมูลเท็จอาจส่งผลต่อการถูกระงับบัญชีผู้ใช้งาน</p>
+                    <p class="mt-2 text-xs text-gray-500 italic">รองรับรูปภาพ วิดีโอ และเสียง (รวมกันไม่เกิน 3 ไฟล์)</p>
                 </div>
 
                 <div class="flex gap-3">
@@ -538,138 +568,87 @@
             @click.self="isProgressModalVisible = false">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden animate-in">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
                     <div class="flex items-center justify-between mb-2">
-                        <h2 class="text-xl font-bold">สถานะเดินทาง</h2>
+                        <h2 class="text-xl font-bold">ติดตามสถานะรายงาน</h2>
                         <button @click="isProgressModalVisible = false" class="text-white/80 hover:text-white transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
-                    <p v-if="selectedTrip" class="text-sm text-blue-100">{{ selectedTrip.origin }} → {{ selectedTrip.destination }}</p>
+                    <p v-if="selectedTrip" class="text-sm text-white/90">{{ selectedTrip.origin }} → {{ selectedTrip.destination }}</p>
                 </div>
 
                 <!-- Content -->
-                <div class="p-6">
-                    <div v-if="selectedTrip" class="space-y-6">
-                        <!-- Modal Tabs -->
-                        <div v-if="selectedTrip.hasReport" class="flex border-b border-gray-200">
-                            <button 
-                                @click="modalTab = 'trip'"
-                                class="flex-1 py-3 text-sm font-semibold transition-colors border-b-2"
-                                :class="modalTab === 'trip' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                            >
-                                รายละเอียดการเดินทาง
-                            </button>
-                            <button 
-                                @click="modalTab = 'report'"
-                                class="flex-1 py-3 text-sm font-semibold transition-colors border-b-2"
-                                :class="modalTab === 'report' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                            >
-                                สถานะการรายงาน
-                            </button>
-                        </div>
-
-                        <!-- Trip View -->
-                        <div v-if="!selectedTrip.hasReport || modalTab === 'trip'" class="space-y-6">
+                <div class="p-0 overflow-y-auto max-h-[70vh]">
+                    <div v-if="selectedTrip" class="p-6 space-y-6">
+                        <!-- Report View (Only show if hasReport is true) -->
+                        <div v-if="selectedTrip.hasReport" class="space-y-6 animate-in slide-in-from-top duration-300">
                             <!-- Progress Steps -->
                             <div class="relative">
-                            <div class="flex justify-between items-start mb-8">
-                                <!-- Step 1 -->
-                                <div class="flex flex-col items-center flex-1">
-                                    <div 
-                                        class="w-12 h-12 rounded-full flex items-center justify-center mb-2 font-bold text-white"
-                                        :class="['pending', 'confirmed', 'completed'].includes(selectedTrip.status) ? 'bg-green-500' : 'bg-gray-300'"
-                                    >
-                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                        </svg>
+                                <div class="flex justify-between items-start mb-8">
+                                    <!-- Step 1 -->
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div 
+                                            class="w-12 h-12 rounded-full flex items-center justify-center mb-2 font-bold text-white shadow-sm"
+                                            :class="['pending', 'confirmed', 'completed'].includes(selectedTrip.status) ? 'bg-green-500' : 'bg-gray-300'"
+                                        >
+                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs font-semibold text-center text-gray-700">รออนุมัติ</p>
                                     </div>
-                                    <p class="text-xs font-semibold text-center">รออนุมัติ</p>
-                                    <p v-if="selectedTrip.status === 'pending'" class="text-xs text-gray-500 mt-1">กำลังดำเนิน</p>
-                                </div>
 
-                                <!-- Connector 1 -->
-                                <div class="flex-1 flex items-center justify-center mb-4 h-1 -mx-2">
-                                    <div 
-                                        class="w-full h-0.5"
-                                        :class="['confirmed', 'completed'].includes(selectedTrip.status) ? 'bg-green-500' : 'bg-gray-300'"
-                                    ></div>
-                                </div>
-
-                                <!-- Step 2 -->
-                                <div class="flex flex-col items-center flex-1">
-                                    <div 
-                                        class="w-12 h-12 rounded-full flex items-center justify-center mb-2 font-bold text-white"
-                                        :class="['confirmed', 'completed'].includes(selectedTrip.status) ? 'bg-green-500' : 'bg-gray-300'"
-                                    >
-                                        <svg v-if="['confirmed', 'completed'].includes(selectedTrip.status)" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                        </svg>
-                                        <span v-else class="text-sm">2</span>
+                                    <!-- Connector 1 -->
+                                    <div class="flex-1 flex items-center justify-center mt-6 h-1 -mx-2">
+                                        <div 
+                                            class="w-full h-0.5"
+                                            :class="['confirmed', 'completed'].includes(selectedTrip.status) ? 'bg-green-500' : 'bg-gray-300'"
+                                        ></div>
                                     </div>
-                                    <p class="text-xs font-semibold text-center">ยืนยันแล้ว</p>
-                                    <p v-if="selectedTrip.status === 'confirmed'" class="text-xs text-gray-500 mt-1">กำลังดำเนิน</p>
-                                </div>
 
-                                <!-- Connector 2 -->
-                                <div class="flex-1 flex items-center justify-center mb-4 h-1 -mx-2">
-                                    <div 
-                                        class="w-full h-0.5"
-                                        :class="selectedTrip.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'"
-                                    ></div>
-                                </div>
-
-                                <!-- Step 3 -->
-                                <div class="flex flex-col items-center flex-1">
-                                    <div 
-                                        class="w-12 h-12 rounded-full flex items-center justify-center mb-2 font-bold text-white"
-                                        :class="selectedTrip.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'"
-                                    >
-                                        <svg v-if="selectedTrip.status === 'completed'" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                                        </svg>
-                                        <span v-else class="text-sm">3</span>
+                                    <!-- Step 2 -->
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div 
+                                            class="w-12 h-12 rounded-full flex items-center justify-center mb-2 font-bold text-white shadow-sm"
+                                            :class="['confirmed', 'completed'].includes(selectedTrip.status) ? 'bg-green-500' : 'bg-gray-300'"
+                                        >
+                                            <svg v-if="['confirmed', 'completed'].includes(selectedTrip.status)" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                            </svg>
+                                            <span v-else class="text-sm">2</span>
+                                        </div>
+                                        <p class="text-xs font-semibold text-center text-gray-700">ยืนยันแล้ว</p>
                                     </div>
-                                    <p class="text-xs font-semibold text-center">เสร็จสิ้น</p>
-                                    <p v-if="selectedTrip.status === 'completed'" class="text-xs text-gray-500 mt-1">สำเร็จ</p>
+
+                                    <!-- Connector 2 -->
+                                    <div class="flex-1 flex items-center justify-center mt-6 h-1 -mx-2">
+                                        <div 
+                                            class="w-full h-0.5"
+                                            :class="selectedTrip.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'"
+                                        ></div>
+                                    </div>
+
+                                    <!-- Step 3 -->
+                                    <div class="flex flex-col items-center flex-1">
+                                        <div 
+                                            class="w-12 h-12 rounded-full flex items-center justify-center mb-2 font-bold text-white shadow-sm"
+                                            :class="selectedTrip.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'"
+                                        >
+                                            <svg v-if="selectedTrip.status === 'completed'" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                            </svg>
+                                            <span v-else class="text-sm">3</span>
+                                        </div>
+                                        <p class="text-xs font-semibold text-center text-gray-700">เสร็จสิ้น</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-3 h-3 rounded-full" :class="getStatusDotClass(selectedTrip.status)"></div>
-                                    <span class="font-semibold text-gray-900">{{ getStatusText(selectedTrip.status) }}</span>
-                                </div>
-                                <p class="text-sm text-gray-600">{{ getStatusDescription(selectedTrip.status) }}</p>
-                            </div>
-
-                            <!-- Trip Details -->
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">วันเดินทาง:</span>
-                                    <span class="font-semibold text-gray-900">{{ selectedTrip.date }} {{ selectedTrip.time }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">ระยะทาง:</span>
-                                    <span class="font-semibold text-gray-900">{{ selectedTrip.distanceText }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">ระยะเวลา:</span>
-                                    <span class="font-semibold text-gray-900">{{ selectedTrip.durationText }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">คนขับ:</span>
-                                    <span class="font-semibold text-gray-900">{{ selectedTrip.driver.name }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Report View -->
-                        <div v-if="selectedTrip.hasReport && modalTab === 'report'" class="space-y-6 animate-in slide-in-from-top duration-300">
-                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                            <!-- Summary Block -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 class="font-bold text-blue-900">สรุปการรายงาน</h4>
                                     <span 
@@ -691,17 +670,17 @@
                                     </div>
                                     <div class="flex justify-between border-b border-blue-100 pb-2">
                                         <span class="opacity-75">วันที่แจ้ง:</span>
-                                        <span class="font-semibold">{{ selectedTrip.reportData?.createdAt ? dayjs(selectedTrip.reportData.createdAt).format('D MMM BBBB HH:mm น.') : '-' }}</span>
+                                        <span class="font-semibold text-right">{{ selectedTrip.reportData?.createdAt ? dayjs(selectedTrip.reportData.createdAt).format('D MMM BBBB HH:mm น.') : '-' }}</span>
                                     </div>
                                     <div class="pt-1">
-                                        <span class="opacity-75 block mb-1">รายละเอียดที่แจ้ง:</span>
-                                        <p class="text-gray-700 bg-white/50 p-3 rounded-lg border border-blue-100 italic">
+                                        <span class="opacity-75 block mb-1 font-medium">รายละเอียดที่แจ้ง:</span>
+                                        <p class="text-gray-700 bg-white/60 p-3 rounded-lg border border-blue-100 italic leading-relaxed">
                                             "{{ selectedTrip.reportData?.description }}"
                                         </p>
                                     </div>
                                     <div v-if="selectedTrip.reportData?.images?.length" class="pt-2">
-                                        <span class="opacity-75 block mb-2">รูปภาพประกอบ:</span>
-                                        <div class="flex gap-2">
+                                        <span class="opacity-75 block mb-2 font-medium">รูปภาพประกอบ:</span>
+                                        <div class="flex flex-wrap gap-2">
                                             <img v-for="(img, idx) in selectedTrip.reportData.images" :key="idx" :src="img" 
                                                 class="w-20 h-20 object-cover rounded-lg border-2 border-white shadow-sm hover:scale-105 transition-transform cursor-pointer" 
                                                 @click="window.open(img, '_blank')"
@@ -712,7 +691,7 @@
                             </div>
 
                             <!-- Admin Response -->
-                            <div class="bg-white border-2 border-gray-100 rounded-xl p-5 shadow-sm">
+                            <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                                 <h4 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
                                     <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 013 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -720,12 +699,12 @@
                                     การตอบรับจากทีมงาน
                                 </h4>
                                 <div v-if="selectedTrip.reportData?.status !== 'PENDING'" class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p class="text-sm text-gray-700 leading-relaxed">
-                                        {{ selectedTrip.reportData?.adminNotes || 'ได้รับการตรวจสอบเรียบร้อยแล้ว' }}
+                                    <p class="text-sm text-gray-700 leading-relaxed italic">
+                                        "{{ selectedTrip.reportData?.adminNotes || 'ได้รับการตรวจสอบเรียบร้อยแล้ว' }}"
                                     </p>
                                     <div v-if="selectedTrip.reportData?.resolvedAt" class="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center text-[10px] text-gray-400">
                                         <span>ตรวจสอบเมื่อ: {{ dayjs(selectedTrip.reportData.resolvedAt).format('D MMM BBBB HH:mm') }}</span>
-                                        <span class="text-green-600 font-bold">VERIFIED BY TEAM</span>
+                                        <span class="text-green-600 font-bold tracking-wider">VERIFIED BY TEAM</span>
                                     </div>
                                 </div>
                                 <div v-else class="flex flex-col items-center py-6 text-center">
@@ -744,7 +723,7 @@
                 <!-- Footer -->
                 <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
                     <button @click="isProgressModalVisible = false"
-                        class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                        class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95">
                         ปิด
                     </button>
                 </div>
@@ -754,12 +733,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 import buddhistEra from 'dayjs/plugin/buddhistEra'
 import ConfirmModal from '~/components/ConfirmModal.vue'
 import { useToast } from '~/composables/useToast'
+import { useSocket } from '~/composables/useSocket'
 
 // Setup dayjs for Thai locale
 dayjs.locale('th')
@@ -1383,11 +1363,12 @@ function getReportStatusText(status) {
 
 function getCategoryText(cat) {
     const cats = {
-        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถ',
-        PASSENGER_ISSUE: 'ปัญหาเกี่ยวกับผู้โดยสาร',
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสารร่วมทริปที่ไม่เหมาะสม',
         ROAD_ISSUE: 'ปัญหาระหว่างเส้นทาง',
-        SAFETY_ISSUE: 'ความปลอดภัย/พฤติกรรม',
+        SAFETY_ISSUE: 'พฤติกรรมการขับขี่ที่ไม่ปลอดภัย',
         PAYMENT_ISSUE: 'ปัญหาการชำระเงิน',
+        NO_SHOW: 'ไม่มาพบตามจุดนัดหมาย',
         OTHER: 'อื่น ๆ'
     }
     return cats[cat] || cat || 'ทั่วไป'
@@ -1443,6 +1424,36 @@ onMounted(() => {
     }
 })
 
+// --- Socket.IO: real-time booking status updates for passenger ---
+const { onEvent } = useSocket()
+
+// When the driver accepts or rejects the passenger's booking
+onEvent('booking:statusChanged', (data) => {
+  const trip = allTrips.value.find(t => t.id === data.bookingId)
+  if (trip) {
+    trip.status = (data.status || '').toLowerCase()
+  }
+})
+
+// When the driver completes the trip
+onEvent('booking:tripCompleted', (data) => {
+  // Update all bookings linked to this route to 'completed'
+  allTrips.value.forEach(t => {
+    if (t.routeId === data.routeId && !['cancelled', 'rejected'].includes(t.status)) {
+      t.status = 'completed'
+    }
+  })
+})
+
+// When admin updates a report status related to one of the passenger's trips
+onEvent('report:statusChanged', (data) => {
+  const trip = allTrips.value.find(t => t.reportData?.id === data.reportId)
+  if (trip && trip.reportData) {
+    trip.reportData.status = data.status
+    trip.reportData.adminNotes = data.adminNotes || trip.reportData.adminNotes
+  }
+})
+
 function initializeMap() {
     if (!mapContainer.value || gmap) return
     gmap = new google.maps.Map(mapContainer.value, {
@@ -1480,9 +1491,14 @@ function closeReviewModal() {
 
 function handleReviewFiles(e) {
     const files = Array.from(e.target.files || [])
-    const remaining = 2 - reviewImages.value.length
+    const remaining = 3 - reviewImages.value.length
     files.slice(0, remaining).forEach(f => {
-        reviewImages.value.push({ file: f, url: URL.createObjectURL(f) })
+        reviewImages.value.push({ 
+            file: f, 
+            url: URL.createObjectURL(f),
+            name: f.name,
+            type: f.type
+        })
     })
     e.target.value = ''
 }
@@ -1578,9 +1594,14 @@ function closeReportModal() {
 
 function handleReportFiles(e) {
     const files = Array.from(e.target.files || [])
-    const remaining = 2 - reportImages.value.length
+    const remaining = 3 - reportImages.value.length
     files.slice(0, remaining).forEach(f => {
-        reportImages.value.push({ file: f, url: URL.createObjectURL(f) })
+        reportImages.value.push({ 
+            file: f, 
+            url: URL.createObjectURL(f),
+            name: f.name,
+            type: f.type
+        })
     })
     e.target.value = ''
 }

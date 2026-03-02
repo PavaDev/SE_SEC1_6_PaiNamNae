@@ -33,7 +33,7 @@ const createReview = async (userId, data) => {
 
         // 3. Validate Booking Status & Route Status
         // Booking must be CONFIRMED and Route should be COMPLETED
-        if (booking.status !== BookingStatus.CONFIRMED) {
+        if (booking.status !== BookingStatus.COMPLETED) {
             throw new ApiError(400, 'Only confirmed bookings can be reviewed');
         }
 
@@ -58,6 +58,9 @@ const createReview = async (userId, data) => {
                 rating,
                 comment,
                 images
+            },
+            include: {
+                booking: { select: { routeId: true } }
             }
         });
 
@@ -74,6 +77,17 @@ const createReview = async (userId, data) => {
             data: {
                 ratingAverage: aggregate._avg.rating || 0,
                 ratingCount: aggregate._count.rating || 0
+            }
+        });
+
+        // 🔔 แจ้งเตือนคนขับว่าได้รับรีวิวใหม่
+        await tx.notification.create({
+            data: {
+                userId: revieweeId,
+                type: 'SYSTEM',
+                title: 'คุณได้รับรีวิวใหม่',
+                body: `ได้รับรีวิว ${rating} ดาว จากผู้โดยสาร`,
+                metadata: { kind: 'NEW_REVIEW', reviewId: review.id, rating, bookingId }
             }
         });
 

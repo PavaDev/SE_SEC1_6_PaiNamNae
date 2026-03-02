@@ -288,20 +288,20 @@
                                     </NuxtLink>
                                     
                                     <!-- ปุ่ม Report สำหรับคนขับ -->
-                                    <button
+                                    <!-- <button
                                         @click.stop="route.hasReport ? openDriverReportStatusModal(route) : openDriverReportModal(route)"
                                         class="px-4 py-2 ml-2 text-sm text-white transition duration-200 rounded-md"
                                         :class="route.hasReport ? 'bg-orange-500 hover:bg-orange-600' : 'bg-red-600 hover:bg-red-700'">
                                         {{ route.hasReport ? 'ติดตามสถานะ' : 'รายงาน' }}
-                                    </button>
+                                    </button> -->
                                     
-                                    <!-- ปุ่มกดจบงานสำหรับคนขับ -->
+                                    <!-- ปุ่มกดจบงานสำหรับคนขับ
                                     <button
                                         v-if="['available', 'full'].includes(route.status)"
                                         @click.stop="openConfirmModal(route, 'completeRoute')"
                                         class="px-4 py-2 ml-2 text-sm text-white transition duration-200 bg-green-600 rounded-md hover:bg-green-700">
                                         สิ้นสุดการเดินทาง
-                                    </button>
+                                    </button> -->
                                 </div>
                             </div>
                         </div>
@@ -528,11 +528,9 @@
                     <select v-model="driverReportCategory"
                         class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">-- เลือกหัวข้อ --</option>
-                        <option value="VEHICLE_ISSUE">ปัญหาเรื่องรถ</option>
-                        <option value="PASSENGER_ISSUE">ปัญหาเรื่องผู้โดยสาร</option>
-                        <option value="ROAD_ISSUE">ปัญหาเรื่องถนน/สภาพแวดล้อม</option>
-                        <option value="SAFETY_ISSUE">ปัญหาด้านความปลอดภัย</option>
-                        <option value="PAYMENT_ISSUE">ปัญหาเรื่องการชำระเงิน</option>
+                        <option value="PASSENGER_ISSUE">พฤติกรรมผู้โดยสารที่ไม่เหมาะสม</option>
+                        <option value="NO_SHOW">ผู้โดยสารไม่มาพบตามจุดนัดหมาย</option>
+                        <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน/ผู้โดยสารไม่จ่ายเงิน</option>
                         <option value="OTHER">อื่นๆ</option>
                     </select>
                 </div>
@@ -688,12 +686,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 import buddhistEra from 'dayjs/plugin/buddhistEra'
 import ConfirmModal from '~/components/ConfirmModal.vue'
 import { useToast } from '~/composables/useToast'
+import { useSocket } from '~/composables/useSocket'
 
 dayjs.locale('th')
 dayjs.extend(buddhistEra)
@@ -1093,11 +1092,12 @@ function getReportStatusText(status) {
 
 function getCategoryText(cat) {
     const cats = {
-        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถ',
-        PASSENGER_ISSUE: 'ปัญหาเกี่ยวกับผู้โดยสาร',
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสารที่ไม่เหมาะสม',
         ROAD_ISSUE: 'ปัญหาระหว่างเส้นทาง',
         SAFETY_ISSUE: 'ความปลอดภัย/พฤติกรรม',
         PAYMENT_ISSUE: 'ปัญหาการชำระเงิน',
+        NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
         OTHER: 'อื่น ๆ'
     }
     return cats[cat] || cat || 'ทั่วไป'
@@ -1379,6 +1379,42 @@ onMounted(() => {
             }
         })
     }
+})
+
+// --- Socket.IO: real-time booking updates for driver ---
+const { onEvent } = useSocket()
+
+// When a passenger creates a new booking on one of this driver's routes
+onEvent('booking:created', (data) => {
+  // Refresh the full list to get up-to-date data
+  fetchMyRoutes()
+})
+
+// When a passenger cancels a booking
+onEvent('booking:cancelled', (data) => {
+  fetchMyRoutes()
+})
+
+// When a report is created against the driver
+onEvent('report:created', (data) => {
+  // Refresh to show updated report status
+  fetchMyRoutes()
+})
+
+// When admin updates a report status
+onEvent('report:statusChanged', async (data) => {
+  // 1. Direct update for immediate UI feedback if modal is open
+  if (showDriverReportStatusModal.value && reportedRouteData.value && reportedRouteData.value.id === data.reportId) {
+    reportedRouteData.value = {
+      ...reportedRouteData.value,
+      status: data.status,
+      adminNotes: data.adminNotes,
+      resolvedAt: data.resolvedAt
+    }
+  }
+
+  // 2. Background refresh to keep the main list consistent
+  await fetchMyRoutes()
 })
 
 function initializeMap() {

@@ -148,7 +148,7 @@ const getReportById = async (id) => {
 };
 
 const createReport = async (reportData) => {
-    return prisma.report.create({
+    const report = await prisma.report.create({
         data: {
             reporterId: reportData.reporterId,
             type: reportData.type,
@@ -161,6 +161,21 @@ const createReport = async (reportData) => {
         },
         include: reportInclude,
     });
+
+    // 🔔 แจ้งเตือนเป้าหมาย (Target User)
+    if (reportData.targetUserId) {
+        await prisma.notification.create({
+            data: {
+                userId: reportData.targetUserId,
+                type: 'SYSTEM',
+                title: 'มีรายงานใหม่เกี่ยวกับคุณ',
+                body: `หมวดหมู่: ${reportData.category}`,
+                metadata: { kind: 'NEW_REPORT_TARGET', reportId: report.id, category: reportData.category }
+            }
+        });
+    }
+
+    return report;
 };
 
 const updateReportStatus = async (id, status, adminNotes, adminId) => {
@@ -179,11 +194,32 @@ const updateReportStatus = async (id, status, adminNotes, adminId) => {
         updateData.resolvedById = adminId;
     }
 
-    return prisma.report.update({
+    const updated = await prisma.report.update({
         where: { id },
         data: updateData,
         include: reportInclude,
     });
+
+    // 🔔 แจ้งเตือนผู้รายงาน (Reporter) เมื่อสถานะอัปเดต
+    const statusLabels = {
+        'PENDING': 'รอพิจารณา',
+        'APPROVED': 'อนุมัติ',
+        'REJECTED': 'ปฏิเสธ',
+        'RESOLVED': 'แก้ไขแล้ว'
+    };
+    const thaiStatus = statusLabels[status] || status;
+
+    await prisma.notification.create({
+        data: {
+            userId: updated.reporterId,
+            type: 'SYSTEM',
+            title: 'อัปเดตสถานะรายงาน',
+            body: `รายงานของคุณถูกอัปเดตเป็น: ${thaiStatus}`,
+            metadata: { kind: 'REPORT_STATUS_UPDATED', reportId: id, status: status }
+        }
+    });
+
+    return updated;
 };
 
 const deleteReport = async (id) => {

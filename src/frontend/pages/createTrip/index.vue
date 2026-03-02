@@ -420,7 +420,7 @@ const handleSubmit = async () => {
 
         // success
         toast.success('สำเร็จ', body?.message || 'สร้างเส้นทางการเดินทางเรียบร้อยแล้ว!')
-        setTimeout(() => { navigateTo('/findTrip') }, 1500)
+        setTimeout(() => { navigateTo('/current-trip') }, 1500)
 
     } catch (err) {
         console.error('Failed to create route:', err)

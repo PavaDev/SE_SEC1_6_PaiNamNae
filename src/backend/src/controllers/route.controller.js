@@ -4,6 +4,7 @@ const vehicleService = require("../services/vehicle.service");
 const ApiError = require("../utils/ApiError");
 const verifService = require("../services/driverVerification.service");
 const { getDirections } = require("../utils/googleMaps");
+const { getIO } = require("../socket");
 
 const getAllRoutes = asyncHandler(async (req, res) => {
   const routes = await routeService.getAllRoutes();
@@ -125,6 +126,14 @@ const createRoute = asyncHandler(async (req, res) => {
   }
 
   const newRoute = await routeService.createRoute(payload);
+
+  // --- Socket.IO: notify /findTrip listeners ---
+  try {
+    const io = getIO();
+    const fullRoute = await routeService.getRouteById(newRoute.id);
+    io.to('trips').emit('trip:created', fullRoute);
+  } catch (e) { console.error('Socket emit error (createRoute):', e.message); }
+
   res.status(201).json({
     success: true,
     message: "Route created successfully",
@@ -480,10 +489,87 @@ const completeRoute = asyncHandler(async (req, res) => {
   const driverId = req.user.sub;
   const { id } = req.params;
 
+  // Fetch route with bookings before completing
+  const routeBefore = await routeService.getRouteById(id);
   const result = await routeService.completeRoute(id, driverId);
+
+  // --- Socket.IO: notify passengers + update trip list ---
+  try {
+    const io = getIO();
+    // Update trip list
+    io.to('trips').emit('trip:completed', { routeId: id });
+    // Notify each confirmed passenger
+    if (routeBefore && routeBefore.bookings) {
+      const targetBookings = routeBefore.bookings.filter(b =>
+        ['CONFIRMED', 'IN_TRANSIT', 'COMPLETED'].includes(b.status)
+      );
+      for (const booking of targetBookings) {
+        io.to(`user:${booking.passengerId}`).emit('booking:tripCompleted', {
+          routeId: id,
+          bookingId: booking.id,
+        });
+        io.to(`user:${booking.passengerId}`).emit('notification:new', {
+          id: Date.now(),
+          type: 'ROUTE',
+          title: 'การเดินทางสิ้นสุดแล้ว',
+          body: 'คนขับได้สิ้นสุดการเดินทางแล้ว',
+          metadata: { kind: 'ROUTE_COMPLETED', routeId: id, bookingId: booking.id },
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+  } catch (e) { console.error('Socket emit error (completeRoute):', e.message); }
+
   res.status(200).json({
     success: true,
     message: "Route completed successfully",
+    data: result
+  });
+});
+
+const startTrip = asyncHandler(async (req, res) => {
+  const driverId = req.user.sub;
+  const { id } = req.params;
+
+  const result = await routeService.startTrip(id, driverId);
+
+  // --- Socket.IO: notify passengers ---
+  try {
+    const io = getIO();
+    io.to('trips').emit('trip:started', { routeId: id });
+
+    // Notify confirmed passengers
+    const route = await routeService.getRouteById(id);
+    if (route && route.bookings) {
+      const confirmedBookings = route.bookings.filter(b => b.status === 'CONFIRMED');
+      for (const booking of confirmedBookings) {
+        io.to(`user:${booking.passengerId}`).emit('booking:tripStarted', { routeId: id, bookingId: booking.id });
+        io.to(`user:${booking.passengerId}`).emit('notification:new', {
+          id: Date.now(),
+          type: 'ROUTE',
+          title: 'การเดินทางเริ่มต้นแล้ว',
+          body: 'คนขับได้เริ่มออกเดินทางแล้ว',
+          metadata: { kind: 'ROUTE_STARTED', routeId: id, bookingId: booking.id },
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+  } catch (e) { console.error('Socket emit error (startTrip):', e.message); }
+
+  res.status(200).json({
+    success: true,
+    message: "Route started successfully",
+    data: result
+  });
+});
+
+const getActiveTrip = asyncHandler(async (req, res) => {
+  const userId = req.user.sub;
+  const result = await routeService.getActiveTrip(userId);
+
+  res.status(200).json({
+    success: true,
+    message: result ? "Active trip found" : "No active trip found",
     data: result
   });
 });
@@ -502,7 +588,9 @@ module.exports = {
   adminDeleteRoute,
   adminGetRoutesByDriver,
   cancelRoute,
-  completeRoute
+  completeRoute,
+  startTrip,
+  getActiveTrip
 };
 
 

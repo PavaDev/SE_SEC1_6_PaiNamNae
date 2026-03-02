@@ -388,10 +388,135 @@ const completeRoute = async (routeId, driverId) => {
     throw new ApiError(400, `Cannot complete route with status ${route.status}`);
   }
 
-  return prisma.route.update({
+  const updated = await prisma.route.update({
     where: { id: routeId },
     data: { status: RouteStatus.COMPLETED }
   });
+
+  // Automatically mark all CONFIRMED or IN_TRANSIT bookings as COMPLETED
+  await prisma.booking.updateMany({
+    where: {
+      routeId,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT] }
+    },
+    data: { status: BookingStatus.COMPLETED }
+  });
+
+  // 🔔 แจ้งเตือนผู้โดยสารที่ยืนยันแล้วว่าการเดินทางสิ้นสุดแล้ว
+  // รวมถึงผู้ที่ IN_TRANSIT และ COMPLETED ไปแล้วด้วย (เพื่อให้แน่ใจว่าทุกคนได้รับแจ้ง)
+  const affectedBookings = await prisma.booking.findMany({
+    where: {
+      routeId,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT, BookingStatus.COMPLETED] }
+    },
+    select: { passengerId: true, id: true }
+  });
+
+  if (affectedBookings.length > 0) {
+    const notifData = affectedBookings.map(b => ({
+      userId: b.passengerId,
+      type: 'ROUTE',
+      title: 'การเดินทางสิ้นสุดแล้ว',
+      body: 'คนขับได้สิ้นสุดการเดินทางแล้ว',
+      metadata: { kind: 'ROUTE_COMPLETED', routeId, bookingId: b.id }
+    }));
+    await prisma.notification.createMany({ data: notifData });
+  }
+
+  return updated;
+};
+
+const startTrip = async (routeId, driverId) => {
+  const route = await prisma.route.findUnique({
+    where: { id: routeId },
+    include: { bookings: true }
+  });
+
+  if (!route) throw new ApiError(404, 'Route not found');
+  if (route.driverId !== driverId) throw new ApiError(403, 'Forbidden');
+  if (route.status !== RouteStatus.AVAILABLE && route.status !== RouteStatus.FULL) {
+    throw new ApiError(400, 'Cannot start trip at this stage');
+  }
+
+  // เคลียร์คำขอ PENDING ทั้งหมดก่อนเริ่มทริป
+  const hasPending = route.bookings.some(b => b.status === BookingStatus.PENDING);
+  if (hasPending) {
+    throw new ApiError(400, 'ต้องจัดการคำขอร่วมทริปที่ค้างอยู่ให้หมดก่อนเริ่มเดินทาง');
+  }
+
+  const updated = await prisma.route.update({
+    where: { id: routeId },
+    data: { status: RouteStatus.IN_TRANSIT }
+  });
+
+  return updated;
+};
+
+const getActiveTrip = async (userId) => {
+  // 1. Check if user is a driver of an active route
+  // Driver logic: find any route that is not COMPLETED or CANCELLED
+  const driverRoute = await prisma.route.findFirst({
+    where: {
+      driverId: userId,
+      status: { in: [RouteStatus.AVAILABLE, RouteStatus.FULL, RouteStatus.IN_TRANSIT] }
+    },
+    include: {
+      driver: {
+        select: { id: true, firstName: true, lastName: true, profilePicture: true, ratingAverage: true, ratingCount: true }
+      },
+      bookings: {
+        include: { passenger: true }
+      }
+    },
+    orderBy: { updatedAt: 'desc' }
+  });
+
+  if (driverRoute) return { role: 'DRIVER', route: driverRoute };
+
+  // 2. Check if user is a passenger with a confirmed/in-transit booking on an active route
+  const passengerBooking = await prisma.booking.findFirst({
+    where: {
+      passengerId: userId,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT] },
+      route: {
+        status: { in: [RouteStatus.AVAILABLE, RouteStatus.FULL, RouteStatus.IN_TRANSIT] }
+      }
+    },
+    include: {
+      route: {
+        include: {
+          ...baseInclude,
+          bookings: {
+            where: { status: { in: [BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT] } },
+            include: {
+              passenger: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profilePicture: true,
+                  isVerified: true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      route: { departureTime: 'asc' }
+    }
+  });
+
+  if (passengerBooking) {
+    return {
+      role: 'PASSENGER',
+      route: passengerBooking.route,
+      bookingId: passengerBooking.id
+    };
+  }
+
+  return null;
 };
 
 module.exports = {
@@ -403,5 +528,7 @@ module.exports = {
   updateRoute,
   deleteRoute,
   cancelRoute,
-  completeRoute
+  completeRoute,
+  startTrip,
+  getActiveTrip
 };

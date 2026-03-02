@@ -111,6 +111,8 @@
                                     </th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">สถานะ
                                     </th>
+                                    <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">หมวดหมู่
+                                    </th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">เนื้อหา
                                     </th>
                                     <th class="px-4 py-3 text-xs font-medium text-left text-gray-500 uppercase">วันที่
@@ -155,6 +157,9 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-gray-700">
+                                        <div class="text-sm">{{ categoryLabelTh(report.category) }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-700">
                                         <div class="max-w-xs truncate">{{ report.description }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-gray-700">
@@ -162,11 +167,6 @@
                                         <div class="text-xs text-gray-500">อัปเดต {{ formatDate(report.updatedAt) }}</div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <button @click="onViewReport(report)"
-                                            class="p-2 text-gray-500 transition-colors cursor-pointer hover:text-emerald-600"
-                                            title="ดูรายละเอียด" aria-label="ดูรายละเอียด">
-                                            <i class="text-lg fa-regular fa-eye"></i>
-                                        </button>
                                         <button @click="onEditReport(report)"
                                             class="p-2 text-gray-500 transition-colors cursor-pointer hover:text-blue-600"
                                             title="แก้ไข" aria-label="แก้ไข">
@@ -252,6 +252,7 @@ import AdminHeader from '~/components/admin/AdminHeader.vue'
 import AdminSidebar from '~/components/admin/AdminSidebar.vue'
 import ConfirmModal from '~/components/ConfirmModal.vue'
 import { useToast } from '~/composables/useToast'
+import { useSocket } from '~/composables/useSocket'
 
 dayjs.locale('th')
 dayjs.extend(buddhistEra)
@@ -343,6 +344,19 @@ function statusLabel(status) {
     return labels[status] || status
 }
 
+function categoryLabelTh(cat) {
+    const labels = {
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        SAFETY_ISSUE: 'พฤติกรรมการขับขี่ที่ไม่ปลอดภัย',
+        PAYMENT_ISSUE: 'ปัญหาเรื่องการจ่ายเงิน',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสาร/ผู้ร่วมทริป',
+        NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
+        ROAD_ISSUE: 'ปัญหาเรื่องถนน/สภาพแวดล้อม',
+        OTHER: 'อื่น ๆ'
+    }
+    return labels[cat] || cat || '-'
+}
+
 function formatDate(iso) {
     if (!iso) return '-'
     return dayjs(iso).format('D MMMM BBBB HH:mm')
@@ -415,7 +429,7 @@ function onViewReport(report) {
 }
 
 function onEditReport(report) {
-    navigateTo(`/admin/reports/${report.id}/edit`).catch(() => { })
+    navigateTo(`/admin/reports/${report.id}`).catch(() => { })
 }
 
 /* ---------- Delete with Confirm Modal ---------- */
@@ -576,6 +590,14 @@ onMounted(() => {
 
 onUnmounted(() => {
     cleanupGlobalScripts()
+})
+
+// --- Socket.IO: real-time report updates for admin ---
+const { onEvent } = useSocket()
+
+// When a new report is created, refresh the list
+onEvent('report:created', () => {
+  fetchReports(pagination.page)
 })
 </script>
 

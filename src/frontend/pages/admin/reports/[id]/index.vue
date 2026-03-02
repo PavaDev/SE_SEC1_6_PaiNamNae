@@ -16,31 +16,6 @@
                         </button>
                         <h1 class="text-2xl font-semibold text-gray-800">รายละเอียดรายงาน #{{ reportId }}</h1>
                     </div>
-                    
-                    <!--  Quick Status Change Buttons (แค่ 3 ปุ่ม) -->
-                    <div v-if="report" class="flex gap-2">
-                        <button @click="quickUpdateStatus('PENDING')" 
-                            :disabled="report.status === 'PENDING'"
-                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="report.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700 hover:bg-yellow-50'">
-                            <i class="fa-solid fa-hourglass-end mr-1"></i>
-                            รอพิจารณา
-                        </button>
-                        <button @click="quickUpdateStatus('APPROVED')" 
-                            :disabled="report.status === 'APPROVED'"
-                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="report.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700 hover:bg-green-50'">
-                            <i class="fa-solid fa-circle-check mr-1"></i>
-                            อนุมัติ
-                        </button>
-                        <button @click="quickUpdateStatus('REJECTED')" 
-                            :disabled="report.status === 'REJECTED'"
-                            class="px-3 py-2 text-xs font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            :class="report.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 hover:bg-red-50'">
-                            <i class="fa-solid fa-circle-xmark mr-1"></i>
-                            ปฏิเสธ
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Loading / Error -->
@@ -103,6 +78,10 @@
                                 <p class="font-medium text-gray-900">{{ report.type }}</p>
                             </div>
                             <div>
+                                <p class="text-sm text-gray-600 mb-1">หมวดหมู่</p>
+                                <p class="font-medium text-gray-900">{{ categoryLabelTh(report.category) }}</p>
+                            </div>
+                            <div>
                                 <p class="text-sm text-gray-600 mb-1">วันที่รายงาน</p>
                                 <p class="font-medium text-gray-900">{{ formatDate(report.createdAt) }}</p>
                             </div>
@@ -117,15 +96,56 @@
                         </div>
                     </div>
 
-                    <!-- Images -->
+                    <!-- Media Files (Images, Video, Audio) -->
                     <div v-if="report.images && report.images.length > 0" class="py-6 border-b border-gray-200">
-                        <h3 class="text-sm font-medium text-gray-600 mb-3">รูปภาพประกอบ</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <img v-for="(img, idx) in report.images" :key="idx" 
-                                :src="img" 
-                                class="w-full h-48 object-cover rounded-lg border border-gray-200" 
-                                alt="Report image" />
+                        <h3 class="text-sm font-medium text-gray-600 mb-4">ไฟล์แนบประกอบ ({{ report.images.length }})</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div v-for="(fileUrl, idx) in report.images" :key="idx" class="relative group">
+                                <!-- Image Renderer -->
+                                <template v-if="isImage(fileUrl)">
+                                    <img :src="fileUrl" 
+                                        class="w-full h-64 object-cover rounded-lg border border-gray-200 shadow-sm cursor-zoom-in hover:brightness-95 transition-all" 
+                                        alt="Report image" 
+                                        @click="window.open(fileUrl, '_blank')" />
+                                </template>
+                                
+                                <!-- Video Renderer -->
+                                <template v-else-if="isVideo(fileUrl)">
+                                    <div class="rounded-lg border border-gray-200 bg-black overflow-hidden shadow-sm">
+                                        <video controls class="w-full h-64">
+                                            <source :src="fileUrl" />
+                                            เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
+                                        </video>
+                                    </div>
+                                </template>
+
+                                <!-- Audio Renderer -->
+                                <template v-else-if="isAudio(fileUrl)">
+                                    <div class="p-6 rounded-lg border border-gray-200 bg-slate-50 flex flex-col items-center justify-center shadow-sm">
+                                        <div class="mb-3 text-emerald-600">
+                                            <i class="fa-solid fa-microphone-lines text-3xl"></i>
+                                        </div>
+                                        <audio controls class="w-full">
+                                            <source :src="fileUrl" />
+                                            เบราว์เซอร์ของคุณไม่รองรับการเล่นเสียง
+                                        </audio>
+                                        <p class="mt-2 text-xs text-slate-500 font-medium">ไฟล์เสียงแนบ (Audio Evidence)</p>
+                                    </div>
+                                </template>
+
+                                <!-- Unknown / Fallback -->
+                                <template v-else>
+                                    <a :href="fileUrl" target="_blank" class="p-6 rounded-lg border border-gray-200 bg-slate-100 flex flex-col items-center justify-center hover:bg-slate-200 transition-colors shadow-sm">
+                                        <i class="fa-solid fa-file-arrow-down text-3xl text-slate-400 mb-2"></i>
+                                        <span class="text-sm text-slate-600 font-medium">ดาวน์โหลดไฟล์แนบ</span>
+                                    </a>
+                                </template>
+                            </div>
                         </div>
+                        <p class="mt-4 text-xs text-gray-500 italic">
+                            <i class="fa-solid fa-circle-info mr-1"></i>
+                            คลิกที่รูปภาพเพื่อดูขนาดเต็ม หรือใช้ปุ่มควบคุมวิดีโอ/เสียงเพื่อตรวจสอบหลักฐาน
+                        </p>
                     </div>
 
                     <!-- Admin Notes -->
@@ -135,32 +155,91 @@
                     </div>
 
                     <!-- Resolved Info -->
-                    <div v-if="report.status === 'RESOLVED'" class="py-6">
+                    <div v-if="['APPROVED', 'REJECTED', 'RESOLVED'].includes(report.status) || report.resolvedAt" class="py-6">
                         <div class="grid grid-cols-2 gap-6">
                             <div>
-                                <p class="text-sm text-gray-600 mb-1">แก้ไขเมื่อ</p>
+                                <p class="text-sm text-gray-600 mb-1">ดำเนินการตรวจสอบเมื่อ</p>
                                 <p class="font-medium text-gray-900">{{ formatDate(report.resolvedAt) }}</p>
                             </div>
                             <div v-if="report.resolvedBy">
-                                <p class="text-sm text-gray-600 mb-1">แก้ไขโดย</p>
-                                <p class="font-medium text-gray-900">{{ report.resolvedBy }}</p>
+                                <p class="text-sm text-gray-600 mb-1">ดำเนินการโดย</p>
+                                <p class="font-medium text-gray-900">
+                                    {{ report.resolvedBy.firstName }} {{ report.resolvedBy.lastName }}
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons (Optional: Keep at bottom for advanced edit) -->
-                <div v-if="report && report.status !== 'RESOLVED'" class="flex gap-3">
-                    <button @click="goToEdit"
-                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-edit mr-2"></i>
-                        แก้ไขสถานะ (ขั้นสูง)
-                    </button>
-                    <button @click="askDelete"
-                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
-                        <i class="fas fa-trash mr-2"></i>
-                        ลบรายงาน
-                    </button>
+                <!-- Audit Action Card -->
+                <div v-if="report" class="bg-white border border-gray-300 rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-gavel text-blue-600"></i>
+                        การตรวจสอบและดำเนินการ
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pb-6 border-b border-gray-100">
+                        <!-- Status Selection -->
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-700">สถานะ <span class="text-red-500">*</span></label>
+                            <select v-model="formData.status"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                <option value="PENDING">รอพิจารณา (Pending)</option>
+                                <option value="APPROVED">อนุมัติ (Approved)</option>
+                                <option value="REJECTED">ปฏิเสธ (Rejected)</option>
+                                <option value="RESOLVED">แก้ไขแล้ว (Resolved)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <i class="fa-solid fa-circle-info mr-1"></i>
+                                เลือกสถานะที่เหมาะสมเพื่อดำเนินการต่อ
+                            </p>
+                        </div>
+                        
+                        <!-- Quick Stats / Helper -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">สรุปการตรวจสอบ</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">สถานะปัจจุบัน:</span>
+                                    <span :class="statusBadgeClass(report.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">
+                                        {{ statusLabelTh(report.status) }}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">แก้ไขล่าสุด:</span>
+                                    <span class="text-gray-900 font-medium">{{ formatDate(report.updatedAt) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Notes -->
+                    <div class="mb-6">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">หมายเหตุจากแอดมิน (Admin Notes)</label>
+                        <textarea v-model="formData.adminNotes" rows="4"
+                            placeholder="ระบุเหตุผลในการตัดสินใจ หรือรายละเอียดการดำเนินการเพิ่มเติม..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                        <div class="flex justify-between mt-1">
+                            <p class="text-xs text-gray-500">หมายเหตุนี้จะถูกบันทึกไว้ในระบบเพื่อใช้ในการอ้างอิง</p>
+                            <p class="text-xs text-gray-500">{{ formData.adminNotes.length }} / 2000</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                        <button @click="submitUpdate" :disabled="isSubmitting"
+                            class="flex-1 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center gap-2 font-medium">
+                            <i class="fas fa-save" v-if="!isSubmitting"></i>
+                            <i class="fas fa-spinner fa-spin" v-else></i>
+                            <span>{{ isSubmitting ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง' }}</span>
+                        </button>
+                        
+                        <button @click="askDelete" :disabled="isSubmitting"
+                            class="px-6 py-2.5 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium">
+                            <i class="fas fa-trash"></i>
+                            <span>ลบรายงาน</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -179,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
@@ -204,8 +283,14 @@ const reportId = route.params.id
 const report = ref(null)
 const isLoading = ref(false)
 const loadError = ref('')
+const isSubmitting = ref(false)
 
 const showDelete = ref(false)
+
+const formData = reactive({
+    status: 'PENDING',
+    adminNotes: ''
+})
 
 // --- Fetch Report ---
 async function fetchReport() {
@@ -215,6 +300,10 @@ async function fetchReport() {
         report.value = await getReportById(reportId)
         if (!report.value) {
             loadError.value = 'ไม่พบรายงาน'
+        } else {
+            // Initialize form data
+            formData.status = report.value.status
+            formData.adminNotes = report.value.adminNotes || ''
         }
     } catch (err) {
         console.error(err)
@@ -225,7 +314,7 @@ async function fetchReport() {
     }
 }
 
-// ✅ Helper Functions for Reporter Info
+// Helper Functions for Reporter Info
 function getReporterName(report) {
     if (report.reporterName) return report.reporterName
     if (report.reporter) {
@@ -254,20 +343,24 @@ function handleImageError(event) {
     event.target.src = 'https://ui-avatars.com/api/?name=User&background=random&size=128'
 }
 
-//  Quick Status Update Function
-async function quickUpdateStatus(newStatus) {
-    if (!report.value || report.value.status === newStatus) return
-    
+// --- Submit Update ---
+async function submitUpdate() {
+    if (!formData.status) {
+        toast.error('ข้อผิดพลาด', 'กรุณาเลือกสถานะ')
+        return
+    }
+
+    isSubmitting.value = true
     try {
-        isLoading.value = true
-        await updateReportStatus(reportId, newStatus, '')
-        toast.success('อัปเดตสถานะสำเร็จ', `เปลี่ยนสถานะเป็น ${statusLabelTh(newStatus)}`)
+        await updateReportStatus(reportId, formData.status, formData.adminNotes)
+        toast.success('บันทึกสำเร็จ', 'อัปเดตข้อมูลรายงานเรียบร้อย')
         await fetchReport() // Refresh data
     } catch (err) {
         console.error(err)
-        toast.error('อัปเดตสถานะไม่สำเร็จ', err?.message || 'เกิดข้อผิดพลาด')
+        const msg = err?.message || 'ไม่สามารถอัปเดตได้'
+        toast.error('อัปเดตไม่สำเร็จ', msg)
     } finally {
-        isLoading.value = false
+        isSubmitting.value = false
     }
 }
 
@@ -313,6 +406,41 @@ function statusLabelTh(status) {
     return labels[status] || status
 }
 
+// Media Type Helpers
+function isImage(url) {
+    if (!url) return false
+    const ext = url.split('.').pop().toLowerCase().split('?')[0]
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']
+    return imageExtensions.includes(ext) || url.includes('/image/upload/')
+}
+
+function isVideo(url) {
+    if (!url) return false
+    const ext = url.split('.').pop().toLowerCase().split('?')[0]
+    const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'wmv', 'avi']
+    return videoExtensions.includes(ext) || url.includes('/video/upload/')
+}
+
+function isAudio(url) {
+    if (!url) return false
+    const ext = url.split('.').pop().toLowerCase().split('?')[0]
+    const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac']
+    return audioExtensions.includes(ext)
+}
+
+function categoryLabelTh(cat) {
+    const labels = {
+        VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
+        SAFETY_ISSUE: 'พฤติกรรมการขับขี่ที่ไม่ปลอดภัย',
+        PAYMENT_ISSUE: 'ปัญหาเรื่องการจ่ายเงิน',
+        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสาร/ผู้ร่วมทริป',
+        NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
+        ROAD_ISSUE: 'ปัญหาเรื่องถนน/สภาพแวดล้อม',
+        OTHER: 'อื่น ๆ'
+    }
+    return labels[cat] || cat || '-'
+}
+
 function formatDate(iso) {
     if (!iso) return '-'
     return dayjs(iso).format('D MMMM BBBB HH:mm')
@@ -323,9 +451,6 @@ function goBack() {
     router.back()
 }
 
-function goToEdit() {
-    router.push(`/admin/reports/${reportId}/edit`)
-}
 
 // --- Delete Report ---
 function askDelete() {

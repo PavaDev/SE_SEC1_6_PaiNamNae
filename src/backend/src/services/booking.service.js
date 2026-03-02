@@ -2,8 +2,9 @@ const prisma = require('../utils/prisma');
 const ApiError = require('../utils/ApiError');
 const { RouteStatus, BookingStatus } = require('@prisma/client');
 const { checkAndApplyPassengerSuspension } = require('./penalty.service');
+const { getIO } = require('../socket');
 
-const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED];
+const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT, BookingStatus.COMPLETED];
 
 const searchBookingsAdmin = async (opts = {}) => {
   const {
@@ -430,6 +431,17 @@ const cancelBooking = async (id, passengerId, opts = {}) => {
       });
     }
 
+    // 🔔 แจ้งเตือน Driver เมื่อมีการยกเลิก
+    await tx.notification.create({
+      data: {
+        userId: booking.route.driverId,
+        type: 'BOOKING',
+        title: 'ผู้โดยสารยกเลิกการจอง',
+        body: 'ผู้โดยสารได้ยกเลิกการจองในเส้นทางของคุณ',
+        metadata: { kind: 'BOOKING_CANCELLED', bookingId: id, routeId: booking.route.id, cancelledBy: 'PASSENGER' }
+      }
+    });
+
     return updatedBooking;
   });
 
@@ -501,8 +513,110 @@ module.exports = {
   adminCreateBooking,
   getMyBookings,
   getBookingById,
-  updateBookingStatus,
   cancelBooking,
   deleteBooking,
-  adminDeleteBooking
+  adminDeleteBooking,
+  updatePassengerStatus,
+  updateBookingStatus,
+  notifyArrival,
 };
+
+async function notifyArrival(bookingId, minutes, userId) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      route: {
+        include: {
+          driver: { select: { firstName: true, lastName: true } }
+        }
+      }
+    }
+  });
+
+  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (booking.route.driverId !== userId) throw new ApiError(403, 'Forbidden');
+  if (booking.status !== BookingStatus.CONFIRMED && booking.status !== BookingStatus.IN_TRANSIT) {
+    throw new ApiError(400, 'สามารถแจ้งเตือนได้เฉพาะผู้โดยสารที่ยืนยันแล้วหรือกำลังเดินทางเท่านั้น');
+  }
+
+  const io = getIO();
+  io.to(`user:${booking.passengerId}`).emit('booking:driverArriving', {
+    bookingId,
+    routeId: booking.routeId,
+    minutes,
+    driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`
+  });
+
+  return { success: true };
+}
+
+async function updatePassengerStatus(id, status, userId, reason) {
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: { route: true },
+  });
+  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (booking.route.driverId !== userId) {
+    throw new ApiError(403, 'Forbidden');
+  }
+
+  // Validate status transition
+  const allowedStatuses = [BookingStatus.IN_TRANSIT, BookingStatus.COMPLETED, BookingStatus.CANCELLED];
+  if (!allowedStatuses.includes(status)) {
+    throw new ApiError(400, 'สถานะไม่ถูกต้อง');
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const updateData = { status };
+    if (status === BookingStatus.CANCELLED) {
+      updateData.cancelledAt = new Date();
+      updateData.cancelledBy = 'DRIVER';
+      updateData.cancelReason = reason || 'NO_SHOW';
+    }
+
+    const updated = await tx.booking.update({
+      where: { id },
+      data: updateData,
+    });
+
+    if (status === BookingStatus.CANCELLED) {
+      // คืนที่นั่งให้ route
+      const refunded = booking.numberOfSeats;
+      const newSeats = booking.route.availableSeats + refunded;
+      const routeUpdates = { availableSeats: newSeats };
+      if (booking.route.status === RouteStatus.FULL && newSeats > 0) {
+        routeUpdates.status = RouteStatus.AVAILABLE;
+      }
+      await tx.route.update({
+        where: { id: booking.route.id },
+        data: routeUpdates,
+      });
+    }
+
+    // Notify passenger
+    let title = '';
+    let body = '';
+    if (status === BookingStatus.IN_TRANSIT) {
+      title = 'เริ่มการเดินทางของคุณ';
+      body = 'คนขับได้ยืนยันว่าคุณขึ้นรถแล้ว';
+    } else if (status === BookingStatus.COMPLETED) {
+      title = 'ถึงจุดหมายแล้ว';
+      body = 'คนขับได้ยืนยันว่าคุณถึงจุดหมายเรียบร้อยแล้ว';
+    } else if (status === BookingStatus.CANCELLED) {
+      title = 'การจองถูกยกเลิก';
+      body = `คนขับได้ยกเลิกการจองของคุณ เหตุผล: ${reason || 'ผู้โดยสารไม่มาตามนัด'}`;
+    }
+
+    await tx.notification.create({
+      data: {
+        userId: booking.passengerId,
+        type: 'BOOKING',
+        title,
+        body,
+        metadata: { kind: 'BOOKING_STATUS_UPDATE', bookingId: id, routeId: booking.route.id, status }
+      }
+    });
+
+    return updated;
+  });
+}

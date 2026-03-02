@@ -32,6 +32,29 @@ export default defineNuxtPlugin(() => {
     // },
 
     onResponseError({ response }) {
+      const statusCode = response?.status
+
+      // Handle 401 Unauthorized globally
+      if (statusCode === 401) {
+        const token = useCookie('token')
+        const user = useCookie('user')
+
+        // Only trigger if we actually had a token (to avoid loops on initial login failure)
+        if (token.value) {
+          token.value = null
+          user.value = null
+
+          const toast = useToast()
+          const router = useRouter()
+
+          // Show toast and redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            toast.warning('Session หมดอายุ', 'กรุณาเข้าสู่ระบบใหม่อีกครั้ง')
+            router.push('/login')
+          }
+        }
+      }
+
       let body = response?._data
       if (typeof body === 'string') {
         try { body = JSON.parse(body) } catch { }
@@ -45,7 +68,7 @@ export default defineNuxtPlugin(() => {
         'Request failed'
 
       throw createError({
-        statusCode: response?.status || 500,
+        statusCode: statusCode || 500,
         statusMessage: msg,
         data: body,
       })

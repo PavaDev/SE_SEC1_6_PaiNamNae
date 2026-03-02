@@ -162,7 +162,7 @@ This project follows semantic versioning.
 ## [1.0.10] - 2026-02-17 - (Panya)
 
 ### Added
-- Add review test case at folder test/backend 
+- Add review tests case at folder tests/backend 
 
 
 ## [1.0.11] - 2026-02-17 - (Pavarit)
@@ -222,3 +222,69 @@ This project follows semantic versioning.
 
 ### Fixed
 - Reporter avatar not displaying
+
+
+## [1.0.16] - 2026-02-17 - (Pavarit)
+
+### Added
+- **Expand Report Status**
+  - Added `RESOLVED` (แก้ไขแล้ว) status to reports
+  - Integrated "RESOLVED" into quick action buttons, filters, and badges across the Admin Dashboard
+- **Role-Specific Report Categories**
+  - Tailored reporting options based on user role (Driver vs Passenger) for better context
+  - Added new `NO_SHOW` (ผู้โดยสารไม่มาพบตามจุดนัดหมาย) category for drivers
+- **Reporting System Enhancements**
+  - Automated Thai translation for report statuses in system notifications
+  - Added **Category** column to Admin Report list view
+  - Displayed detailed resolution info (Resolved By/At) in report details for all terminal states
+
+### Changed
+- Refactored `myTrip` progress modal to remove redundant tabs and fix layout overflow issues
+
+
+## [1.0.17] - 2026-02-17 - (Pavarit)
+
+### Added
+- **Swagger API Documentation**
+  - Add `Review` and `Report` API documentation
+- **AI Declaration**
+  - Add AI Declaration documentation
+
+### Changed
+- `Route` Swagger API endpint documentation 
+
+
+## [1.0.18] - 2026-02-17 - (Panya)
+
+### Added
+- Add report and admin report status test case at folder tests/backend
+
+
+## [1.0.19] - 2026-02-17 - (Panya)
+
+### Changed
+- Update report and admin report status test case
+
+
+## [2.0.0] - 2026-03-02 - (Pavarit)
+
+### Added
+- **Arrival Notification System**
+  - **Driver UI**: "แจ้งถึงในอีกกี่นาที" button on `current-trip` page for drivers
+  - **Passenger UI**: Real-time arrival notifications with countdown timer
+  - **Booking Service**: `notifyArrival` method to handle arrival notifications
+  - **Notification Service**: `sendArrivalNotification` method for WebSocket broadcasting
+  - **WebSocket Integration**: Real-time arrival updates to passengers
+  - **Quick Selection**: 5, 10, 15, 20, 25, 30 minute presets for arrival time
+  - **Validation**: Arrival time validation and submission error handling
+
+### Changed
+- **Current Trip Page**: Enhanced driver action buttons with arrival notification option
+- **Booking Status**: Added `NOTIFIED_ARRIVAL` status for tracking
+- **WebSocket Messages**: New `ARRIVAL_NOTIFICATION` event type for real-time updates
+- **UI/UX**: Arrival time picker modal with modern design and quick selection buttons
+
+### Fixed
+- **WebSocket Connectivity**: Fixed connection issues by removing hardcoded user IDs
+- **Booking Data**: Resolved issues with booking data fetching and display
+- **UI Responsiveness**: Improved layout for driver action buttons on mobile devices
