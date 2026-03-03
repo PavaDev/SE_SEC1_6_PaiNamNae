@@ -320,3 +320,9 @@ This project follows semantic versioning.
 ### Added
 - UAT for test driver send notification to passenger
 - API Integration for test driver send notification to passenger
+
+## [2.0.4] - 2026-03-03 - (Yasinthon)
+
+### Added
+- API Integration for test driver report incident to admin
+- UAT for test driver report incident to admin
