@@ -288,3 +288,35 @@ This project follows semantic versioning.
 - **WebSocket Connectivity**: Fixed connection issues by removing hardcoded user IDs
 - **Booking Data**: Resolved issues with booking data fetching and display
 - **UI Responsiveness**: Improved layout for driver action buttons on mobile devices
+
+
+## [2.0.1] - 2026-03-03 - (Narathaip)
+
+### Added
+- **Bubble Chat Notification Center**
+  - **Centralized Mediator**: Converted `DriverChat` to `BubbleChat` for trip status notifications (In-only).
+  - **Persistence Store**: Implemented `LocalStorage` notification history to ensure data persists after re-entering the session.
+  - **"Check Status" Button**: Added a dedicated button for passengers to monitor real-time driver updates.
+
+### Changed
+- **Communication Flow**: Optimized as a status mediator between Driver and Passenger based on the current trip lifecycle.
+- **Premium Visualization**: Enhanced notification card design with dedicated iconography for Arrival, Check-in, and Status updates.
+
+
+## [2.0.2] - 2026-03-03 - (์Narathaip)
+
+### Changed
+- **Notification Lifecycle**: 
+  - Removed automatic timeouts that prematurely cleared trip notifications.
+  - Notifications now persist in the buffer until the user explicitly acknowledges the trip completion via the "OK", "Skip", or "Save Review" buttons.
+  - Ensured chat history is cleared synchronously for both drivers and passengers upon closing the review modal.
+- **Navigation Reliability**: Upgraded `router.push` to `navigateTo` across the notification components (`NotiChat.vue`, `default.vue`) for more stable Nuxt 3 routing.
+- **Top-Level Modals**: Re-structured HTML modals in `current-trip.vue` to prevent element nesting issues and layout bugs.
+
+### Fixed
+- **Trip Completion Crash**: Fixed a critical bug where completing a trip caused a white screen crash due to a missing `null` check on the `activeTrip` object.
+## [2.0.3] - 2026-03-03 - (Panya)
+
+### Added
+- UAT for test driver send notification to passenger
+- API Integration for test driver send notification to passenger
