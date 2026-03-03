@@ -31,14 +31,10 @@ const createReview = async (userId, data) => {
             throw new ApiError(403, 'You are not authorized to review this booking');
         }
 
-        // 3. Validate Booking Status & Route Status
-        // Booking must be CONFIRMED and Route should be COMPLETED
+        // 3. Validate Booking Status
+        // Booking must be COMPLETED
         if (booking.status !== BookingStatus.COMPLETED) {
-            throw new ApiError(400, 'Only confirmed bookings can be reviewed');
-        }
-
-        if (booking.route.status !== RouteStatus.COMPLETED) {
-            throw new ApiError(400, 'Cannot review a trip that is not completed');
+            throw new ApiError(400, 'Only completed bookings can be reviewed');
         }
 
         // 4. Check if review already exists

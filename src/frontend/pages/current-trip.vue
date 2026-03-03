@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 text-gray-900 font-kanit">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <!-- <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <NuxtLink :to="role === 'DRIVER' ? '/myRoute' : '/myTrip'" class="p-2 hover:bg-gray-100 rounded-full transition">
@@ -19,7 +19,7 @@
             <span class="text-sm font-medium text-blue-600">{{ statusText }}</span>
         </div>
       </div>
-    </header>
+    </header> -->
 
     <main v-if="isLoading" class="flex flex-col items-center justify-center h-[calc(100vh-64px)]">
         <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -83,13 +83,7 @@
                                     <span class="text-xs text-gray-400">({{ activeTrip.route.driver.ratingCount || 0 }})</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <button @click="openBubbleChat" title="Check Driver Status" class="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition flex items-center gap-1">
-                                    <span class="text-xs font-bold hidden sm:inline">ตรวจสอบสถานะ</span>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                </button>
+                           
                             </div>
                         </div>
                         <div class="space-y-3">
@@ -158,7 +152,7 @@
                                                 <p class="text-[10px] text-blue-600 font-medium">{{ b.numberOfSeats }} ที่นั่ง</p>
                                             </div>
                                         </div>
-                                        <div v-if="activeTrip.route.status === 'IN_TRANSIT'" class="flex gap-1" @click.stop>
+                                        <div v-if="activeTrip.route.status === 'IN_TRANSIT'" class="flex gap-2" @click.stop>
                                             <button @click="openArrivalPicker(b)" title="แจ้งเตือนจะถึงแล้ว" class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405C18.21 14.79 18 13.918 18 13V9a6 6 0 10-12 0v4c0 .918-.21 1.79-.595 2.595L4 17h5m6 0a3 3 0 11-6 0h6z"/></svg>
                                             </button>
@@ -460,7 +454,11 @@
                         <div>
                             <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">ประเภทปัญหา</label>
                             <select v-model="driverReportCategory" class="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                <option v-if="driverReportType === 'passenger'" value="PASSENGER_ISSUE">ปัญหาจากผู้โดยสาร</option>
+                                <option v-if="driverReportType === 'passenger'" value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม</option>
+                                <option v-if="driverReportType === 'passenger'" value="NO_SHOW">ผู้โดยสารไม่มาพบตามจุดนัดหมาย</option>
+                                <option v-if="driverReportType === 'passenger'" value="LATE_ISSUE">ผู้โดยสารมาช้ามาก</option>
+                                <option v-if="driverReportType === 'passenger'" value="WRONG_INFO">ผู้โดยสารไม่ใช่คนเดียวกับที่จอง</option>
+                                
                                 <option v-if="driverReportType === 'incident'" value="VEHICLE_ISSUE">ปัญหายานพาหนะ</option>
                                 <option v-if="driverReportType === 'incident'" value="ROAD_ISSUE">ปัญหาถนน/เส้นทาง</option>
                                 <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย</option>
@@ -520,8 +518,11 @@
                             <select v-model="passengerReportCategory" class="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                                 <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ</option>
                                 <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย</option>
-                                <option value="PASSENGER_ISSUE">พฤติกรรมคนขับ</option>
+                                <option value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม</option>
+                                <option value="LATE_ISSUE">คนขับมาช้ากว่ากำหนดมาก</option>
+                                <option value="WRONG_INFO">ข้อมูลคนขับหรือรถไม่ตรงปก</option>
                                 <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน</option>
+                                <option value="APP_ISSUE">แอปมีปัญหา/ขัดข้อง</option>
                                 <option value="OTHER">อื่นๆ</option>
                             </select>
                         </div>
@@ -1139,8 +1140,17 @@ onEvent('booking:passengerStatusChanged', async (data) => {
     if (activeTrip.value && activeTrip.value.route.id === data.routeId) {
         await fetchActiveTrip()
         nextTick(() => { if (mapDisplay.value && activeTrip.value) initMap() })
+
+        // ถ้าผู้โดยสารคนนี้ถูก driver ส่งถึงที่หมายแล้ว → เปิด review modal ทันที
+        // ไม่ต้องรอให้คนอื่น หรือให้ทริปทั้งหมดจบก่อน
+        if (role.value === 'PASSENGER' && data.status === 'COMPLETED') {
+            if (myBooking.value?.id === data.bookingId) {
+                isTripCompleted.value = true
+            }
+        }
     }
 })
+
 
 onEvent('booking:created', async (data) => {
     if (activeTrip.value && activeTrip.value.route.id === data.routeId) {
@@ -1169,6 +1179,21 @@ onEvent('booking:tripCompleted', async () => {
     await fetchActiveTrip()
 })
 
+
+// --- Passenger Kick: fired by driver when they mark passenger as no-show ---
+onEvent('booking:passengerKicked', (data) => {
+    // Only handle if the current user is a passenger on this trip
+    if (role.value !== 'PASSENGER') return
+    if (!activeTrip.value || activeTrip.value.route.id !== data.routeId) return
+
+    toast.error('การจองถูกยกเลิก', data.message || 'คนขับไม่พบคุณ ณ จุดนัดพบ การจองของคุณถูกยกเลิก')
+
+    // Redirect to myTrip after 2 seconds
+    setTimeout(() => {
+        router.push('/myTrip')
+    }, 2000)
+})
+  
 useHead({
     title: 'การเดินทางปัจจุบัน - ไปนำแหน่',
     script: process.client && !window.google?.maps ? [{

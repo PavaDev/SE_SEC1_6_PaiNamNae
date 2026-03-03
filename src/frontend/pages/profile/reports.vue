@@ -273,7 +273,11 @@ function categoryLabel(cat) {
         SAFETY_ISSUE: 'ปัญหาความปลอดภัย',
         ROAD_ISSUE: 'ปัญหาถนน / เส้นทาง',
         PAYMENT_ISSUE: 'ปัญหาการชำระเงิน',
-        PASSENGER_ISSUE: 'ปัญหาพฤติกรรม',
+        PASSENGER_ISSUE: 'พฤติกรรมไม่เหมาะสม',
+        LATE_ISSUE: 'ความล่าช้า',
+        WRONG_INFO: 'ข้อมูลไม่ตรงตามที่ระบุ',
+        APP_ISSUE: 'ปัญหาการใช้งานแอปพลิเคชัน',
+        NO_SHOW: 'ไม่มาพบตามจุดนัดหมาย',
         OTHER: 'อื่นๆ',
     }
     return map[cat] || cat
