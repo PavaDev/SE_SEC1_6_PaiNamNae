@@ -1093,10 +1093,13 @@ function getReportStatusText(status) {
 function getCategoryText(cat) {
     const cats = {
         VEHICLE_ISSUE: 'ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง',
-        PASSENGER_ISSUE: 'พฤติกรรมผู้โดยสารที่ไม่เหมาะสม',
+        PASSENGER_ISSUE: 'พฤติกรรมไม่เหมาะสม',
         ROAD_ISSUE: 'ปัญหาระหว่างเส้นทาง',
         SAFETY_ISSUE: 'ความปลอดภัย/พฤติกรรม',
         PAYMENT_ISSUE: 'ปัญหาการชำระเงิน',
+        LATE_ISSUE: 'ความล่าช้า',
+        WRONG_INFO: 'ข้อมูลไม่ตรงตามที่ระบุ',
+        APP_ISSUE: 'ปัญหาการใช้งานแอปพลิเคชัน',
         NO_SHOW: 'ผู้โดยสารไม่มาพบตามจุดนัดหมาย',
         OTHER: 'อื่น ๆ'
     }

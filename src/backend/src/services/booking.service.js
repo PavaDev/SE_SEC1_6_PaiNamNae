@@ -3,6 +3,12 @@ const ApiError = require('../utils/ApiError');
 const { RouteStatus, BookingStatus } = require('@prisma/client');
 const { checkAndApplyPassengerSuspension } = require('./penalty.service');
 const { getIO } = require('../socket');
+const { sendArrivalNotificationEmail, sendNoShowEmail } = require('./email.service');
+
+// --- Spam prevention: cooldown Map for arrival notifications ---
+// Key: bookingId, Value: timestamp of last notify
+const arrivalCooldowns = new Map();
+const ARRIVAL_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
 const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT, BookingStatus.COMPLETED];
 
@@ -522,6 +528,15 @@ module.exports = {
 };
 
 async function notifyArrival(bookingId, minutes, userId) {
+  // --- Spam prevention ---
+  const now = Date.now();
+  const lastSent = arrivalCooldowns.get(bookingId);
+  if (lastSent && now - lastSent < ARRIVAL_COOLDOWN_MS) {
+    const remainingSec = Math.ceil((ARRIVAL_COOLDOWN_MS - (now - lastSent)) / 1000);
+    const remainingMin = Math.ceil(remainingSec / 60);
+    throw new ApiError(429, `กรุณารอก่อน คุณเพิ่งส่งแจ้งเตือนไปแล้ว กรุณารออีก ${remainingMin} นาที`);
+  }
+
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -529,7 +544,8 @@ async function notifyArrival(bookingId, minutes, userId) {
         include: {
           driver: { select: { firstName: true, lastName: true } }
         }
-      }
+      },
+      passenger: { select: { id: true, email: true, firstName: true, lastName: true } }
     }
   });
 
@@ -539,6 +555,9 @@ async function notifyArrival(bookingId, minutes, userId) {
     throw new ApiError(400, 'สามารถแจ้งเตือนได้เฉพาะผู้โดยสารที่ยืนยันแล้วหรือกำลังเดินทางเท่านั้น');
   }
 
+  // Record cooldown timestamp BEFORE emitting to prevent double-send on concurrent calls
+  arrivalCooldowns.set(bookingId, now);
+
   const io = getIO();
   io.to(`user:${booking.passengerId}`).emit('booking:driverArriving', {
     bookingId,
@@ -547,13 +566,28 @@ async function notifyArrival(bookingId, minutes, userId) {
     driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`
   });
 
+  // Send email asynchronously (don't block the response)
+  sendArrivalNotificationEmail(
+    booking.passenger,
+    booking.route.driver,
+    booking,
+    minutes
+  ).catch(err => console.error('[Email] sendArrivalNotificationEmail failed:', err.message));
+
   return { success: true };
 }
 
 async function updatePassengerStatus(id, status, userId, reason) {
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { route: true },
+    include: {
+      route: {
+        include: {
+          driver: { select: { firstName: true, lastName: true } }
+        }
+      },
+      passenger: { select: { id: true, email: true, firstName: true, lastName: true } }
+    },
   });
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.route.driverId !== userId) {
@@ -566,7 +600,7 @@ async function updatePassengerStatus(id, status, userId, reason) {
     throw new ApiError(400, 'สถานะไม่ถูกต้อง');
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const updateData = { status };
     if (status === BookingStatus.CANCELLED) {
       updateData.cancelledAt = new Date();
@@ -619,4 +653,29 @@ async function updatePassengerStatus(id, status, userId, reason) {
 
     return updated;
   });
+
+  // --- ถ้า NO_SHOW: ส่ง socket kick + email ---
+  if (status === BookingStatus.CANCELLED) {
+    try {
+      const io = getIO();
+      // Kick passenger out of current-trip page
+      io.to(`user:${booking.passengerId}`).emit('booking:passengerKicked', {
+        bookingId: id,
+        routeId: booking.routeId,
+        reason: reason || 'NO_SHOW',
+        message: `คนขับไม่พบคุณ ณ จุดนัดพบ การจองถูกยกเลิก`,
+      });
+    } catch (e) {
+      console.error('[Socket] Failed to emit booking:passengerKicked:', e.message);
+    }
+
+    // Send no-show email asynchronously
+    sendNoShowEmail(
+      booking.passenger,
+      booking.route.driver,
+      booking
+    ).catch(err => console.error('[Email] sendNoShowEmail failed:', err.message));
+  }
+
+  return result;
 }

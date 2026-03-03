@@ -288,3 +288,18 @@ This project follows semantic versioning.
 - **WebSocket Connectivity**: Fixed connection issues by removing hardcoded user IDs
 - **Booking Data**: Resolved issues with booking data fetching and display
 - **UI Responsiveness**: Improved layout for driver action buttons on mobile devices
+
+
+## [2.0.5] - 2026-03-03 - (Pavarit)
+
+### Added
+- **Email Notification System**
+  - **Driver UI**: "แจ้งถึงในอีกกี่นาที" button on `current-trip` page for drivers
+  - **Passenger UI**: Real-time arrival notifications with countdown timer
+  - **Booking Service**: `notifyArrival` method to handle arrival notifications
+  - **Notification Service**: `sendArrivalNotification` method for WebSocket broadcasting
+  - **WebSocket Integration**: Real-time arrival updates to passengers
+  - **Quick Selection**: 5, 10, 15, 20, 25, 30 minute presets for arrival time
+  - **Validation**: Arrival time validation and submission error handling 
+  - **Email Service**: `sendArrivalNotificationEmail` method for sending arrival notifications to passengers
+  - **Email Service**: `sendNoShowEmail` method for sending no-show 

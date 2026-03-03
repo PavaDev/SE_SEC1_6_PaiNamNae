@@ -413,32 +413,74 @@
             </div>
         </header>
 
-        <!-- Driver Arrival Notification Modal (Global) -->
-        <div v-if="showArrivalModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showArrivalModal = false"></div>
-            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-                <div class="p-8 text-center bg-gradient-to-b from-blue-50 to-white">
-                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h2 class="text-xl font-bold text-gray-900 mb-2">คนขับกำลังเดินทางมา!</h2>
-                    <p class="text-gray-600 mb-8">
-                        คุณ <span class="font-bold text-blue-600">{{ arrivalData?.driverName }}</span> กำลังจะมาถึงจุดนัดพบภายใน <span class="font-bold text-blue-600 text-lg">{{ arrivalData?.minutes }} นาที</span>
-                    </p>
-                    <button @click="showArrivalModal = false" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition">
-                        รับทราบ
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <main class="flex-1">
             <NuxtPage />
         </main>
     </div>
+
+    <!-- ========== Global Driver Arrival Modal ========== -->
+    <Teleport to="body">
+        <Transition
+            enter-active-class="transition ease-out duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="showArrivalModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                <!-- Backdrop -->
+                <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showArrivalModal = false"></div>
+                <!-- Modal Card -->
+                <Transition
+                    enter-active-class="transition ease-out duration-300"
+                    enter-from-class="opacity-0 scale-90"
+                    enter-to-class="opacity-100 scale-100"
+                >
+                    <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden">
+                        <!-- Close button -->
+                        <button @click="showArrivalModal = false"
+                            class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+
+                        <!-- Header gradient -->
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-700 px-8 pt-10 pb-14 text-center">
+                            <!-- Animated car icon -->
+                            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30">
+                                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                        d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9l1.5-4.5A2 2 0 016.4 3h11.2a2 2 0 011.9 1.5L21 9M3 9h18M3 9l-1 6h20l-1-6"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-black text-white mb-1">คนขับกำลังมาถึง!</h2>
+                            <p class="text-blue-100 text-sm">{{ arrivalData?.driverName || 'คนขับ' }} กำลังมุ่งหน้ามาหาคุณ</p>
+                        </div>
+
+                        <!-- Content (overlap card style) -->
+                        <div class="-mt-8 mx-4 bg-white rounded-2xl shadow-lg px-6 py-5 mb-4 text-center">
+                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">เวลาโดยประมาณ</p>
+                            <p class="text-5xl font-black text-blue-600 leading-none">{{ arrivalData?.minutes }}<span class="text-xl text-gray-400 font-normal ml-1">นาที</span></p>
+                        </div>
+
+                        <!-- Footer action -->
+                        <div class="px-6 pb-6">
+                            <p class="text-center text-xs text-gray-400 mb-4">กรุณาเตรียมตัวให้พร้อม ณ จุดนัดพบของคุณ</p>
+                            <button @click="showArrivalModal = false"
+                                class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                                รับทราบ
+                            </button>
+                        </div>
+                    </div>
+                </Transition>
+            </div>
+        </Transition>
+    </Teleport>
+
 </template>
+
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'

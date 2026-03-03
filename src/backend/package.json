@@ -28,6 +28,11 @@
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+<<<<<<< Updated upstream
+=======
+    "nodemailer": "^8.0.1",
+    "prisma": "^6.19.2",
+>>>>>>> Stashed changes
     "prom-client": "^15.1.2",
     "socket.io": "^4.8.3",
     "swagger-jsdoc": "^6.2.8",
