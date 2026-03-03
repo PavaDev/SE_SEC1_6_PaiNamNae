@@ -346,10 +346,16 @@ This project follows semantic versioning.
 ## [2.0.6] - 2026-03-03 - (Arimeta)
 
 ### Changed
-- **Refactored folder**
+- **Refact folder name**
   - docs to doc
   - src to code
   - tests to test
 
 ### Added
-- **User Manaul**: Added User_manual.md in doc
+- **Folders**
+  - Added adapt_blueprint and test_report in doc
+  - Added test_data and test_design in folder test
+- **Documents**
+  - Added User_manual, adapt_blueprint and test_report to doc
+  - Added sprint2 to sprint_backlog
+  - Added test_data and test_design to test
