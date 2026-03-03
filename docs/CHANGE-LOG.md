@@ -315,3 +315,8 @@ This project follows semantic versioning.
 
 ### Fixed
 - **Trip Completion Crash**: Fixed a critical bug where completing a trip caused a white screen crash due to a missing `null` check on the `activeTrip` object.
+## [2.0.3] - 2026-03-03 - (Panya)
+
+### Added
+- UAT for test driver send notification to passenger
+- API Integration for test driver send notification to passenger
