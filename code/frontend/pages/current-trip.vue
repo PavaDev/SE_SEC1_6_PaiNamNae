@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 text-gray-900 font-kanit">
     <!-- Header -->
-    <!-- <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <NuxtLink :to="role === 'DRIVER' ? '/myRoute' : '/myTrip'" class="p-2 hover:bg-gray-100 rounded-full transition">
@@ -19,7 +19,7 @@
             <span class="text-sm font-medium text-blue-600">{{ statusText }}</span>
         </div>
       </div>
-    </header> -->
+    </header>
 
     <main v-if="isLoading" class="flex flex-col items-center justify-center h-[calc(100vh-64px)]">
         <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -82,8 +82,6 @@
                                     <span class="text-xs font-semibold text-yellow-600">★ {{ activeTrip.route.driver.ratingAverage?.toFixed(1) || '0.0' }}</span>
                                     <span class="text-xs text-gray-400">({{ activeTrip.route.driver.ratingCount || 0 }})</span>
                                 </div>
-                            </div>
-                           
                             </div>
                         </div>
                         <div class="space-y-3">

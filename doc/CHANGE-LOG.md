@@ -359,3 +359,21 @@ This project follows semantic versioning.
   - Added User_manual, adapt_blueprint and test_report to doc
   - Added sprint2 to sprint_backlog
   - Added test_data and test_design to test
+
+## [2.0.7] - 2026-03-15 - (Narathaip)
+
+### Fixed
+- **Frontend Build Recovery**
+  - Fixed `RollupError` in `pages/current-trip.vue` caused by malformed HTML (redundant `</div>` tag).
+  - Fixed `SyntaxError` in `app.vue` caused by duplicate `useAuth` declarations.
+- **UI Restoration**
+  - Restored the Navigation Bar in `pages/current-trip.vue` by reactivating the header section.
+- **Docker Build**
+  - Resolved build failures preventing `docker compose up --build` from completing.
+
+### Added / Improved
+- **Authentication Stability**
+  - Added `fetchMe` to `useAuth` composable to reliably sync user profiles.
+  - Improved Layouts (`default.vue`, `default_v1.vue`) to automatically handle missing user data and restore Login/Register visibility.
+- **Database Support**
+  - Streamlined database reset and seeding process by ensuring connectivity.
