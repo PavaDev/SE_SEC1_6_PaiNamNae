@@ -447,29 +447,44 @@
                         </button>
 
                         <!-- Header gradient -->
-                        <div class="bg-gradient-to-br from-blue-500 to-blue-700 px-8 pt-10 pb-14 text-center">
-                            <!-- Animated car icon -->
-                            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30">
+                        <div :class="arrivalData?.reason ? 'bg-gradient-to-br from-orange-400 to-orange-600' : 'bg-gradient-to-br from-blue-500 to-blue-700'" 
+                            class="px-8 pt-10 pb-14 text-center transition-colors duration-500">
+                            <!-- Icon -->
+                            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30 backdrop-blur-md transition-all duration-300">
                                 <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                        d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4zM3 9l1.5-4.5A2 2 0 016.4 3h11.2a2 2 0 011.9 1.5L21 9M3 9h18M3 9l-1 6h20l-1-6"/>
+                                  <path v-if="!arrivalData?.reason" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405C18.21 14.79 18 13.918 18 13V9a6 6 0 10-12 0v4c0 .918-.21 1.79-.595 2.595L4 17h5m6 0a3 3 0 11-6 0h6z"/>
+                                  <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                 </svg>
                             </div>
-                            <h2 class="text-2xl font-black text-white mb-1">คนขับกำลังมาถึง!</h2>
-                            <p class="text-blue-100 text-sm">{{ arrivalData?.driverName || 'คนขับ' }} กำลังมุ่งหน้ามาหาคุณ</p>
+                            <h2 class="text-2xl font-black text-white mb-1">
+                                {{ arrivalData?.reason ? 'เหตุขัดข้อง/ล่าช้า' : 'คนขับกำลังมาถึง!' }}
+                            </h2>
+                            <p class="text-white/80 text-sm font-medium">คุณ {{ arrivalData?.driverName || 'คนขับ' }} กำลังมุ่งหน้ามาหาคุณ</p>
                         </div>
 
                         <!-- Content (overlap card style) -->
                         <div class="-mt-8 mx-4 bg-white rounded-2xl shadow-lg px-6 py-5 mb-4 text-center">
                             <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">เวลาโดยประมาณ</p>
-                            <p class="text-5xl font-black text-blue-600 leading-none">{{ arrivalData?.minutes }}<span class="text-xl text-gray-400 font-normal ml-1">นาที</span></p>
+                            <p class="text-5xl font-black leading-none" :class="arrivalData?.reason ? 'text-orange-600' : 'text-blue-600'">
+                                {{ arrivalData?.minutes }}<span class="text-xl text-gray-400 font-normal ml-1">นาที</span>
+                            </p>
+                        </div>
+
+                        <!-- Special Reason Box -->
+                        <div v-if="arrivalData?.reason" class="mx-6 mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl text-left animate-in slide-in-from-bottom-2 duration-500">
+                            <div class="flex items-center gap-2 mb-1">
+                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <span class="text-[10px] font-bold text-orange-600 uppercase">อัปเดตสถานะ/เหตุขัดข้อง</span>
+                            </div>
+                            <p class="text-sm font-bold text-orange-800">{{ arrivalData?.reason }}</p>
                         </div>
 
                         <!-- Footer action -->
-                        <div class="px-6 pb-6">
-                            <p class="text-center text-xs text-gray-400 mb-4">กรุณาเตรียมตัวให้พร้อม ณ จุดนัดพบของคุณ</p>
+                        <div class="px-6 pb-6 text-center">
+                            <p v-if="!arrivalData?.reason" class="text-xs text-gray-400 mb-4 font-medium">กรุณาเตรียมตัวให้พร้อม ณ จุดนัดพบของคุณ</p>
                             <button @click="showArrivalModal = false"
-                                class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                                class="w-full py-4 text-white font-black rounded-2xl shadow-xl transition-all active:scale-95"
+                                :class="arrivalData?.reason ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'">
                                 รับทราบ
                             </button>
                         </div>
@@ -750,6 +765,9 @@ const showArrivalModal = ref(false)
 const arrivalData = ref(null)
 
 onEvent('booking:driverArriving', (data) => {
+    // If we're on the current-trip page, it has its own detailed modal, so skip this one
+    if (route.path === '/current-trip') return
+    
     arrivalData.value = data
     showArrivalModal.value = true
 })

@@ -16,8 +16,9 @@ const transporter = nodemailer.createTransport({
  * @param {Object} driver    - { firstName, lastName }
  * @param {Object} booking   - { id, routeId, pickupLocation, dropoffLocation, numberOfSeats }
  * @param {number} minutes   - จำนวนนาทีที่คาดว่าจะถึง
+ * @param {string} [reason]  - เหตุผลความล่าช้า (ถ้ามี)
  */
-async function sendArrivalNotificationEmail(passenger, driver, booking, minutes) {
+async function sendArrivalNotificationEmail(passenger, driver, booking, minutes, reason) {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
         console.warn('[Email] SMTP credentials not configured, skipping email.');
         return;
@@ -37,6 +38,10 @@ async function sendArrivalNotificationEmail(passenger, driver, booking, minutes)
           <p style="margin: 0; color: #1e40af; font-size: 18px; font-weight: bold; text-align: center;">
             ⏱️ คุณ${driver.firstName} ${driver.lastName} จะมาถึงใน <span style="font-size: 24px;">${minutes} นาที</span>
           </p>
+          ${reason ? `
+          <p style="margin: 8px 0 0; color: #1e40af; font-size: 14px; text-align: center; background: white; padding: 8px; border-radius: 8px; border: 1px dashed #bfdbfe;">
+            💡 <strong>หมายเหตุ:</strong> ${reason}
+          </p>` : ''}
         </div>
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
           <tr>

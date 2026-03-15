@@ -376,4 +376,22 @@ This project follows semantic versioning.
   - Added `fetchMe` to `useAuth` composable to reliably sync user profiles.
   - Improved Layouts (`default.vue`, `default_v1.vue`) to automatically handle missing user data and restore Login/Register visibility.
 - **Database Support**
-  - Streamlined database reset and seeding process by ensuring connectivity.
+  - Streamlined database reset and seeding process by ensuring connectivity.
+
+
+## [2.0.8] - 2026-03-15 - (Narathaip)
+
+### Added / Improved
+- **Enhanced Arrival Notification System**
+  - Added **Driver's Name** to the passenger arrival modal for better identification.
+  - Implemented **Theme-based UI**: The notification modal now dynamically switches to an **Orange/Amber** theme when an emergency or delay is reported.
+  - Added support for **"เหตุผลที่มาถึงช้า" (Reason for Delay)** allowing drivers to provide context for arrival updates.
+  - Improved **Emergency Alert Persistence**: Ensured emergency notifications reappear for passengers if a new alert is sent, even if the previous modal was dismissed.
+- **Backend API & Validation**
+  - Updated `Booking` validations to support `reason` and `minutes` in arrival notifications.
+  - Added robust validation for `notify-wait` and `passenger-status` updates.
+
+### Fixed
+- **UI & Layout Stability**
+  - Resolved a **Duplicate Overlay** issue in `pages/current-trip.vue` where multiple backdrop elements were rendering simultaneously.
+  - Cleaned up redundant HTML tags causing layout inconsistencies in the trip management interface.

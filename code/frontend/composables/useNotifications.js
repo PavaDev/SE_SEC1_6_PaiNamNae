@@ -107,7 +107,9 @@ export function useNotifications() {
         // --- Event Listeners ---
 
         onEvent('booking:driverArriving', (data) => {
-            addNotification(`คนขับใกล้ถึงแล้ว! อีกประมาณ ${data.minutes} นาที`, 'arrival', true)
+            const prefix = data.reason ? '⚠️ แจ้งความล่าช้า: ' : '🚗 ใกล้ถึงแล้ว: '
+            const reasonText = data.reason ? ` เนื่องจาก: ${data.reason}` : ''
+            addNotification(`${prefix}คนขับจะมาถึงในอีกประมาณ ${data.minutes} นาที${reasonText}`, 'arrival', true)
         })
 
         onEvent('trip:started', () => {

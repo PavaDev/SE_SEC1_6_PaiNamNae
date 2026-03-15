@@ -80,6 +80,10 @@ module.exports = {
     reason: z.string().optional(),
   }),
   notifyArrivalSchema: z.object({
-    minutes: z.number().int().min(1).max(30),
+    minutes: z.number().int().min(1).max(60),
+    reason: z.string().nullable().optional(),
+  }),
+  notifyWaitSchema: z.object({
+    reason: z.string().nullable().optional(),
   }),
 };

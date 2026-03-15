@@ -8,7 +8,8 @@ const { sendArrivalNotificationEmail, sendNoShowEmail } = require('./email.servi
 // --- Spam prevention: cooldown Map for arrival notifications ---
 // Key: bookingId, Value: timestamp of last notify
 const arrivalCooldowns = new Map();
-const ARRIVAL_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const emergencyTracker = new Map(); // Track timestamps for "spam-allowed" emergency notifications
+const ARRIVAL_COOLDOWN_MS = 30 * 1000; // 30 seconds
 
 const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT, BookingStatus.COMPLETED];
 
@@ -525,16 +526,36 @@ module.exports = {
   updatePassengerStatus,
   updateBookingStatus,
   notifyArrival,
+  notifyWait,
 };
 
-async function notifyArrival(bookingId, minutes, userId) {
-  // --- Spam prevention ---
+async function notifyArrival(bookingId, minutes, userId, reason) {
   const now = Date.now();
-  const lastSent = arrivalCooldowns.get(bookingId);
-  if (lastSent && now - lastSent < ARRIVAL_COOLDOWN_MS) {
-    const remainingSec = Math.ceil((ARRIVAL_COOLDOWN_MS - (now - lastSent)) / 1000);
-    const remainingMin = Math.ceil(remainingSec / 60);
-    throw new ApiError(429, `กรุณารอก่อน คุณเพิ่งส่งแจ้งเตือนไปแล้ว กรุณารออีก ${remainingMin} นาที`);
+  const lastLockout = arrivalCooldowns.get(bookingId);
+
+  // Phase 1 Lock: Only applies to NORMAL notifications (no reason)
+  if (!reason && lastLockout && (now - lastLockout < 30 * 1000)) {
+    throw new ApiError(400, 'คุณส่งข้อมูลถี่เกินไป กรุณารอสักพัก (30 วินาที) ก่อนแจ้งใหม่');
+  }
+
+  if (reason) {
+    // Phase 2: Emergency mode (Bypasses normal lock, but capped at 3 per 10s)
+    let logs = emergencyTracker.get(bookingId) || [];
+    logs = logs.filter(t => now - t < 10000);
+
+    if (logs.length >= 3) {
+      // Trigger a hard lock if emergency spam limit reached
+      arrivalCooldowns.set(bookingId, now); 
+      throw new ApiError(400, 'คุณส่งข้อมูลฉุกเฉินถี่เกินไป (3 ครั้ง/10วิ) ระบบล็อกชั่วคราว 30 วินาที');
+    }
+    
+    // Add current timestamp to logs for this emergency
+    logs.push(now);
+    emergencyTracker.set(bookingId, logs);
+  } else {
+    // Phase 1: Normal mode -> Immediate 30s cooldown
+    arrivalCooldowns.set(bookingId, now);
+    emergencyTracker.delete(bookingId); // Reset spam tracker for this booking
   }
 
   const booking = await prisma.booking.findUnique({
@@ -555,14 +576,12 @@ async function notifyArrival(bookingId, minutes, userId) {
     throw new ApiError(400, 'สามารถแจ้งเตือนได้เฉพาะผู้โดยสารที่ยืนยันแล้วหรือกำลังเดินทางเท่านั้น');
   }
 
-  // Record cooldown timestamp BEFORE emitting to prevent double-send on concurrent calls
-  arrivalCooldowns.set(bookingId, now);
-
   const io = getIO();
   io.to(`user:${booking.passengerId}`).emit('booking:driverArriving', {
     bookingId,
     routeId: booking.routeId,
     minutes,
+    reason,
     driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`
   });
 
@@ -571,7 +590,8 @@ async function notifyArrival(bookingId, minutes, userId) {
     booking.passenger,
     booking.route.driver,
     booking,
-    minutes
+    minutes,
+    reason
   ).catch(err => console.error('[Email] sendArrivalNotificationEmail failed:', err.message));
 
   return { success: true };
@@ -678,4 +698,43 @@ async function updatePassengerStatus(id, status, userId, reason) {
   }
 
   return result;
+}
+
+async function notifyWait(bookingId, passengerId, reason) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      route: true,
+      passenger: { select: { firstName: true, lastName: true } }
+    }
+  });
+
+  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (booking.passengerId !== passengerId) throw new ApiError(403, 'Forbidden');
+  if (booking.status !== BookingStatus.CONFIRMED && booking.status !== BookingStatus.IN_TRANSIT) {
+    throw new ApiError(400, 'สามารถแจ้งให้รอได้เฉพาะกรณีที่ยืนยันแล้วเท่านั้น');
+  }
+
+  const io = getIO();
+  // Notify driver via socket
+  io.to(`user:${booking.route.driverId}`).emit('booking:passengerRequestWait', {
+    bookingId,
+    routeId: booking.routeId,
+    passengerId,
+    passengerName: `${booking.passenger.firstName} ${booking.passenger.lastName}`,
+    reason
+  });
+
+  // Create official notification for driver
+  await prisma.notification.create({
+    data: {
+      userId: booking.route.driverId,
+      type: 'BOOKING',
+      title: 'ผู้โดยสารขอให้รอสักครู่',
+      body: `คุณ ${booking.passenger.firstName} ขอให้คุณช่วยรอก่อน: ${reason || 'ไม่มีเหตุผลระบุ'}`,
+      metadata: { kind: 'PASSENGER_WAIT_REQUEST', bookingId, routeId: booking.routeId, reason }
+    }
+  });
+
+  return { success: true };
 }
