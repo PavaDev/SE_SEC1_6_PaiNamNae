@@ -53,6 +53,20 @@ function initSocket(httpServer, corsOptions) {
             socket.leave('trips');
         });
 
+        // Join/leave a specific trip chat room (for /current-trip page)
+        socket.on('join-trip', (routeId) => {
+            if (routeId && typeof routeId === 'string') {
+                socket.join(`trip:${routeId}`);
+                console.log(`🗨️  User ${socket.userId} joined trip:${routeId}`);
+            }
+        });
+
+        socket.on('leave-trip', (routeId) => {
+            if (routeId && typeof routeId === 'string') {
+                socket.leave(`trip:${routeId}`);
+            }
+        });
+
         socket.on('disconnect', (reason) => {
             console.log(`🔌 Socket disconnected: ${socket.id} (${reason})`);
         });
@@ -73,3 +87,4 @@ function getIO() {
 }
 
 module.exports = { initSocket, getIO };
+

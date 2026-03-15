@@ -35,6 +35,14 @@ export function useSocket() {
     }
 
     /**
+     * Emit a socket event to the server.
+     */
+    function emit(event, ...args) {
+        const s = getSocket()
+        if (s) s.emit(event, ...args)
+    }
+
+    /**
      * Join a Socket.IO room (server-side).
      */
     function joinRoom(room) {
@@ -71,8 +79,10 @@ export function useSocket() {
         socket: getSocket(),
         onEvent,
         offEvent,
+        emit,
         joinRoom,
         leaveRoom,
         cleanup,
     }
 }
+

@@ -68,10 +68,13 @@ const createReview = async (userId, data) => {
             _count: { rating: true }
         });
 
+        const rawAvg = aggregate._avg.rating || 0;
+        const roundedAvg = Math.round(rawAvg * 2) / 2;
+
         await tx.user.update({
             where: { id: revieweeId },
             data: {
-                ratingAverage: aggregate._avg.rating || 0,
+                ratingAverage: roundedAvg,
                 ratingCount: aggregate._count.rating || 0
             }
         });
