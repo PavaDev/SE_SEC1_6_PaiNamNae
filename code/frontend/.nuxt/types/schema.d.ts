@@ -19,6 +19,8 @@ import { NuxtModule, ModuleDependencyMeta } from '@nuxt/schema'
    apiBase: string,
 
    googleMapsApiKey: string,
+
+   vapidPublicKey: string,
   }
 declare module '@nuxt/schema' {
   interface ModuleDependencies {

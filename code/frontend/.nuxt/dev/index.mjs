@@ -650,7 +650,8 @@ const _inlineRuntimeConfig = {
   },
   "public": {
     "apiBase": "http://localhost:3000/api/",
-    "googleMapsApiKey": "AIzaSyC7o-2oUOFQlrcpvOjczc0pjd7ajGhCV_Q"
+    "googleMapsApiKey": "AIzaSyBquE9Kfdlj5joA904KzjjhOqAkOIbzHcs",
+    "vapidPublicKey": "BPzJIlZgpC6eUT9FxnezScfezfh3LU-ODCVxE5KJn9GvqDA7_Qbnn7WUc4sPwZPUSGx_SHZyr7mBjOLltPxVpMk"
   }
 };
 const envOptions = {
