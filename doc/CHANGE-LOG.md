@@ -359,3 +359,61 @@ This project follows semantic versioning.
   - Added User_manual, adapt_blueprint and test_report to doc
   - Added sprint2 to sprint_backlog
   - Added test_data and test_design to test
+
+
+## [3.0.0] - 2026-03-15 - (Narathaip)
+
+### Fixed
+- **Frontend Build Recovery**
+  - Fixed `RollupError` in `pages/current-trip.vue` caused by malformed HTML (redundant `</div>` tag).
+  - Fixed `SyntaxError` in `app.vue` caused by duplicate `useAuth` declarations.
+- **UI Restoration**
+  - Restored the Navigation Bar in `pages/current-trip.vue` by reactivating the header section.
+- **Docker Build**
+  - Resolved build failures preventing `docker compose up --build` from completing.
+
+### Added / Improved
+- **Authentication Stability**
+  - Added `fetchMe` to `useAuth` composable to reliably sync user profiles.
+  - Improved Layouts (`default.vue`, `default_v1.vue`) to automatically handle missing user data and restore Login/Register visibility.
+- **Database Support**
+  - Streamlined database reset and seeding process by ensuring connectivity.
+
+
+## [3.0.1] - 2026-03-15 - (Narathaip)
+
+### Added / Improved
+- **Enhanced Arrival Notification System**
+  - Added **Driver's Name** to the passenger arrival modal for better identification.
+  - Implemented **Theme-based UI**: The notification modal now dynamically switches to an **Orange/Amber** theme when an emergency or delay is reported.
+  - Added support for **"เหตุผลที่มาถึงช้า" (Reason for Delay)** allowing drivers to provide context for arrival updates.
+  - Improved **Emergency Alert Persistence**: Ensured emergency notifications reappear for passengers if a new alert is sent, even if the previous modal was dismissed.
+- **Backend API & Validation**
+  - Updated `Booking` validations to support `reason` and `minutes` in arrival notifications.
+  - Added robust validation for `notify-wait` and `passenger-status` updates.
+
+### Fixed
+- **UI & Layout Stability**
+  - Resolved a **Duplicate Overlay** issue in `pages/current-trip.vue` where multiple backdrop elements were rendering simultaneously.
+  - Cleaned up redundant HTML tags causing layout inconsistencies in the trip management interface.
+
+
+## [3.0.2] - 2026-03-16 - (Pavarit)
+
+### Added / Improved
+- **Global Arrival Notification System**
+  - Migrated the **High-Awareness Arrival Modal** from `current-trip.vue` to `layouts/default.vue`, enabling global visibility across all pages.
+  - Implemented **Auto-Dismiss for Chat**: The Trip Chat bubble now automatically closes when the arrival modal appears to prevent UI overlap and ensure passenger awareness.
+  - Redesigned **Arrival Chat Dialogue**: Upgraded arrival notifications within the trip chat to feature a **High-Awareness Dialogue UI** (matching the modal's aesthetic) for better visibility.
+  - Improved **Global Socket Synchronization**: Optimized the `booking:driverArriving` listener to handle real-time updates globally.
+- **Backend & Endpoint Optimization**
+  - Refined the **Arrival Notification Endpoint** logic to dynamically detect existing notices and set the `isUpdate` flag.
+  - Updated the API to handle the `reason` field, enabling drivers to send context-rich arrival updates.
+  - Added `ENABLE_EMAIL_NOTIFICATION` environment variable to control the email notification service during development and testing.
+- **Icon Modernization & Performance**
+
+### Fixed
+- **UI Redundancy & Cleanup**
+  - Removed duplicate arrival modal templates and conflicting logic from `layouts/default.vue` and `current-trip.vue`.
+  - Resolved **Missing Icon** issues in the global modal and notification panels caused by outdated library references.
+  - Fixed Z-index layering issues between chat bubbles and high-priority notification overlays.

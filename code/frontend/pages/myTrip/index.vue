@@ -91,10 +91,14 @@
                                         <h5 class="font-medium text-gray-900">{{ trip.driver.name }}</h5>
                                         <div class="flex items-center cursor-pointer hover:opacity-80" @click.stop="toggleTripDetails(trip.id)">
                                             <div class="flex text-sm text-yellow-400">
-                                                <span>
-                                                    {{ '★'.repeat(Math.round(trip.driver.ratingAverage)) }}{{ '☆'.repeat(5 -
-                                                        Math.round(trip.driver.ratingAverage)) }}
-                                                </span>
+                                                <template v-for="i in 5" :key="i">
+                                                    <span v-if="i <= Math.floor(trip.driver.ratingAverage || 0)">★</span>
+                                                    <span v-else-if="i <= Math.ceil(trip.driver.ratingAverage || 0) && (trip.driver.ratingAverage || 0) % 1 > 0" class="relative">
+                                                        <span class="absolute overflow-hidden w-1/2">★</span>
+                                                        <span class="text-gray-300">★</span>
+                                                    </span>
+                                                    <span v-else class="text-gray-300">★</span>
+                                                </template>
                                             </div>
                                             <span class="ml-2 text-sm text-gray-600">
                                                 {{ (trip.driver.ratingAverage || 0).toFixed(1) }} ({{ trip.driver.ratingCount }} รีวิว)

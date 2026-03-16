@@ -123,11 +123,17 @@
                                                 </div>
                                                 <div class="flex items-center mt-1">
                                                     <div class="flex text-yellow-400">
-                                                        <span v-for="star in 5" :key="star">{{ star <=
-                                                            route.driver.rating ? '★' : '☆' }}</span>
+                                                        <template v-for="i in 5" :key="i">
+                                                            <span v-if="i <= Math.floor(route.driver.rating)">★</span>
+                                                            <span v-else-if="i <= Math.ceil(route.driver.rating) && route.driver.rating % 1 > 0" class="relative">
+                                                                <span class="absolute overflow-hidden w-1/2">★</span>
+                                                                <span class="text-gray-300">★</span>
+                                                            </span>
+                                                            <span v-else class="text-gray-300">★</span>
+                                                        </template>
                                                     </div>
                                                     <span class="ml-2 text-sm text-gray-600">
-                                                        {{ route.driver.rating }} ({{ route.driver.reviews }} รีวิว)
+                                                        {{ Number(route.driver.rating).toFixed(1) }} ({{ route.driver.reviews }} รีวิว)
                                                     </span>
                                                 </div>
                                             </div>
@@ -311,10 +317,16 @@
                                     </div>
                                     <div class="flex items-center">
                                         <div class="flex text-sm text-yellow-400">
-                                            <span v-for="star in 5" :key="star">{{ star <= bookingRoute.driver.rating
-                                                ? '★' : '☆' }}</span>
+                                            <template v-for="i in 5" :key="i">
+                                                <span v-if="i <= Math.floor(bookingRoute.driver.rating)">★</span>
+                                                <span v-else-if="i <= Math.ceil(bookingRoute.driver.rating) && bookingRoute.driver.rating % 1 > 0" class="relative">
+                                                    <span class="absolute overflow-hidden w-1/2">★</span>
+                                                    <span class="text-gray-300">★</span>
+                                                </span>
+                                                <span v-else class="text-gray-300">★</span>
+                                            </template>
                                         </div>
-                                        <span class="ml-2 text-sm text-gray-600">{{ bookingRoute.driver.rating }} ({{
+                                        <span class="ml-2 text-sm text-gray-600">{{ Number(bookingRoute.driver.rating).toFixed(1) }} ({{
                                             bookingRoute.driver.reviews }} รีวิว)</span>
                                     </div>
                                 </div>
@@ -494,11 +506,16 @@
                 </div>
 
                 <div class="flex items-center text-yellow-400">
-                    <span v-for="star in 5" :key="star">
-                    {{ star <= selectedDriver.rating ? '★' : '☆' }}
-                    </span>
+                    <template v-for="i in 5" :key="i">
+                        <span v-if="i <= Math.floor(selectedDriver.rating)">★</span>
+                        <span v-else-if="i <= Math.ceil(selectedDriver.rating) && selectedDriver.rating % 1 > 0" class="relative">
+                            <span class="absolute overflow-hidden w-1/2">★</span>
+                            <span class="text-gray-300">★</span>
+                        </span>
+                        <span v-else class="text-gray-300">★</span>
+                    </template>
                     <span class="ml-2 text-sm text-gray-600">
-                    {{ selectedDriver.rating }}
+                    {{ Number(selectedDriver.rating).toFixed(1) }}
                     </span>
                 </div>
                 </div>

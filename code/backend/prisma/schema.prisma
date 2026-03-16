@@ -63,6 +63,11 @@ enum NotificationType {
   ROUTE
 }
 
+enum MessageSender {
+  DRIVER
+  PASSENGER
+}
+
 enum ReportType {
   DRIVER
   PASSENGER
@@ -121,6 +126,8 @@ model User {
   reportsMade           Report[]            @relation("ReporterReports")
   reportsReceived       Report[]            @relation("ReportedUser")
   resolvedReports       Report[]            @relation("ResolvedReports")
+  tripMessages          TripMessage[]
+  pushSubscriptions     PushSubscription[]
 
   ratingAverage         Float               @default(0)
   ratingCount           Int                 @default(0)
@@ -225,6 +232,7 @@ model Route {
 
   bookings        Booking[]
   reports         Report[]
+  tripMessages    TripMessage[]
 
   @@index([driverId])
   @@index([vehicleId])
@@ -307,4 +315,32 @@ model Report {
   @@index([status])
   @@index([type])
   @@index([createdAt])
+}
+
+model TripMessage {
+  id          String        @id @default(cuid())
+  routeId     String
+  route       Route         @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User          @relation(fields: [senderId], references: [id])
+  senderRole  MessageSender
+  text        String
+  isSystem    Boolean       @default(false)
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  @@index([routeId, createdAt])
+  @@index([senderId])
+}
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint    String   @unique
+  p256dh      String
+  auth        String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
 }

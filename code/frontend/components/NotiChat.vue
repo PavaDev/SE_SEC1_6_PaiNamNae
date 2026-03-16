@@ -6,8 +6,8 @@
             class="relative flex items-center justify-center w-16 h-16 transition-all duration-300 bg-blue-600 border-2 border-white rounded-full shadow-2xl hover:scale-110 active:scale-95 group"
             aria-label="Toggle Trip Status"
         >
-            <i v-if="!isOpen" class="text-2xl text-white fas fa-bell"></i>
-            <i v-else class="text-2xl text-white fas fa-times"></i>
+            <i v-if="!isOpen" class="text-2xl text-white fa-solid fa-bell"></i>
+            <i v-else class="text-2xl text-white fa-solid fa-xmark"></i>
             
             <!-- Notification Badge -->
             <div v-if="hasUnread && !isOpen" class="absolute top-0 right-1 flex items-center justify-center w-5 h-5 bg-red-500 border-2 border-white rounded-full scale-in-center">
@@ -26,7 +26,7 @@
                     <div class="flex items-center gap-3">
                         <div class="relative w-12 h-12 overflow-hidden bg-blue-50 rounded-2xl border border-blue-100 rotate-3">
                             <div class="flex items-center justify-center w-full h-full text-blue-600">
-                                <i class="fas fa-bullhorn text-xl"></i>
+                                <i class="fa-solid fa-bullhorn text-xl"></i>
                             </div>
                             <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
@@ -39,7 +39,7 @@
                         </div>
                     </div>
                     <button @click="toggleChat" class="flex items-center justify-center w-8 h-8 text-gray-400 transition-all bg-gray-50 rounded-xl hover:bg-gray-100 hover:text-gray-600 hover:rotate-90">
-                        <i class="fas fa-times text-xs"></i>
+                        <i class="fa-solid fa-xmark text-xs"></i>
                     </button>
                 </div>
 
@@ -47,7 +47,7 @@
                 <div ref="messageArea" class="flex-1 p-5 overflow-y-auto bg-gray-50/50 space-y-5 scroll-smooth">
                     <div v-if="notifications.length === 0" class="flex flex-col items-center justify-center h-full text-center p-8 opacity-50">
                         <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-300">
-                            <i class="fas fa-comment-slash text-3xl"></i>
+                            <i class="fa-solid fa-comment-slash text-3xl"></i>
                         </div>
                         <p class="text-sm text-gray-500 font-medium">ยังไม่มีข้อความส่งตรงถึงคุณ</p>
                         <p class="text-[11px] text-gray-400 mt-1">พร้อมรับการเดินทางครั้งถัดไป</p>
@@ -58,17 +58,17 @@
                             <div @click="handleClick(notif)" class="flex max-w-[92%] items-start gap-3" :class="notif.isClickable ? 'cursor-pointer hover:scale-[1.02] active:scale-95 transition-all' : ''">
                                 <div class="flex-shrink-0 w-9 h-9 rounded-2xl flex items-center justify-center text-[14px] shadow-sm border mt-0.5"
                                      :class="getIconBg(notif.type)">
-                                     <i v-if="notif.type === 'arrival'" class="fas fa-map-pin"></i>
-                                     <i v-else-if="notif.type === 'status'" class="fas fa-shield-alt"></i>
-                                     <i v-else-if="notif.type === 'danger'" class="fas fa-exclamation-triangle"></i>
-                                     <i v-else class="fas fa-info-circle"></i>
+                                     <i v-if="notif.type === 'arrival'" class="fa-solid fa-location-pin"></i>
+                                     <i v-else-if="notif.type === 'status'" class="fa-solid fa-shield"></i>
+                                     <i v-else-if="notif.type === 'danger'" class="fa-solid fa-triangle-exclamation"></i>
+                                     <i v-else class="fa-solid fa-circle-info"></i>
                                 </div>
                                 <div class="bg-white px-5 py-3.5 rounded-3xl rounded-tl-none text-[13px] shadow-sm border border-gray-100 transition-all hover:shadow-md hover:border-blue-100">
                                     <div class="whitespace-pre-wrap leading-relaxed text-gray-700 font-semibold" :class="notif.isClickable ? 'text-blue-700' : ''">
                                         {{ notif.text }}
                                     </div>
                                     <div class="mt-2 text-[10px] text-gray-400 flex items-center gap-1.5 font-medium">
-                                        <i class="far fa-clock text-[9px]"></i>
+                                        <i class="fa-regular fa-clock text-[9px]"></i>
                                         {{ notif.time }}
                                     </div>
                                 </div>
