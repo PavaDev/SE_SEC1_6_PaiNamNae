@@ -746,6 +746,27 @@ async function updatePassengerStatus(id, status, userId, reason) {
       }
     });
 
+    // --- Save system message to TripChat for Check-in/Completion ---
+    if (status === BookingStatus.IN_TRANSIT || status === BookingStatus.COMPLETED) {
+      try {
+        const chatService = require('./chat.service');
+        const passengerName = booking.passenger.firstName;
+        const systemText = status === BookingStatus.IN_TRANSIT 
+          ? `✅ @${passengerName} เช็คอินขึ้นรถเรียบร้อยแล้ว!`
+          : `🏁 @${passengerName} ถึงจุดหมายปลายทางแล้ว`;
+        
+        const metadata = {
+          type: 'STATUS_UPDATE',
+          status,
+          passengerId: booking.passengerId,
+          passengerName: passengerName
+        };
+        await chatService.sendSystemMessage(booking.routeId, booking.route.driverId, 'DRIVER', systemText, metadata);
+      } catch (e) {
+        console.error('[Chat] Failed to save status system message:', e.message);
+      }
+    }
+
     return updated;
   });
 
@@ -791,7 +812,7 @@ async function notifyWait(bookingId, passengerId, reason) {
   }
 
   const io = getIO();
-  // Notify driver via socket
+  // Broadcast wait request via socket
   io.to(`user:${booking.route.driverId}`).emit('booking:passengerRequestWait', {
     bookingId,
     routeId: booking.routeId,
@@ -799,6 +820,23 @@ async function notifyWait(bookingId, passengerId, reason) {
     passengerName: `${booking.passenger.firstName} ${booking.passenger.lastName}`,
     reason
   });
+
+  // --- Save system message to TripChat ---
+  try {
+    const chatService = require('./chat.service');
+    const passengerName = booking.passenger.firstName;
+    const systemText = `✋ @${passengerName}: ขอให้คนขับรอสักครู่${reason ? ` (เหตุผล: ${reason})` : ''}`;
+    
+    const metadata = {
+      type: 'PASSENGER_WAIT',
+      passengerId: passengerId,
+      passengerName: passengerName,
+      reason: reason
+    };
+    await chatService.sendSystemMessage(booking.routeId, passengerId, 'PASSENGER', systemText, metadata);
+  } catch (e) {
+    console.error('[Chat] Failed to save wait system message:', e.message);
+  }
 
   // Create official notification for driver
   await prisma.notification.create({

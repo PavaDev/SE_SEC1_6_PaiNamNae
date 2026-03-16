@@ -417,3 +417,39 @@ This project follows semantic versioning.
   - Removed duplicate arrival modal templates and conflicting logic from `layouts/default.vue` and `current-trip.vue`.
   - Resolved **Missing Icon** issues in the global modal and notification panels caused by outdated library references.
   - Fixed Z-index layering issues between chat bubbles and high-priority notification overlays.
+
+## [3.0.3] - 2026-03-16 - (ฺNarathaip)
+
+
+### Added / Improved
+- **Trip Chat — Multi-Tab Conversation System (Driver)**
+  - Added a **Tab Bar** in \TripChat.vue\ for the driver to switch between conversations per passenger.
+  - **"กลุ่ม" (Group) Tab**: Shows all messages in the trip chat at once.
+  - **Per-Passenger Tabs**: Each confirmed/pending passenger gets their own tab, filtered to show only messages FROM that passenger and system messages targeted at them.
+  - Tab badges display **unread message counts** per conversation so the driver can see who needs attention.
+  - Each passenger tab shows a **color-coded status dot** on their avatar:
+    - 🟠 Orange = \PENDING\ (รอตอบรับ)
+    - 🔵 Blue = \CONFIRMED\
+    - 🟢 Green = \IN_TRANSIT\
+  - Added a transparent **scope indicator** below the input (\👥 ข้อความจะส่งถึงทุกคนในทริป\) so the driver always knows messages are group-wide.
+- **Chat Passengers Source Fix**
+  - Updated \chatPassengers\ in \current-trip.vue\ to include \PENDING\ bookings (previously only \CONFIRMED\ and \IN_TRANSIT\), ensuring all passengers appear in chat tabs regardless of booking status.
+  - Added \profilePicture\ and \bookingStatus\ fields to the passenger map for correct avatar display and status dots.
+- **System Message Rendering**
+  - Added \DRIVER_ACKNOWLEDGE\ to the System Pill rendering logic with a 👍 thumbs-up icon.
+  - Enhanced \@mention\ highlighting in pills to use a blue badge background for better visibility.
+- **"แจ้งให้รอ" (Wait Request) — Inline Form for Passenger**
+  - Replaced direct-submit button with a **2-step inline expandable form**.
+  - Step 1: Passenger taps the orange button → form expands inline (no separate modal).
+  - Step 2: Passenger sees **Quick Reason Chips** (predefined reasons) + **Textarea** to type a custom reason + a **live preview bubble** of the message before sending.
+  - After sending, the button converts to a locked indigo state "คนขับได้รับเรื่องแล้ว (กำลังรอคุณอยู่)".
+
+### Changed
+- **Removed Auto-@ Mention**: The \sendMessage\ function no longer auto-prepends \@passengerName\ when the driver sends from a passenger tab. All messages are sent as plain text.
+- **Message Filtering Logic**: Passenger tabs filter by sender ID (messages FROM that passenger) and targeted system metadata, replacing the fragile \@name\ text-search approach.
+- **Input Placeholder**: Unified to \"พิมพ์ข้อความถึงทุกคนในทริป...\" regardless of active tab, reflecting the true group-send behavior.
+
+### Fixed
+- **Missing \</div>\ Build Error**: Fixed a malformed HTML structure in \TripChat.vue\ input area that caused \RollupError: Element is missing end tag\ during Docker build (\
+pm run build\).
+
