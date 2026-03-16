@@ -37,7 +37,7 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500">
                                 <option value="">ทั้งหมด</option>
                                 <option value="PENDING">รอพิจารณา</option>
-                                <option value="APPROVED">อนุมัติ</option>
+                                <option value="APPROVED">รับเรื่อง</option>
                                 <option value="REJECTED">ปฏิเสธ</option>
                                 <option value="RESOLVED">แก้ไขแล้ว</option>
                             </select>
@@ -317,9 +317,9 @@ function typeBadge(type) {
 function statusBadge(status) {
     const badges = {
         'PENDING': 'bg-yellow-100 text-yellow-700',
-        'APPROVED': 'bg-green-100 text-green-700',
+        'APPROVED': 'bg-blue-100 text-blue-700',
         'REJECTED': 'bg-red-100 text-red-700',
-        'RESOLVED': 'bg-blue-100 text-blue-700'
+        'RESOLVED': 'bg-green-100 text-green-700'
     }
     return badges[status] || 'bg-gray-100 text-gray-700'
 }
@@ -337,7 +337,7 @@ function statusIcon(status) {
 function statusLabel(status) {
     const labels = {
         'PENDING': 'รอพิจารณา',
-        'APPROVED': 'อนุมัติ',
+        'APPROVED': 'รับเรื่อง',
         'REJECTED': 'ปฏิเสธ',
         'RESOLVED': 'แก้ไขแล้ว'
     }

@@ -185,7 +185,7 @@
                             <select v-model="formData.status"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                 <option value="PENDING">รอพิจารณา (Pending)</option>
-                                <option value="APPROVED">อนุมัติ (Approved)</option>
+                                <option value="APPROVED">รับเรื่อง (Approved)</option>
                                 <option value="REJECTED">ปฏิเสธ (Rejected)</option>
                                 <option value="RESOLVED">แก้ไขแล้ว (Resolved)</option>
                             </select>
@@ -379,9 +379,9 @@ function typeBadgeClass(type) {
 function statusBadgeClass(status) {
     const badges = {
         'PENDING': 'bg-yellow-100 text-yellow-700',
-        'APPROVED': 'bg-green-100 text-green-700',
+        'APPROVED': 'bg-blue-100 text-blue-700',
         'REJECTED': 'bg-red-100 text-red-700',
-        'RESOLVED': 'bg-blue-100 text-blue-700'
+        'RESOLVED': 'bg-green-100 text-green-700'
     }
     return badges[status] || 'bg-gray-100 text-gray-700'
 }
@@ -399,7 +399,7 @@ function statusIconClass(status) {
 function statusLabelTh(status) {
     const labels = {
         'PENDING': 'รอพิจารณา',
-        'APPROVED': 'อนุมัติ',
+        'APPROVED': 'รับเรื่อง',
         'REJECTED': 'ปฏิเสธ',
         'RESOLVED': 'แก้ไขแล้ว'
     }

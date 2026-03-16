@@ -44,7 +44,7 @@ const updateReportStatus = asyncHandler(async (req, res) => {
         if (updatedReport.reporterId) {
             const statusLabels = {
                 'PENDING': 'รอพิจารณา',
-                'APPROVED': 'อนุมัติ',
+                'APPROVED': 'รับเรื่อง',
                 'REJECTED': 'ปฏิเสธ',
                 'RESOLVED': 'แก้ไขแล้ว'
             };

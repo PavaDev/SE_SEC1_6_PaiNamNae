@@ -177,6 +177,7 @@ import { useToast } from '~/composables/useToast'
 import ProfileSidebar from '~/components/ProfileSidebar.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
+import { useSocket } from '~/composables/useSocket'
 
 dayjs.locale('th')
 
@@ -284,7 +285,7 @@ function categoryLabel(cat) {
 }
 
 function statusLabel(s) {
-    const map = { PENDING: 'รอพิจารณา', APPROVED: 'อนุมัติ', REJECTED: 'ปฏิเสธ', RESOLVED: 'แก้ไขแล้ว' }
+    const map = { PENDING: 'รอพิจารณา', APPROVED: 'รับเรื่อง', REJECTED: 'ปฏิเสธ', RESOLVED: 'แก้ไขแล้ว' }
     return map[s] || s
 }
 
