@@ -529,12 +529,8 @@ module.exports = {
   notifyWait,
 };
 
-<<<<<<< HEAD
-async function notifyArrival(bookingId, minutes, userId, reason) {
-=======
 async function notifyArrival(bookingId, userId, minutes, customText = null, reason = null) {
   /* --- Spam prevention (Disabled for individual passenger updates) ---
->>>>>>> main
   const now = Date.now();
   const lastLockout = arrivalCooldowns.get(bookingId);
 
@@ -588,8 +584,6 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
     throw new ApiError(400, 'สามารถแจ้งเตือนได้เฉพาะผู้โดยสารที่ยืนยันแล้วหรือกำลังเดินทางเท่านั้น');
   }
 
-<<<<<<< HEAD
-=======
   // Record cooldown timestamp BEFORE emitting to prevent double-send on concurrent calls
   arrivalCooldowns.set(bookingId, Date.now());
 
@@ -612,20 +606,14 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
   });
   const isUpdate = !!existingNotification;
 
->>>>>>> main
   const io = getIO();
   io.to(`user:${booking.passengerId}`).emit('booking:driverArriving', {
     bookingId,
     routeId: booking.routeId,
     minutes,
-<<<<<<< HEAD
-    reason,
-    driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`
-=======
     driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`,
     isUpdate,
     reason
->>>>>>> main
   });
 
   // --- Save system message to TripChat ---
@@ -677,10 +665,7 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
     booking.route.driver,
     booking,
     minutes,
-<<<<<<< HEAD
-=======
     isUpdate,
->>>>>>> main
     reason
   ).catch(err => console.error('[Email] sendArrivalNotificationEmail failed:', err.message));
 

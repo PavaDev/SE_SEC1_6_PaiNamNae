@@ -16,15 +16,6 @@ const transporter = nodemailer.createTransport({
  * @param {Object} driver    - { firstName, lastName }
  * @param {Object} booking   - { id, routeId, pickupLocation, dropoffLocation, numberOfSeats }
  * @param {number} minutes   - จำนวนนาทีที่คาดว่าจะถึง
-<<<<<<< HEAD
- * @param {string} [reason]  - เหตุผลความล่าช้า (ถ้ามี)
- */
-async function sendArrivalNotificationEmail(passenger, driver, booking, minutes, reason) {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('[Email] SMTP credentials not configured, skipping email.');
-        return;
-    }
-=======
  * @param {boolean} isUpdate - เป็นการแจ้งเตือนซ้ำ/อัพเดทเวลา (default: false)
  * @param {string} reason    - เหตุผลประกอบ (ถ้ามี)
  */
@@ -33,7 +24,6 @@ async function sendArrivalNotificationEmail(passenger, driver, booking, minutes,
     console.log('[Email] Email sending is disabled via ENABLE_EMAIL_NOTIFICATION toggle.');
     return;
   }
->>>>>>> main
 
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.warn('[Email] SMTP credentials not configured, skipping email.');

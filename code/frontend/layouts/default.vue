@@ -438,56 +438,6 @@
                     enter-from-class="opacity-0 scale-95 translate-y-4"
                     enter-to-class="opacity-100 scale-100 translate-y-0"
                 >
-<<<<<<< HEAD
-                    <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden">
-                        <!-- Close button -->
-                        <button @click="showArrivalModal = false"
-                            class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-
-                        <!-- Header gradient -->
-                        <div :class="arrivalData?.reason ? 'bg-gradient-to-br from-orange-400 to-orange-600' : 'bg-gradient-to-br from-blue-500 to-blue-700'" 
-                            class="px-8 pt-10 pb-14 text-center transition-colors duration-500">
-                            <!-- Icon -->
-                            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-white/30 backdrop-blur-md transition-all duration-300">
-                                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path v-if="!arrivalData?.reason" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405C18.21 14.79 18 13.918 18 13V9a6 6 0 10-12 0v4c0 .918-.21 1.79-.595 2.595L4 17h5m6 0a3 3 0 11-6 0h6z"/>
-                                  <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                </svg>
-                            </div>
-                            <h2 class="text-2xl font-black text-white mb-1">
-                                {{ arrivalData?.reason ? 'เหตุขัดข้อง/ล่าช้า' : 'คนขับกำลังมาถึง!' }}
-                            </h2>
-                            <p class="text-white/80 text-sm font-medium">คุณ {{ arrivalData?.driverName || 'คนขับ' }} กำลังมุ่งหน้ามาหาคุณ</p>
-                        </div>
-
-                        <!-- Content (overlap card style) -->
-                        <div class="-mt-8 mx-4 bg-white rounded-2xl shadow-lg px-6 py-5 mb-4 text-center">
-                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">เวลาโดยประมาณ</p>
-                            <p class="text-5xl font-black leading-none" :class="arrivalData?.reason ? 'text-orange-600' : 'text-blue-600'">
-                                {{ arrivalData?.minutes }}<span class="text-xl text-gray-400 font-normal ml-1">นาที</span>
-                            </p>
-                        </div>
-
-                        <!-- Special Reason Box -->
-                        <div v-if="arrivalData?.reason" class="mx-6 mb-4 p-4 bg-orange-50 border border-orange-100 rounded-2xl text-left animate-in slide-in-from-bottom-2 duration-500">
-                            <div class="flex items-center gap-2 mb-1">
-                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                <span class="text-[10px] font-bold text-orange-600 uppercase">อัปเดตสถานะ/เหตุขัดข้อง</span>
-                            </div>
-                            <p class="text-sm font-bold text-orange-800">{{ arrivalData?.reason }}</p>
-                        </div>
-
-                        <!-- Footer action -->
-                        <div class="px-6 pb-6 text-center">
-                            <p v-if="!arrivalData?.reason" class="text-xs text-gray-400 mb-4 font-medium">กรุณาเตรียมตัวให้พร้อม ณ จุดนัดพบของคุณ</p>
-                            <button @click="showArrivalModal = false"
-                                class="w-full py-4 text-white font-black rounded-2xl shadow-xl transition-all active:scale-95"
-                                :class="arrivalData?.reason ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'">
-=======
                     <div class="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
                         <!-- Status Badge -->
                         <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10">
@@ -535,7 +485,6 @@
                             <button @click="closePassengerArrivalModal" 
                                 class="w-full py-4 text-white font-black rounded-[1.25rem] transition-all active:scale-95 shadow-xl"
                                 :class="passengerArrivalData.isUpdate ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'">
->>>>>>> main
                                 รับทราบ
                             </button>
                         </div>
@@ -820,13 +769,6 @@ function closePassengerArrivalModal() {
 }
 
 onEvent('booking:driverArriving', (data) => {
-<<<<<<< HEAD
-    // If we're on the current-trip page, it has its own detailed modal, so skip this one
-    if (route.path === '/current-trip') return
-    
-    arrivalData.value = data
-    showArrivalModal.value = true
-=======
     passengerArrivalData.value = {
         minutes: data.minutes,
         driverName: data.driverName,
@@ -834,7 +776,6 @@ onEvent('booking:driverArriving', (data) => {
         isUpdate: data.isUpdate || false
     }
     showPassengerArrivalModal.value = true
->>>>>>> main
 })
 
 /* ใส่ฟอนต์ Kanit แบบเดิม */

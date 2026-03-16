@@ -12,11 +12,7 @@
 import ToastWrapper from '~/components/ToastWrapper.vue';
 import NotiChat from '~/components/NotiChat.vue';
 import { useAuth } from '~/composables/useAuth';
-<<<<<<< HEAD
-import { computed, onMounted, watch } from 'vue';
-=======
 import { computed, watch } from 'vue';
->>>>>>> main
 import { useRoute } from 'vue-router'
 import { useNotifications } from '~/composables/useNotifications'
 
