@@ -628,6 +628,32 @@
             </div>
         </div>
 
+        <!-- Passenger Arrival Alert Modal -->
+        <div v-if="showPassengerArrivalModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md" @click="closePassengerArrivalModal"></div>
+            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+                <div class="p-8 text-center bg-gradient-to-b from-blue-50 to-white">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-black text-gray-900 mb-2">คนขับใกล้จะถึงแล้ว!</h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        คุณ {{ passengerArrivalInfo.driverName }} แจ้งว่าจะถึงจุดนัดพบในอีก
+                        <span class="text-blue-600 font-bold text-lg">{{ passengerArrivalInfo.minutes }}</span> นาที
+                    </p>
+                    <div v-if="passengerArrivalInfo.reason" class="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700 text-left">
+                        <p class="font-bold mb-1 uppercase tracking-tighter text-[9px]">ข้อความจากคนขับ:</p>
+                        {{ passengerArrivalInfo.reason }}
+                    </div>
+                    <button @click="closePassengerArrivalModal" class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition">
+                        รับทราบ
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <TripChat
             v-if="activeTrip && tripChatRouteId"
             :routeId="tripChatRouteId"
@@ -639,6 +665,7 @@
             rightClass="right-6"
         />
     </div>
+  </div>
 </template>
 
 <script setup>
@@ -811,13 +838,10 @@ const arrivalPredefinedReasons = [
     'ติดสายโทรศัพท์/ธุระด่วน'
 ]
 
-// --- Passenger Arrival Modal (High Awareness) ---
-const showPassengerArrivalModal = ref(false)
-const passengerArrivalData = ref({ minutes: 5, driverName: '', reason: '', isUpdate: false })
-
 function closePassengerArrivalModal() {
     showPassengerArrivalModal.value = false
 }
+
 
 function openArrivalPicker(booking) {
     if (activeTrip.value?.route?.status !== 'IN_TRANSIT') {
