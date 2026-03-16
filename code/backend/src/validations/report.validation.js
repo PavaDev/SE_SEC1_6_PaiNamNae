@@ -2,7 +2,7 @@ const { z } = require('zod');
 
 const createReportSchema = z.object({
     type: z.enum(['DRIVER', 'PASSENGER'], { message: 'Invalid report type' }),
-    category: z.enum(['VEHICLE_ISSUE', 'PASSENGER_ISSUE', 'ROAD_ISSUE', 'SAFETY_ISSUE', 'PAYMENT_ISSUE', 'OTHER', 'LATE_ISSUE', 'WRONG_INFO', 'APP_ISSUE'], { message: 'Invalid category' }),
+    category: z.enum(['VEHICLE_ISSUE', 'PASSENGER_ISSUE', 'ROAD_ISSUE', 'SAFETY_ISSUE', 'PAYMENT_ISSUE', 'OTHER', 'LATE_ISSUE', 'WRONG_INFO', 'APP_ISSUE', 'NO_SHOW'], { message: 'Invalid category' }),
     description: z.string().min(5, 'Description must be at least 5 characters').max(2000, 'Description must be at most 2000 characters'),
     routeId: z.string().optional(),
     bookingId: z.string().optional(),

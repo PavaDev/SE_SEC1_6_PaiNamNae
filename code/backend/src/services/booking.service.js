@@ -618,7 +618,7 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
 
   // --- Save system message to TripChat ---
   const driverName = `${booking.route.driver.firstName} ${booking.route.driver.lastName}`;
-  const passengerName = booking.passenger.firstName;
+  const passengerName = `${booking.passenger.firstName} ${booking.passenger.lastName}`;
 
   // Format system message with reason if provided
   let systemText = customText;
@@ -638,6 +638,7 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
     const metadata = {
       type: 'ARRIVAL',
       targetUserId: booking.passengerId,
+      targetUserName: passengerName, // Add this for frontend display
       minutes: minutes,
       reason: reason,
       isUpdate: isUpdate
@@ -651,8 +652,10 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
   try {
     const { sendPushToUser } = require('./webpush.service');
     await sendPushToUser(booking.passengerId, {
-      title: '🚗 คนขับใกล้ถึงแล้ว!',
-      body: `${driverName} จะถึงในอีกประมาณ ${minutes} นาที`,
+      title: '🚗 คนขับถึงจุดรับแล้ว!',
+      body: minutes === 0 
+        ? `${driverName} มาถึงจุดนัดพบแล้ว` 
+        : `${driverName} จะถึงในอีกประมาณ ${minutes} นาที`,
       url: '/current-trip',
     });
   } catch (e) {
@@ -750,7 +753,7 @@ async function updatePassengerStatus(id, status, userId, reason) {
     if (status === BookingStatus.IN_TRANSIT || status === BookingStatus.COMPLETED) {
       try {
         const chatService = require('./chat.service');
-        const passengerName = booking.passenger.firstName;
+        const passengerName = `${booking.passenger.firstName} ${booking.passenger.lastName}`;
         const systemText = status === BookingStatus.IN_TRANSIT
           ? ` @${passengerName} เช็คอินขึ้นรถเรียบร้อยแล้ว!`
           : ` @${passengerName} ถึงจุดหมายปลายทางแล้ว`;
@@ -824,7 +827,7 @@ async function notifyWait(bookingId, passengerId, reason) {
   // --- Save system message to TripChat ---
   try {
     const chatService = require('./chat.service');
-    const passengerName = booking.passenger.firstName;
+    const passengerName = `${booking.passenger.firstName} ${booking.passenger.lastName}`;
     const systemText = `✋ @${passengerName}: ขอให้คนขับรอสักครู่${reason ? ` (เหตุผล: ${reason})` : ''}`;
 
     const metadata = {
@@ -844,7 +847,7 @@ async function notifyWait(bookingId, passengerId, reason) {
       userId: booking.route.driverId,
       type: 'BOOKING',
       title: 'ผู้โดยสารขอให้รอสักครู่',
-      body: `คุณ ${booking.passenger.firstName} ขอให้คุณช่วยรอก่อน: ${reason || 'ไม่มีเหตุผลระบุ'}`,
+      body: `คุณ ${booking.passenger.firstName} ${booking.passenger.lastName} ขอให้คุณช่วยรอก่อน: ${reason || 'ไม่มีเหตุผลระบุ'}`,
       metadata: { kind: 'PASSENGER_WAIT_REQUEST', bookingId, routeId: booking.routeId, reason }
     }
   });

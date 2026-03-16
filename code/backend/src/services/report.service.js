@@ -21,11 +21,24 @@ const reportInclude = {
         },
     },
     route: {
-        select: {
-            id: true,
-            startLocation: true,
-            endLocation: true,
-            departureTime: true,
+        include: {
+            driver: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    profilePicture: true,
+                },
+            },
+            vehicle: {
+                select: {
+                    id: true,
+                    vehicleModel: true,
+                    licensePlate: true,
+                    color: true,
+                },
+            },
         },
     },
     booking: {

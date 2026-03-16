@@ -501,10 +501,15 @@
                     <select v-model="passengerReportCategory"
                         class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">-- เลือกหัวข้อ --</option>
-                        <option value="VEHICLE_ISSUE">ปัญหาสภาพรถ/ข้อมูลรถไม่ตรง</option>
-                        <option value="SAFETY_ISSUE">พฤติกรรมการขับขี่ที่ไม่ปลอดภัย</option>
-                        <option value="PAYMENT_ISSUE">ปัญหาเรื่องการจ่ายเงิน</option>
-                        <option value="PASSENGER_ISSUE">พฤติกรรมผู้โดยสารร่วมทริปที่ไม่เหมาะสม</option>
+                        <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ/ข้อมูลรถไม่ตรง</option>
+                        <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย/พฤติกรรมการขับขี่</option>
+                        <option value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม (รวมถึงผู้โดยสารร่วมทริป)</option>
+                        <option value="ROAD_ISSUE">ปัญหาระหว่างเส้นทาง</option>
+                        <option value="LATE_ISSUE">ความล่าช้ากว่ากำหนดมาก</option>
+                        <option value="WRONG_INFO">ข้อมูลไม่ตรงตามที่ระบุ</option>
+                        <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน</option>
+                        <option value="APP_ISSUE">ปัญหาการใช้งานแอปพลิเคชัน</option>
+                        <option value="NO_SHOW">คนขับไม่มาพบตามจุดนัดหมาย</option>
                         <option value="OTHER">อื่นๆ</option>
                     </select>
                 </div>

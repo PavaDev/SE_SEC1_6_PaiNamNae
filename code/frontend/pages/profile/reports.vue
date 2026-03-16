@@ -50,12 +50,16 @@
                             <div>
                                 <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">หมวดหมู่ปัญหา</label>
                                 <select v-model="form.category" class="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-400 outline-none bg-white">
-                                    <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ</option>
+                                    <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ/ข้อมูลรถไม่ตรง</option>
                                     <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย</option>
                                     <option value="ROAD_ISSUE">ปัญหาถนน / เส้นทาง</option>
                                     <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน</option>
-                                    <option value="PASSENGER_ISSUE">ปัญหาพฤติกรรม</option>
-                                    <option value="OTHER">อื่นๆ (ปัญหาระบบ)</option>
+                                    <option value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม</option>
+                                    <option value="LATE_ISSUE">ความล่าช้า</option>
+                                    <option value="WRONG_INFO">ข้อมูลไม่ตรงตามที่ระบุ</option>
+                                    <option value="APP_ISSUE">ปัญหาการใช้งานแอปพลิเคชัน</option>
+                                    <option value="NO_SHOW">ไม่มาพบตามจุดนัดหมาย</option>
+                                    <option value="OTHER">อื่นๆ</option>
                                 </select>
                             </div>
 
@@ -198,9 +202,39 @@ const form = reactive({
 const reportFiles = ref([])
 const isSubmitting = ref(false)
 
+function validateFile(file) {
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    const allowedTypes = ['image/', 'video/', 'audio/'];
+    
+    if (file.size > maxSize) {
+        toast.error('ไฟล์มีขนาดใหญ่เกินไป', 'ขนาดไฟล์สูงสุดคือ 100MB');
+        return false;
+    }
+    
+    const isAllowed = allowedTypes.some(type => file.type.startsWith(type));
+    if (!isAllowed) {
+        toast.error('ประเภทไฟล์ไม่ถูกต้อง', 'กรุณาแนบเฉพาะรูปภาพ วิดีโอ หรือเสียง');
+        return false;
+    }
+    
+    return true;
+}
+
 function onFileChange(e) {
     const file = e.target.files?.[0]
-    if (!file || reportFiles.value.length >= 3) return
+    if (!file) return
+
+    if (reportFiles.value.length >= 3) {
+        toast.error('จำกัดจำนวนไฟล์', 'สามารถแนบไฟล์ได้สูงสุด 3 ไฟล์')
+        e.target.value = ''
+        return
+    }
+
+    if (!validateFile(file)) {
+        e.target.value = ''
+        return
+    }
+
     const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
     reportFiles.value.push({ file, type: file.type, preview })
     e.target.value = ''

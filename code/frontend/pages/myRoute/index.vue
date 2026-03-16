@@ -528,9 +528,15 @@
                     <select v-model="driverReportCategory"
                         class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         <option value="">-- เลือกหัวข้อ --</option>
-                        <option value="PASSENGER_ISSUE">พฤติกรรมผู้โดยสารที่ไม่เหมาะสม</option>
-                        <option value="NO_SHOW">ผู้โดยสารไม่มาพบตามจุดนัดหมาย</option>
-                        <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน/ผู้โดยสารไม่จ่ายเงิน</option>
+                        <option value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม</option>
+                        <option value="NO_SHOW">ไม่มาพบตามจุดนัดหมาย</option>
+                        <option value="LATE_ISSUE">ความล่าช้า/มาช้ามาก</option>
+                        <option value="WRONG_INFO">ข้อมูลไม่ตรงตามระบุ</option>
+                        <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ</option>
+                        <option value="ROAD_ISSUE">ปัญหาระหว่างเส้นทาง</option>
+                        <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย</option>
+                        <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน</option>
+                        <option value="APP_ISSUE">ปัญหาการใช้งานแอปพลิเคชัน</option>
                         <option value="OTHER">อื่นๆ</option>
                     </select>
                 </div>

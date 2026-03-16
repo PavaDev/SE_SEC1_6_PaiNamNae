@@ -1,25 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 text-gray-900 font-kanit">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <NuxtLink :to="role === 'DRIVER' ? '/myRoute' : '/myTrip'" class="p-2 hover:bg-gray-100 rounded-full transition">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </NuxtLink>
-          <h1 class="text-xl font-bold text-gray-900">การเดินทางปัจจุบัน</h1>
-        </div>
-        <div v-if="activeTrip && !isAdminPage" class="flex items-center gap-2">
-            <span class="flex h-3 w-3 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-            </span>
-            <span class="text-sm font-medium text-blue-600">{{ statusText }}</span>
-        </div>
-      </div>
-    </header>
 
     <main v-if="isLoading" class="flex flex-col items-center justify-center h-[calc(100vh-64px)]">
         <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -143,40 +123,40 @@
                                     @click="focusOnBooking(b)"
                                     class="p-3 bg-white rounded-xl border cursor-pointer transition-all duration-300"
                                     :class="focusedBookingId === b.id ? 'border-orange-400 ring-2 ring-orange-100 shadow-lg scale-[1.02]' : 'border-gray-100 hover:border-blue-200'">
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-between py-2">
                                         <div class="flex items-center gap-3">
                                             <img :src="b.passenger.profilePicture || defaultAvatar" class="w-8 h-8 rounded-full object-cover" />
                                             <div>
-                                                <p class="text-sm font-bold">{{ b.passenger.firstName }}</p>
+                                                <p class="text-sm font-bold">{{ b.passenger.firstName }} {{ b.passenger.lastName }}</p>
                                                 <div class="flex items-center gap-2">
                                                     <p class="text-[10px] text-blue-600 font-medium">{{ b.numberOfSeats }} ที่นั่ง</p>
                                                 </div>
                                             </div>
-                                            <div v-if="activeTrip.route?.status === 'IN_TRANSIT'" class="flex gap-2" @click.stop>
-                                                <div class="flex gap-1.5">
-                                                    <button @click="quickArrive(b)" title="ถึงที่นัดหมายเเล้ว!" class="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition shadow-sm">
-                                                        <!-- Pin SVG -->
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button @click="openArrivalPicker(b)" title="แจ้งเตือนจะถึงแล้ว" 
-                                                        class="p-2 rounded-lg transition-all duration-300"
-                                                        :class="notifiedBookings.has(b.id) ? 'bg-yellow-400 text-gray-900 font-bold shadow-sm' : 'bg-blue-100 text-blue-600'">
-                                                        <!-- Sedan SVG -->
-                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                                <button @click="handleUpdatePassengerStatus(b.id, 'IN_TRANSIT')" title="เช็คอิน" class="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                        <div v-if="activeTrip.route?.status === 'IN_TRANSIT'" class="flex gap-2" @click.stop>
+                                            <div class="flex gap-1.5">
+                                                <button @click="quickArrive(b)" title="ถึงที่นัดหมายเเล้ว!" class="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition shadow-sm">
+                                                    <!-- Pin SVG -->
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
                                                 </button>
-                                                <button @click="handleUpdatePassengerStatus(b.id, 'CANCELLED')" title="ไม่มา" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                <button @click="openArrivalPicker(b)" title="แจ้งเตือนจะถึงแล้ว" 
+                                                    class="p-2 rounded-lg transition-all duration-300"
+                                                    :class="notifiedBookings.has(b.id) ? 'bg-yellow-400 text-gray-900 font-bold shadow-sm' : 'bg-blue-100 text-blue-600'">
+                                                    <!-- Sedan SVG -->
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                                                    </svg>
                                                 </button>
                                             </div>
+                                            <button @click="handleUpdatePassengerStatus(b.id, 'IN_TRANSIT')" title="เช็คอิน" class="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            </button>
+                                            <button @click="handleUpdatePassengerStatus(b.id, 'CANCELLED')" title="ไม่มา" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
                                         </div>
                                     </div>
                                     <div class="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-200 space-y-1">
@@ -205,7 +185,7 @@
                                         <div class="flex items-center gap-3">
                                             <img :src="b.passenger.profilePicture || defaultAvatar" class="w-8 h-8 rounded-full object-cover" />
                                             <div>
-                                                <p class="text-sm font-bold">{{ b.passenger.firstName }}</p>
+                                                <p class="text-sm font-bold">{{ b.passenger.firstName }} {{ b.passenger.lastName }}</p>
                                                 <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">บนรถแล้ว</span>
                                             </div>
                                         </div>
@@ -229,7 +209,7 @@
                             <div class="space-y-2">
                                 <div v-for="b in completedBookings" :key="b.id" class="p-2 flex items-center gap-3 grayscale">
                                     <img :src="b.passenger.profilePicture || defaultAvatar" class="w-6 h-6 rounded-full object-cover" />
-                                    <p class="text-xs text-gray-600">{{ b.passenger.firstName }}</p>
+                                    <p class="text-xs text-gray-600">{{ b.passenger.firstName }} {{ b.passenger.lastName }}</p>
                                 </div>
                             </div>
                         </div>
@@ -255,94 +235,7 @@
                             เสร็จสิ้นการเดินทาง
                         </button>
                     </template>
-                    <template v-else-if="role === 'PASSENGER' && ['AVAILABLE', 'FULL', 'IN_TRANSIT'].includes(activeTrip?.route?.status)">
-                        <!-- Wait Button / Inline Form -->
-                        <div v-if="myBooking?.status === 'CONFIRMED' || myBooking?.status === 'PENDING'" class="space-y-2">
-                            <!-- Sent state -->
-                            <div v-if="hasRequestedWait"
-                                class="w-full py-4 px-6 bg-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 flex items-center justify-center gap-3 cursor-not-allowed">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                คนขับได้รับเรื่องแล้ว (กำลังรอคุณอยู่)
-                            </div>
-
-                            <!-- Collapsed state -->
-                            <button v-else-if="!showWaitPicker"
-                                @click="openWaitPicker"
-                                class="w-full py-4 px-6 font-bold rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-orange-100 hover:scale-[1.02] active:scale-95 border-b-4 border-orange-600">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7m0 0v1a4.5 4.5 0 01-9 0v-1m9 1H7" />
-                                </svg>
-                                กรุณารอสักครู่ (แจ้งคนขับ)
-                            </button>
-
-                            <!-- Expanded inline form -->
-                            <div v-else
-                                class="w-full bg-orange-50 border-2 border-orange-300 rounded-2xl p-4 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <!-- Header -->
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7m0 0v1a4.5 4.5 0 01-9 0v-1m9 1H7" /></svg>
-                                        <span class="text-orange-700 font-black text-sm">แจ้งขอให้คนขับรอ</span>
-                                    </div>
-                                    <button @click="showWaitPicker = false" class="p-1 hover:bg-orange-100 rounded-lg transition">
-                                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
-                                </div>
-
-                                <!-- Quick Reason Chips -->
-                                <div class="flex flex-wrap gap-1.5">
-                                    <button v-for="reason in waitPredefinedReasons" :key="reason"
-                                        @click="waitReason = reason"
-                                        :class="[
-                                            'text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all',
-                                            waitReason === reason
-                                                ? 'bg-orange-500 text-white border-orange-500'
-                                                : 'bg-white text-orange-600 border-orange-200 hover:border-orange-400'
-                                        ]">
-                                        {{ reason }}
-                                    </button>
-                                </div>
-
-                                <!-- Textarea Preview -->
-                                <div class="relative">
-                                    <textarea
-                                        v-model="waitReason"
-                                        rows="2"
-                                        placeholder="หรือพิมพ์เหตุผลของคุณเอง..."
-                                        class="w-full p-3 pr-10 bg-white border border-orange-200 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition leading-relaxed"
-                                    ></textarea>
-                                    <span class="absolute bottom-2 right-2 text-[9px] text-gray-400">{{ waitReason.length }}/100</span>
-                                </div>
-
-                                <!-- Preview bubble -->
-                                <div v-if="waitReason.trim()" class="flex items-start gap-2 p-2 bg-white rounded-xl border border-orange-100">
-                                    <span class="text-[9px] text-orange-400 font-bold mt-1 whitespace-nowrap">ตัวอย่าง:</span>
-                                    <p class="text-[11px] text-gray-700 leading-snug">{{ waitReason }}</p>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="flex gap-2 pt-1">
-                                    <button @click="showWaitPicker = false"
-                                        class="flex-1 py-2.5 border border-orange-200 text-orange-600 font-bold rounded-xl text-sm hover:bg-orange-50 transition">
-                                        ยกเลิก
-                                    </button>
-                                    <button @click="submitWaitRequest" :disabled="isSubmittingWait"
-                                        class="flex-1 py-2.5 bg-orange-500 text-white font-bold rounded-xl text-sm hover:bg-orange-600 transition active:scale-95 shadow-md shadow-orange-200 disabled:opacity-50">
-                                        {{ isSubmittingWait ? 'กำลังส่ง...' : 'ส่งแจ้งเตือน ✓' }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Show In-Transit Status if boarded (IN_TRANSIT) -->
-                        <div v-else-if="myBooking?.status === 'IN_TRANSIT'"
-                            class="w-full py-4 px-6 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-2xl shadow-xl shadow-green-100 flex items-center justify-center gap-2 animate-pulse">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span>คุณกำลังอยู่บนรถ (ระหว่างทาง)</span>
-                        </div>
-                    </template>
+                    
                     <button @click="role === 'DRIVER' ? openDriverReportModal() : openPassengerReportModal()" 
                         class="w-full py-4 px-6 bg-white border border-red-100 text-red-600 font-bold rounded-2xl hover:bg-red-50 active:scale-95 transition-all flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,11 +396,7 @@
             <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-8 text-center overflow-hidden"
                 :class="selectedBookingForArrival?.hasNotifiedArrival ? 'border-t-[10px] border-amber-500' : ''">
                 
-                <!-- Awareness Badge for Updates -->
-                <div v-if="selectedBookingForArrival?.hasNotifiedArrival" 
-                    class="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-tighter">
-                    Update Mode
-                </div>
+                
 
                 <div v-if="selectedBookingForArrival?.hasNotifiedArrival" 
                     class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce-short">
@@ -523,15 +412,10 @@
                 <p class="text-sm text-gray-500 mb-6 font-medium">
                     {{ selectedBookingForArrival?.hasNotifiedArrival 
                         ? 'คุณเคยเเจ้งเตือนไปเเล้ว ต้องการปรับเปลี่ยนเวลาไหม?' 
-                        : `แจ้งให้คุณ ${selectedBookingForArrival?.passenger.firstName} ทราบว่าคุณใกล้จะถึงแล้ว` }}
+                        : `แจ้งให้คุณ ${selectedBookingForArrival?.passenger.firstName} ${selectedBookingForArrival?.passenger.lastName} ทราบว่าคุณใกล้จะถึงแล้ว` }}
                 </p>
                 
-                <div class="grid grid-cols-4 gap-2 mb-4">
-                    <button @click="arrivalMinutes = 0" 
-                        class="py-3 px-2 rounded-xl border-2 font-bold transition text-xs"
-                        :class="arrivalMinutes === 0 ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-gray-100 text-gray-400 hover:border-gray-200'">
-                        ถึงแล้ว
-                    </button>
+                <div class="grid grid-cols-3 gap-2 mb-4">
                     <button v-for="m in [5,10,15,20,25,30]" :key="m" @click="arrivalMinutes = m" 
                         class="py-3 px-2 rounded-xl border-2 font-bold transition text-sm"
                         :class="[
@@ -600,11 +484,13 @@
                                 <option v-if="driverReportType === 'passenger'" value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม</option>
                                 <option v-if="driverReportType === 'passenger'" value="NO_SHOW">ผู้โดยสารไม่มาพบตามจุดนัดหมาย</option>
                                 <option v-if="driverReportType === 'passenger'" value="LATE_ISSUE">ผู้โดยสารมาช้ามาก</option>
-                                <option v-if="driverReportType === 'passenger'" value="WRONG_INFO">ผู้โดยสารไม่ใช่คนเดียวกับที่จอง</option>
+                                <option v-if="driverReportType === 'passenger'" value="WRONG_INFO">ข้อมูลผู้โดยสารไม่ตรงตามระบุ</option>
                                 
                                 <option v-if="driverReportType === 'incident'" value="VEHICLE_ISSUE">ปัญหายานพาหนะ</option>
                                 <option v-if="driverReportType === 'incident'" value="ROAD_ISSUE">ปัญหาถนน/เส้นทาง</option>
                                 <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย</option>
+                                <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน</option>
+                                <option value="APP_ISSUE">ปัญหาการใช้งานแอปพลิเคชัน</option>
                                 <option value="OTHER">อื่นๆ</option>
                             </select>
                         </div>
@@ -659,13 +545,15 @@
                         <div>
                             <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">ประเภทปัญหา</label>
                             <select v-model="passengerReportCategory" class="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ</option>
-                                <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย</option>
+                                <option value="VEHICLE_ISSUE">ปัญหายานพาหนะ/ข้อมูลรถไม่ตรง</option>
+                                <option value="SAFETY_ISSUE">ปัญหาความปลอดภัย/พฤติกรรมการขับขี่</option>
                                 <option value="PASSENGER_ISSUE">พฤติกรรมไม่เหมาะสม</option>
-                                <option value="LATE_ISSUE">คนขับมาช้ากว่ากำหนดมาก</option>
-                                <option value="WRONG_INFO">ข้อมูลคนขับหรือรถไม่ตรงปก</option>
+                                <option value="ROAD_ISSUE">ปัญหาระหว่างเส้นทาง</option>
+                                <option value="LATE_ISSUE">ความล่าช้ากว่ากำหนดมาก</option>
+                                <option value="WRONG_INFO">ข้อมูลไม่ตรงตามที่ระบุ</option>
                                 <option value="PAYMENT_ISSUE">ปัญหาการชำระเงิน</option>
-                                <option value="APP_ISSUE">แอปมีปัญหา/ขัดข้อง</option>
+                                <option value="APP_ISSUE">ปัญหาการใช้งานแอปพลิเคชัน</option>
+                                <option value="NO_SHOW">คนขับไม่มาพบตามจุดนัดหมาย</option>
                                 <option value="OTHER">อื่นๆ</option>
                             </select>
                         </div>
@@ -702,9 +590,6 @@
                 </div>
             </div>
         </div>
-
-
-
         <TripChat
             v-if="activeTrip && tripChatRouteId"
             :routeId="tripChatRouteId"
@@ -804,7 +689,7 @@ const myBooking = computed(() => {
 const reportableBookings = computed(() => {
     if (!activeTrip.value) return []
     return activeTrip.value.route.bookings?.filter(b =>
-        ['CONFIRMED', 'IN_TRANSIT', 'PENDING'].includes(b.status) && b.passenger
+        ['CONFIRMED', 'IN_TRANSIT', 'PENDING', 'COMPLETED', 'CANCELLED'].includes(b.status) && b.passenger
     ) || []
 })
 
@@ -849,9 +734,38 @@ const comment = ref('')
 const isSubmittingReview = ref(false)
 const reviewFiles = ref([]) // { file, type, preview }
 
+function validateFile(file) {
+    const maxSize = 100 * 1024 * 1024 // 100MB
+    const allowedTypes = ['image/', 'video/', 'audio/']
+    
+    if (file.size > maxSize) {
+        toast.error('ไฟล์มีขนาดใหญ่เกินไป', 'กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 100MB')
+        return false
+    }
+    
+    const isAllowed = allowedTypes.some(type => file.type.startsWith(type))
+    if (!isAllowed) {
+        toast.error('ไม่รองรับไฟล์ชนิดนี้', 'กรุณาเลือกเฉพาะไฟล์รูปภาพ วิดีโอ หรือเสียงเท่านั้น')
+        return false
+    }
+    
+    return true
+}
+
 function onReviewFileChange(e) {
     const file = e.target.files?.[0]
-    if (!file || reviewFiles.value.length >= 3) return
+    if (!file) return
+    
+    if (reviewFiles.value.length >= 3) {
+        toast.error('จำกัดจำนวนไฟล์', 'คุณสามารถอัปโหลดได้สูงสุด 3 ไฟล์เท่านั้น')
+        return
+    }
+
+    if (!validateFile(file)) {
+        e.target.value = ''
+        return
+    }
+
     const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
     reviewFiles.value.push({ file, type: file.type, preview })
     e.target.value = '' // reset input so same file can be picked again
@@ -952,7 +866,7 @@ async function submitArrivalNotif() {
     isSubmittingArrival.value = true
     try {
         const mins = parseInt(arrivalMinutes.value)
-        const reason = arrivalReason.value.trim() || (selectedBookingForArrival.value.hasNotifiedArrival ? 'อัปเดตเวลาเดินทาง' : null)
+        const reason = arrivalReason.value.trim() || null
         
         // 1. Send dedicated notification API
         await $api(`/bookings/${selectedBookingForArrival.value.id}/notify-arrival`, {
@@ -1059,7 +973,18 @@ function acknowledgeWait(bookingId) {
 
 function onReportFileChange(e) {
     const file = e.target.files?.[0]
-    if (!file || reportFiles.value.length >= 3) return
+    if (!file) return
+    
+    if (reportFiles.value.length >= 3) {
+        toast.error('จำกัดจำนวนไฟล์', 'คุณสามารถอัปโหลดได้สูงสุด 3 ไฟล์เท่านั้น')
+        return
+    }
+
+    if (!validateFile(file)) {
+        e.target.value = ''
+        return
+    }
+
     const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
     reportFiles.value.push({ file, type: file.type, preview })
     e.target.value = ''
@@ -1102,6 +1027,12 @@ async function fetchActiveTrip() {
     try {
         const res = await $api('/routes/active')
         if (res) {
+            // Reset arrival modal flags on fresh data load to ensure it pops up again 
+            // if we navigate away and back, or if it's a new trip.
+            hasSeenArrivalModal.value = false
+            showPassengerArrivalModal.value = false
+            tripHasAlreadySentEmergency.value = false
+
             activeTrip.value = res
             role.value = res.role
             if (activeTrip.value?.route?.status === 'COMPLETED') {
@@ -1482,7 +1413,6 @@ onEvent('booking:passengerStatusChanged', async (data) => {
         nextTick(() => { if (mapDisplay.value && activeTrip.value) initMap() })
 
         // ถ้าผู้โดยสารคนนี้ถูก driver ส่งถึงที่หมายแล้ว → เปิด review modal ทันที
-        // ไม่ต้องรอให้คนอื่น หรือให้ทริปทั้งหมดจบก่อน
         if (role.value === 'PASSENGER' && data.status === 'COMPLETED') {
             if (myBooking.value?.id === data.bookingId) {
                 isTripCompleted.value = true
@@ -1490,7 +1420,6 @@ onEvent('booking:passengerStatusChanged', async (data) => {
         }
     }
 })
-
 
 onEvent('booking:created', async (data) => {
     if (activeTrip.value?.route?.id === data.routeId) {
@@ -1515,12 +1444,55 @@ onEvent('booking:statusChanged', async (data) => {
 
 onEvent('booking:tripCompleted', async () => {
     isTripCompleted.value = true
-    // Optionally re-fetch to get final data before it's gone
     await fetchActiveTrip()
 })
 
+onEvent('booking:driverArriving', (data) => {
+    console.log('[Socket] booking:driverArriving received:', data)
+    console.log('[Socket] Current activeTrip routeId:', activeTrip.value?.route?.id)
+    
+    // Loosen the strict check to allow the modal to pop even if activeTrip is slightly out of sync initially
+    if (activeTrip.value && activeTrip.value.route?.id !== data.routeId) {
+        console.warn('Ignoring driverArriving for different route:', data.routeId)
+        return
+    }
+    
+    // Always update passenger info so UI is fresh
+    passengerArrivalInfo.value = {
+        minutes: data.minutes || 0,
+        driverName: data.driverName || 'คนขับ',
+        reason: data.reason
+    }
 
+    // Determine current urgent/emergency status
+    const isEmergency = passengerArrivalInfo.value.reason !== null && passengerArrivalInfo.value.reason !== undefined && passengerArrivalInfo.value.reason.trim() !== ''
 
+    // Rule 1: First time ever receiving an arrival ping -> show it
+    if (!hasSeenArrivalModal.value) {
+        console.log('[Socket] Showing modal (first time)')
+        showPassengerArrivalModal.value = true
+        hasSeenArrivalModal.value = true
+        if (isEmergency) { tripHasAlreadySentEmergency.value = true }
+        return
+    }
+
+    // Rule 2: If we've seen a normal ping before, but THIS one is an emergency -> show it again
+    if (hasSeenArrivalModal.value && isEmergency && !tripHasAlreadySentEmergency.value) {
+        showPassengerArrivalModal.value = true
+        tripHasAlreadySentEmergency.value = true
+        toast.warning(
+            '⚠️ ข้อความจากคนขับ', 
+            `อัปเดตสถานะ: ${passengerArrivalInfo.value.reason}`
+        )
+        return
+    }
+
+    // Fallback: Just slide down a toast if we shouldn't pop a modal to avoid spam
+    toast.info(
+        'คนขับใกล้ถึงแล้ว!', 
+        data.minutes === 0 ? 'ถึงจุดนัดพบเเล้ว' : `จะถึงในอีก ${data.minutes} นาที`
+    )
+})
 
 onEvent('booking:passengerRequestWait', (data) => {
     // Show urgent notification to driver

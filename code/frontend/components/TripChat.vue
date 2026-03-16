@@ -29,24 +29,24 @@
         <!-- Chat Window -->
         <transition name="chat-pop">
             <div v-if="isOpen"
-                class="absolute bottom-16 right-0 w-[92vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-100"
-                style="height: 560px; max-height: 82vh;"
+                class="absolute bottom-16 right-0 w-[85vw] sm:w-[350px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-100"
+                style="height: 480px; max-height: 70vh;"
             >
                 <!-- Header -->
-                <div class="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-between shadow-md z-10">
+                <div class="flex-shrink-0 px-4 py-3 bg-gray-800 flex items-center justify-between shadow-sm z-10">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center ring-2 ring-white/40 flex-shrink-0">
-                            <i class="fa-solid fa-users text-white text-sm"></i>
+                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-users text-white text-xs"></i>
                         </div>
                         <div>
-                            <p class="text-white font-bold text-sm leading-tight">แชทกลุ่มทริป</p>
-                            <p class="text-blue-200 text-[10px] font-medium">
-                                สมาชิกในทริป {{ passengers.length + 1 }} คน
+                            <p class="text-white font-bold text-xs leading-tight">แชทกลุ่มทริป</p>
+                            <p class="text-gray-400 text-[10px]">
+                                สมาชิก {{ passengers.length + 1 }} คน
                             </p>
                         </div>
                     </div>
                     <button @click="isOpen = false"
-                        class="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-white/70 transition-colors">
                         <i class="fa-solid fa-xmark text-xs"></i>
                     </button>
                 </div>
@@ -57,10 +57,9 @@
                 >
                     <!-- Carpooling Info Card (AUTO) -->
                     <div v-if="passengers.length > 0" class="w-full mb-3">
-                        <div class="rounded-2xl overflow-hidden shadow-md border border-blue-100 bg-white">
-                            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 flex items-center gap-2">
-                                <i class="fa-solid fa-car-side text-white text-xs"></i>
-                                <span class="text-white text-[10px] font-black uppercase tracking-wider">ข้อมูลทริปร่วมเดินทาง</span>
+                        <div class="rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+                            <div class="bg-gray-50 border-b border-gray-100 px-3 py-1.5">
+                                <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">ข้อมูลทริปร่วมเดินทาง</span>
                             </div>
                             <div class="p-3 space-y-2">
                                 <!-- Route — only show if we have readable names -->
@@ -84,7 +83,7 @@
                                         <div v-for="p in passengers" :key="p.id"
                                             class="flex items-center gap-1 bg-blue-50 rounded-full px-2 py-0.5">
                                             <img :src="p.profilePicture || defaultAvatar" class="w-3.5 h-3.5 rounded-full object-cover" />
-                                            <span class="text-[9px] font-bold text-blue-700">{{ p.firstName }}</span>
+                                            <span class="text-[9px] font-bold text-blue-700">{{ p.firstName }} {{ p.lastName }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -105,14 +104,8 @@
 
                     <template v-for="msg in messages" :key="msg.id">
                         <!-- Standard Pill for system messages -->
-                        <div v-if="msg.isSystem && (!msg.metadata?.type || ['STATUS_UPDATE', 'DRIVER_ACKNOWLEDGE'].includes(msg.metadata?.type))" class="w-full flex justify-center my-3 px-2">
-                            <div v-if="msg.text" class="bg-white/90 border border-gray-100 text-gray-800 text-[11px] font-bold px-4 py-2 rounded-full max-w-[95%] text-center leading-snug shadow-sm backdrop-blur-sm">
-                                <i :class="[
-                                    'fa-solid mr-1.5 opacity-70',
-                                    msg.metadata?.status === 'IN_TRANSIT' ? 'fa-circle-check text-emerald-500' :
-                                    (msg.metadata?.status === 'COMPLETED' ? 'fa-flag-checkered text-blue-600' :
-                                    (msg.metadata?.type === 'DRIVER_ACKNOWLEDGE' ? 'fa-thumbs-up text-indigo-500' : 'fa-bell text-amber-500'))
-                                ]"></i>
+                        <div v-if="msg.isSystem && (!msg.metadata?.type || ['STATUS_UPDATE', 'DRIVER_ACKNOWLEDGE'].includes(msg.metadata?.type))" class="w-full flex justify-center my-2 px-2">
+                            <div v-if="msg.text" class="bg-gray-100/80 text-gray-500 text-[10px] font-medium px-4 py-1 rounded-full max-w-[90%] text-center leading-snug">
                                 <span v-html="formatMessage(msg.text)"></span>
                             </div>
                         </div>
@@ -126,127 +119,113 @@
                             <!-- Message Content -->
                             <div class="max-w-[85%] space-y-0.5">
                                 <p class="text-[10px] text-gray-400 font-bold mb-0.5 px-1" :class="isMe(msg) ? 'text-right' : 'text-left'">
-                                    {{ msg.sender?.firstName }}
+                                    {{ msg.sender?.firstName }} {{ msg.sender?.lastName }}
                                 </p>
 
-                                <!-- Case A: Arrival Card -->
-                                <div v-if="msg.metadata?.type === 'ARRIVAL'"
-                                    class="w-full min-w-[260px] rounded-2xl shadow-lg border-2 overflow-hidden bg-white animate-in zoom-in-95 duration-300"
-                                    :class="[
-                                        msg.metadata?.minutes === 0 ? 'border-emerald-200' : 'border-blue-100',
-                                        isMe(msg) ? 'rounded-br-sm' : 'rounded-bl-sm'
-                                    ]"
-                                >
-                                    <div class="px-3 py-2 flex items-center justify-between"
-                                        :class="msg.metadata?.minutes === 0 ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-blue-600 to-indigo-600'">
-                                        <div class="flex items-center gap-1.5 overflow-hidden">
-                                            <svg v-if="msg.metadata?.minutes === 0" class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
-                                            <svg v-else class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                            <span class="text-[10px] font-black text-white uppercase tracking-wider truncate">
-                                                {{ msg.metadata?.isUpdate ? '[แจ้งเปลี่ยนเวลา]' : '' }}
-                                                {{ msg.metadata?.minutes === 0 ? 'ถึงจุดนัดพบแล้ว!' : 'กำลังเดินทางมารับ' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="p-3 flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                                            :class="msg.metadata?.minutes === 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'">
-                                            <svg v-if="msg.metadata?.minutes > 0" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                                            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="text-xs font-black text-gray-900 leading-tight">
-                                                <span class="text-gray-400 mr-1.5">แจ้งถึง:</span>
-                                                <span :class="['font-black px-2 py-0.5 rounded-md mr-1.5', msg.metadata?.minutes === 0 ? 'text-emerald-700 bg-emerald-50' : 'text-blue-700 bg-blue-50']">
-                                                    {{ msg.metadata?.passengerName }}
-                                                </span>
-                                                <br class="mt-1" />
-                                                <template v-if="msg.metadata?.minutes === 0">ถึงจุดนัดพบเเล้ว!</template>
-                                                <template v-else>แจ้งเข้าใกล้: อีก <span class="text-base text-blue-600 underline underline-offset-2">{{ msg.metadata?.minutes }}</span> นาที</template>
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    <div v-if="msg.metadata?.reason" class="px-3 pb-3">
-                                        <div class="px-2.5 py-1.5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-2">
-                                            <p class="text-[10px] text-gray-600 leading-tight italic">"{{ msg.metadata.reason }}"</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Safety Reminder (แสดงเฉพาะผู้โดยสาร เมื่อคนขับแจ้งใกล้ถึง - แสดงแค่ครั้งเดียว) -->
-                                <div v-if="msg.metadata?.type === 'ARRIVAL' && myRole === 'PASSENGER' && msg.id === firstArrivalId"
-                                    class="w-full min-w-[260px] rounded-2xl overflow-hidden border border-amber-200 bg-amber-50 animate-in fade-in duration-500 mt-1"
-                                >
-                                    <div class="px-3 py-1.5 bg-amber-500 flex items-center gap-1.5">
-                                        <svg class="w-3 h-3 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                                        </svg>
-                                        <span class="text-[9px] font-black text-white uppercase tracking-wider">⚠️ Safety Reminder</span>
-                                    </div>
-                                    <div class="px-3 py-2.5 space-y-1.5">
-                                        <div class="flex items-start gap-2">
-                                            <span class="text-amber-500 text-[10px] flex-shrink-0 mt-px">🔍</span>
-                                            <p class="text-[10px] text-amber-900 leading-snug font-medium">ตรวจสอบชื่อคนขับและป้ายทะเบียนรถให้ตรงกับในแอปก่อนขึ้นรถทุกครั้ง</p>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="text-amber-500 text-[10px] flex-shrink-0 mt-px">🚗</span>
-                                            <p class="text-[10px] text-amber-900 leading-snug font-medium">ห้ามขึ้นรถที่ไม่ตรงกับข้อมูลในแอปโดยเด็ดขาด</p>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="text-amber-500 text-[10px] flex-shrink-0 mt-px">📍</span>
-                                            <p class="text-[10px] text-amber-900 leading-snug font-medium">แจ้งคนที่ไว้ใจได้ว่าคุณกำลังขึ้นรถ และแชร์ location ให้ผู้ติดตามทราบ</p>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <span class="text-amber-500 text-[10px] flex-shrink-0 mt-px">🆘</span>
-                                            <p class="text-[10px] text-amber-900 leading-snug font-medium">หากรู้สึกไม่ปลอดภัย โทรแจ้งตำรวจได้ที่ <span class="font-black">191</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Case B: Passenger Wait Card (Sent by Passenger) -->
-                                <div v-else-if="msg.metadata?.type === 'PASSENGER_WAIT'"
-                                    class="w-full min-w-[260px] rounded-2xl shadow-lg border-2 border-orange-200 overflow-hidden bg-white animate-in zoom-in-95 duration-300"
-                                    :class="isMe(msg) ? 'rounded-br-sm' : 'rounded-bl-sm'"
-                                >
-                                    <div class="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 flex items-center gap-1.5 overflow-hidden">
-                                        <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7m0 0v1a4.5 4.5 0 01-9 0v-1m9 1H7" /></svg>
-                                        <span class="text-[10px] font-black text-white uppercase tracking-wider">ขอยืนยัน: กรุณารอสักครู่</span>
-                                    </div>
-                                    <div class="p-3 flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="text-xs font-black text-gray-900 leading-tight">
-                                                <span class="text-orange-700 font-black bg-orange-50 px-1.5 py-0.5 rounded-md mr-1.5">{{ msg.metadata?.passengerName }}</span>
-                                                ขอให้ช่วยรอสักครู่
-                                            </h4>
-                                            <p class="text-[10px] text-gray-400 font-bold mt-0.5 tracking-tight">กำลังรีบไปที่จุดนัดพบ</p>
-                                        </div>
-                                    </div>
-                                    <div v-if="msg.metadata?.reason" class="px-3 pb-3">
-                                        <div class="px-2.5 py-1.5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-2">
-                                            <p class="text-[10px] text-gray-600 leading-tight italic">"{{ msg.metadata.reason }}"</p>
-                                        </div>
-                                    </div>
-                                    <!-- Driver Acknowledge Button -->
-                                    <div v-if="myRole === 'DRIVER'" class="px-3 pb-3">
-                                        <button
-                                            @click="acknowledgeWait(msg.metadata?.passengerId, msg.metadata?.passengerName)"
-                                            class="w-full py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-[10px] font-black rounded-xl transition-all active:scale-95 shadow-md shadow-orange-100 flex items-center justify-center gap-2 uppercase tracking-wider"
+                                <!-- Metadata Cards (Arrival, Wait, etc.) -->
+                                <template v-if="msg.metadata?.type">
+                                    <!-- Case A: Arrival Card -->
+                                    <template v-if="msg.metadata.type === 'ARRIVAL'">
+                                        <div
+                                            class="w-full min-w-[240px] rounded-xl shadow-sm border overflow-hidden bg-white animate-in zoom-in-95 duration-300"
+                                            :class="[
+                                                msg.metadata?.minutes === 0 ? 'border-emerald-100' : 'border-gray-100',
+                                                isMe(msg) ? 'rounded-br-sm' : 'rounded-bl-sm'
+                                            ]"
                                         >
-                                            <i class="fa-solid fa-check-circle"></i>
-                                            รับทราบแล้ว (จะรอนะ)
-                                        </button>
-                                    </div>
-                                </div>
+                                            <div class="px-3 py-1.5 flex items-center justify-between border-b"
+                                                :class="msg.metadata?.minutes === 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-50 text-gray-700'">
+                                                <span class="text-[9px] font-bold uppercase tracking-wider">
+                                                    {{ msg.metadata?.isUpdate && msg.metadata?.minutes > 0 ? '[แจ้งเปลี่ยนเวลา]' : '' }}
+                                                    {{ msg.metadata?.minutes === 0 ? 'ถึงจุดนัดพบแล้ว' : 'แจ้งสถานะรับ-ส่ง' }}
+                                                </span>
+                                            </div>
+                                            <div class="p-3 flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                                    :class="msg.metadata?.minutes === 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'">
+                                                    <svg v-if="msg.metadata?.minutes > 0" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                                                    <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="text-xs font-black text-gray-900 leading-tight">
+                                                        <span class="text-gray-400 mr-1.5">แจ้งถึง:</span>
+                                                        <span :class="['font-black px-2 py-0.5 rounded-md mr-1.5', msg.metadata?.minutes === 0 ? 'text-emerald-700 bg-emerald-50' : 'text-blue-700 bg-blue-50']">
+                                                            {{ msg.metadata?.targetUserName || msg.metadata?.passengerName }}
+                                                        </span>
+                                                        <br class="mt-1" />
+                                                        <template v-if="msg.metadata?.minutes === 0">ถึงจุดนัดพบเเล้ว!</template>
+                                                        <template v-else>จะถึงภายใน: <span class="text-base text-blue-600 underline underline-offset-2">{{ msg.metadata?.minutes }}</span> นาที</template>
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                            <div v-if="msg.metadata?.reason" class="px-3 pb-3">
+                                                <div class="px-2.5 py-1.5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-2">
+                                                    <p class="text-[10px] text-gray-600 leading-tight italic">"{{ msg.metadata.reason }}"</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Safety Reminder (Nested under Arrival) -->
+                                        <div v-if="myRole === 'PASSENGER' && msg.id === firstArrivalId"
+                                            class="w-full min-w-[240px] rounded-xl overflow-hidden border border-amber-100 bg-amber-50/50 animate-in fade-in duration-500 mt-2"
+                                        >
+                                            <div class="px-3 py-1.5 bg-amber-100 text-amber-800 border-b border-amber-200">
+                                                <span class="text-[9px] font-bold uppercase tracking-wider">คำแนะนำด้านความปลอดภัย</span>
+                                            </div>
+                                            <div class="px-4 py-3 space-y-2">
+                                                <p class="text-[10px] text-amber-900 leading-snug">• ตรวจสอบชื่อคนขับและป้ายทะเบียนรถให้ตรงกับในแอป</p>
+                                                <p class="text-[10px] text-amber-900 leading-snug">• ห้ามขึ้นรถที่ไม่ตรงกับข้อมูลในแอปโดยเด็ดขาด</p>
+                                                <p class="text-[10px] text-amber-900 leading-snug">• แจ้งบุคคลใกล้ชิดทราบเมื่อเริ่มการเดินทาง</p>
+                                                <p class="text-[10px] text-amber-900 leading-snug">• กรณีฉุกเฉิน โทรแจ้งตำรวจได้ที่ <span class="font-bold">191</span></p>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Case B: Passenger Wait Card -->
+                                    <template v-else-if="msg.metadata.type === 'PASSENGER_WAIT'">
+                                        <div
+                                            class="w-full min-w-[240px] rounded-xl shadow-sm border border-orange-100 overflow-hidden bg-white animate-in zoom-in-95 duration-300"
+                                            :class="isMe(msg) ? 'rounded-br-sm' : 'rounded-bl-sm'"
+                                        >
+                                            <div class="px-3 py-1.5 bg-orange-50 text-orange-700 border-b border-orange-100">
+                                                <span class="text-[9px] font-bold uppercase tracking-wider">ขอยืนยัน: กรุณารอสักครู่</span>
+                                            </div>
+                                            <div class="p-3 flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="text-xs font-black text-gray-900 leading-tight">
+                                                        <span class="text-orange-700 font-black bg-orange-50 px-1.5 py-0.5 rounded-md mr-1.5">{{ msg.metadata?.passengerName }}</span>
+                                                        ขอให้ช่วยรอสักครู่
+                                                    </h4>
+                                                    <p class="text-[10px] text-gray-400 font-bold mt-0.5 tracking-tight">กำลังรีบไปที่จุดนัดพบ</p>
+                                                </div>
+                                            </div>
+                                            <div v-if="msg.metadata?.reason" class="px-3 pb-3">
+                                                <div class="px-2.5 py-1.5 bg-gray-50 rounded-xl border border-gray-100 flex items-start gap-2">
+                                                    <p class="text-[10px] text-gray-600 leading-tight italic">"{{ msg.metadata.reason }}"</p>
+                                                </div>
+                                            </div>
+                                            <!-- Driver Acknowledge Button -->
+                                            <div v-if="myRole === 'DRIVER'" class="px-3 pb-3">
+                                                <button
+                                                    @click="acknowledgeWait(msg.metadata?.passengerId, msg.metadata?.passengerName)"
+                                                    class="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold rounded-lg transition-colors flex items-center justify-center gap-2 uppercase tracking-wider"
+                                                >
+                                                    รับทราบแล้ว
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
 
                                 <!-- Case C: Normal Text Message -->
                                 <div v-else-if="msg.text" :class="[
-                                    'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm break-words',
+                                    'px-3 py-2 rounded-xl text-sm leading-relaxed shadow-sm break-words',
                                     isMe(msg)
-                                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm'
-                                        : 'bg-white text-gray-800 rounded-bl-sm border border-gray-100'
+                                        ? 'bg-blue-600 text-white rounded-br-none'
+                                        : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
                                 ]">
                                     <span v-html="formatMessage(msg.text)"></span>
                                 </div>
@@ -260,14 +239,14 @@
                 </div>
 
                 <!-- Input Area -->
-                <div class="flex-shrink-0 bg-white border-t border-gray-100 shadow-[0_-2px_8px_rgba(0,0,0,0.04)]">
-                    <div class="px-3 pt-2 pb-1">
-                        <div class="flex items-center gap-2 bg-gray-100/80 rounded-xl px-3 py-1 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-300 border border-transparent transition-all">
+                <div class="flex-shrink-0 bg-white border-t border-gray-200">
+                    <div class="px-3 py-2">
+                        <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 transition-colors focus-within:bg-white focus-within:border-blue-400">
                             <input
                                 v-model="inputText"
                                 ref="chatInput"
                                 type="text"
-                                :placeholder="isTripEnded ? 'การสนทนาจบลงแล้ว' : 'พิมพ์ข้อความถึงทุกคนในทริป...'"
+                                :placeholder="isTripEnded ? 'การสนทนาจบลงแล้ว' : 'พิมพ์ข้อความ...'"
                                 :disabled="isTripEnded"
                                 class="flex-1 bg-transparent text-sm py-2 outline-none text-gray-800 placeholder-gray-400 min-w-0 disabled:opacity-50"
                                 @keyup.enter="sendMessage"
@@ -275,18 +254,17 @@
                             <button
                                 @click="sendMessage"
                                 :disabled="!inputText.trim() || isSending || isTripEnded"
-                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 transition-colors"
                             >
-                                <i v-if="!isSending" class="fa-solid fa-paper-plane text-xs -translate-x-px"></i>
+                                <i v-if="!isSending" class="fa-solid fa-paper-plane text-xs"></i>
                                 <i v-else class="fa-solid fa-circle-notch fa-spin text-xs"></i>
                             </button>
                         </div>
                     </div>
                     <!-- Scope indicator -->
-                    <div class="px-3 pb-2 flex items-center gap-1">
-                        <i class="fa-solid fa-lock text-[8px] text-gray-400"></i>
-                        <span class="text-[9px] text-gray-400">ข้อความจะส่งถึงทุกคนในทริป</span>
-                        <span class="ml-1 text-[9px] text-blue-500 font-bold">เห็นทุกคน</span>
+                    <div class="px-3 pb-2 flex justify-center items-center gap-1 opacity-50">
+                        <i class="fa-solid fa-lock text-[8px]"></i>
+                        <span class="text-[9px]">ข้อความจะส่งถึงทุกคนในทริป</span>
                     </div>
                 </div>
             </div>

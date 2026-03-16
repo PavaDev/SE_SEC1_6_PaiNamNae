@@ -51,16 +51,23 @@
                     <!-- Reporter Info -->
                     <div class="py-6 border-b border-gray-200">
                         <h3 class="text-sm font-medium text-gray-600 mb-4">ผู้รายงาน</h3>
-                        <div class="flex items-center gap-4">
-                            <!--  Fixed Avatar Loading -->
-                            <img :src="getReporterAvatar(report)" 
-                                @error="handleImageError"
-                                class="object-cover rounded-full w-12 h-12 bg-gray-200" 
-                                alt="avatar" />
-                            <div>
-                                <p class="font-medium text-gray-900">{{ getReporterName(report) }}</p>
-                                <p class="text-sm text-gray-500">{{ getReporterEmail(report) }}</p>
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <!--  Fixed Avatar Loading -->
+                                <img :src="getReporterAvatar(report)" 
+                                    @error="handleImageError"
+                                    class="object-cover rounded-full w-12 h-12 bg-gray-200" 
+                                    alt="avatar" />
+                                <div>
+                                    <p class="font-medium text-gray-900">{{ getReporterName(report) }}</p>
+                                    <p class="text-sm text-gray-500">{{ getReporterEmail(report) }}</p>
+                                </div>
                             </div>
+                            <button v-if="report.reporter" @click="onViewReviews(report.reporter)" 
+                                class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 transition-colors">
+                                <i class="fa-regular fa-star"></i>
+                                ดูรีวิวผู้ใช้งาน
+                            </button>
                         </div>
                     </div>
 
@@ -87,11 +94,72 @@
                             </div>
                             <div v-if="report.targetUser">
                                 <p class="text-sm text-gray-600 mb-1">ผู้ที่ถูกรายงาน</p>
-                                <p class="font-medium text-gray-900">{{ report.targetUser.firstName }} {{ report.targetUser.lastName }}</p>
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="font-medium text-gray-900">{{ report.targetUser.firstName }} {{ report.targetUser.lastName }}</p>
+                                    <button @click="onViewReviews(report.targetUser)" 
+                                        class="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md hover:bg-yellow-100 transition-colors uppercase">
+                                        <i class="fa-regular fa-star"></i>
+                                        ดูรีวิว
+                                    </button>
+                                </div>
                             </div>
                             <div v-if="report.routeId">
                                 <p class="text-sm text-gray-600 mb-1">Route ID</p>
                                 <p class="font-medium text-gray-900">{{ report.routeId }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Route Details Context -->
+                    <div v-if="report.route" class="py-6 border-b border-gray-200 bg-slate-50/50 -mx-6 px-6">
+                        <h3 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-route text-blue-500"></i>
+                            รายละเอียดเส้นทาง (Route Context)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Start/End -->
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex flex-col items-center gap-1 mt-1">
+                                        <div class="w-2.5 h-2.5 rounded-full border-2 border-emerald-500"></div>
+                                        <div class="w-0.5 h-6 bg-gray-200"></div>
+                                        <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                                    </div>
+                                    <div class="flex-1 space-y-3">
+                                        <div>
+                                            <p class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">จุดเริ่มต้น</p>
+                                            <p class="text-sm text-gray-700 font-medium">{{ report.route.startLocation?.name || 'ไม่ระบุ' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">จุดหมาย</p>
+                                            <p class="text-sm text-gray-700 font-medium">{{ report.route.endLocation?.name || 'ไม่ระบุ' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Driver & Vehicle -->
+                            <div class="space-y-4">
+                                <div v-if="report.route.driver" class="flex items-center gap-3 p-2 rounded-lg bg-white border border-gray-100">
+                                    <img :src="report.route.driver.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(report.route.driver.firstName)}&background=random`" 
+                                        class="w-10 h-10 rounded-full border border-gray-100" />
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-400 uppercase mb-0.5">คนขับ (Driver)</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ report.route.driver.firstName }} {{ report.route.driver.lastName }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="report.route.vehicle" class="p-3 rounded-lg bg-white border border-gray-100">
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1.5">ยานพาหนะ (Vehicle)</p>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-mono font-bold border border-gray-200">
+                                            {{ report.route.vehicle.licensePlate }}
+                                        </span>
+                                        <span class="text-sm text-gray-600">
+                                            {{ report.route.vehicle.color }} {{ report.route.vehicle.vehicleModel }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -248,6 +316,81 @@
         <div id="overlay" class="fixed inset-0 z-40 hidden bg-black bg-opacity-50 lg:hidden"
             @click="closeMobileSidebar"></div>
 
+        <!-- User Reviews Modal -->
+        <Transition name="modal-fade">
+            <div v-if="showReviewModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-white/30">
+                <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col modal-content border border-white/50">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">รีวิวของ {{ selectedUserForReviews?.firstName }} {{ selectedUserForReviews?.lastName }}</h3>
+                            <div class="flex text-yellow-400">
+                                <template v-for="i in 5" :key="i">
+                                    <span v-if="i <= Math.floor(selectedUserForReviews?.ratingAverage || 0)">★</span>
+                                    <span v-else-if="i <= Math.ceil(selectedUserForReviews?.ratingAverage || 0) && (selectedUserForReviews?.ratingAverage || 0) % 1 > 0" class="relative">
+                                        <span class="absolute overflow-hidden w-1/2">★</span>
+                                        <span class="text-gray-300">★</span>
+                                    </span>
+                                    <span v-else class="text-gray-300">★</span>
+                                </template>
+                                <span class="ml-2 text-gray-600">
+                                    ({{ selectedUserForReviews?.ratingAverage?.toFixed(1) || '0.0' }})
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-500">ทั้งหมด {{ userReviews.length }} รายการ</p>
+                        </div>
+                        <button @click="closeReviewModal" class="text-gray-400 hover:text-gray-600">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <div v-if="isLoadingUserReviews" class="py-12 text-center text-gray-500">
+                            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
+                            <p>กำลังโหลดรีวิว...</p>
+                        </div>
+                        
+                        <div v-else-if="userReviews.length === 0" class="py-12 text-center text-gray-500">
+                            <i class="fa-regular fa-comment-dots text-4xl mb-3 text-gray-300"></i>
+                            <p>ไม่พบรายการรีวิว</p>
+                        </div>
+
+                        <div v-else class="space-y-6">
+                            <div v-for="review in userReviews" :key="review.id" class="p-4 border border-gray-100 rounded-xl bg-gray-50/50">
+                                <div class="flex items-start gap-4">
+                                    <img :src="review.reviewer?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.reviewer?.firstName || 'U')}&background=random`" 
+                                        class="w-10 h-10 rounded-full border border-gray-200" />
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-medium text-gray-900">{{ review.reviewer?.firstName }} {{ review.reviewer?.lastName }}</span>
+                                            <span class="text-xs text-gray-400">{{ dayjs(review.createdAt).format('D MMM BBBB') }}</span>
+                                        </div>
+                                        <div class="flex items-center mt-0.5 text-yellow-400 text-sm">
+                                            <span v-for="i in 5" :key="i">{{ i <= review.rating ? '★' : '☆' }}</span>
+                                        </div>
+                                        <p class="mt-2 text-sm text-gray-700 leading-relaxed">{{ review.comment }}</p>
+                                        
+                                        <!-- Review Images -->
+                                        <div v-if="review.images && review.images.length" class="grid grid-cols-4 gap-2 mt-3">
+                                            <img v-for="(img, idx) in review.images" :key="idx" :src="img" 
+                                                class="w-full aspect-square object-cover rounded-md border border-gray-200" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                        <button @click="closeReviewModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            ปิดหน้าต่าง
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Transition>
         <!-- Confirm Delete Modal -->
         <ConfirmModal :show="showDelete"
             :title="`ลบรายงาน #${reportId}`"
@@ -258,8 +401,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useRuntimeConfig, useCookie } from '#app'
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 import buddhistEra from 'dayjs/plugin/buddhistEra'
@@ -282,8 +426,13 @@ const { getReportById, deleteReport, updateReportStatus } = useReport()
 const reportId = route.params.id
 const report = ref(null)
 const isLoading = ref(false)
+const isLoadingUserReviews = ref(false)
 const loadError = ref('')
 const isSubmitting = ref(false)
+
+const showReviewModal = ref(false)
+const selectedUserForReviews = ref(null)
+const userReviews = ref([])
 
 const showDelete = ref(false)
 
@@ -454,6 +603,50 @@ function goBack() {
     router.back()
 }
 
+// --- User Reviews Modal Logic ---
+function onViewReviews(user) {
+    selectedUserForReviews.value = user
+    showReviewModal.value = true
+    fetchUserReviews(user.id)
+}
+
+function closeReviewModal() {
+    showReviewModal.value = false
+    selectedUserForReviews.value = null
+    userReviews.value = []
+}
+
+async function fetchUserReviews(userId) {
+    isLoadingUserReviews.value = true
+    try {
+        const config = useRuntimeConfig()
+        const token = useCookie('token').value || (process.client ? localStorage.getItem('token') : '')
+        
+        const res = await fetch(`${config.public.apiBase}/reviews/received/${userId}`, {
+            headers: {
+                Accept: 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            credentials: 'include'
+        })
+        
+        if (res.status === 404) {
+            userReviews.value = []
+            return
+        }
+        
+        const body = await res.json()
+        if (res.ok) {
+            userReviews.value = body.data || []
+        }
+    } catch (err) {
+        console.error('Failed to fetch user reviews:', err)
+        userReviews.value = []
+    } finally {
+        isLoadingUserReviews.value = false
+    }
+}
+
 
 // --- Delete Report ---
 function askDelete() {
@@ -569,6 +762,23 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.modal-fade-enter-active, .modal-fade-leave-active {
+    transition: all 0.3s ease;
+}
+.modal-fade-enter-from, .modal-fade-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.modal-content {
+    animation: modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modal-pop {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 .sidebar {
     transition: width 0.3s ease;
 }

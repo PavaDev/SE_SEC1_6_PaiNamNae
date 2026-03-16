@@ -22,8 +22,12 @@ self.addEventListener('push', (event) => {
         icon: data.icon || '/icon-192.png',
         badge: data.badge || '/icon-72.png',
         data: { url: data.url || '/' },
-        requireInteraction: false,
+        tag: 'arrival-notification',
+        renotify: true,
+        requireInteraction: true,
         silent: false,
+        vibrate: [200, 100, 200, 100, 200, 100, 200],
+        timestamp: Date.now()
     };
 
     event.waitUntil(

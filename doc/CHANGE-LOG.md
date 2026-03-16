@@ -277,8 +277,6 @@ This project follows semantic versioning.
   - **WebSocket Integration**: Real-time arrival updates to passengers
   - **Quick Selection**: 5, 10, 15, 20, 25, 30 minute presets for arrival time
   - **Validation**: Arrival time validation and submission error handling
-
-### Changed
 - **Current Trip Page**: Enhanced driver action buttons with arrival notification option
 - **Booking Status**: Added `NOTIFIED_ARRIVAL` status for tracking
 - **WebSocket Messages**: New `ARRIVAL_NOTIFICATION` event type for real-time updates
@@ -316,11 +314,13 @@ This project follows semantic versioning.
 ### Fixed
 - **Trip Completion Crash**: Fixed a critical bug where completing a trip caused a white screen crash due to a missing `null` check on the `activeTrip` object.
 
+
 ## [2.0.3] - 2026-03-03 - (Panya)
 
 ### Added
 - UAT for test driver send notification to passenger
 - API Integration for test driver send notification to passenger
+
 
 ## [2.0.4] - 2026-03-03 - (Yasinthon)
 
@@ -343,13 +343,14 @@ This project follows semantic versioning.
   - **Email Service**: `sendNoShowEmail` method for sending no-show 
 - UAT for test driver report incident to admin
 
+
 ## [2.0.6] - 2026-03-03 - (Arimeta)
 
 ### Changed
 - **Refact folder name**
   - docs to doc
   - src to code
-  - tests to test
+  - test to test
 
 ### Added
 - **Folders**
@@ -410,7 +411,6 @@ This project follows semantic versioning.
   - Refined the **Arrival Notification Endpoint** logic to dynamically detect existing notices and set the `isUpdate` flag.
   - Updated the API to handle the `reason` field, enabling drivers to send context-rich arrival updates.
   - Added `ENABLE_EMAIL_NOTIFICATION` environment variable to control the email notification service during development and testing.
-- **Icon Modernization & Performance**
 
 ### Fixed
 - **UI Redundancy & Cleanup**
@@ -418,26 +418,27 @@ This project follows semantic versioning.
   - Resolved **Missing Icon** issues in the global modal and notification panels caused by outdated library references.
   - Fixed Z-index layering issues between chat bubbles and high-priority notification overlays.
 
+
 ## [3.0.3] - 2026-03-16 - (ฺNarathaip)
 
 
 ### Added / Improved
 - **Trip Chat — Multi-Tab Conversation System (Driver)**
-  - Added a **Tab Bar** in \TripChat.vue\ for the driver to switch between conversations per passenger.
+  - Added a **Tab Bar** in `TripChat.vue` for the driver to switch between conversations per passenger.
   - **"กลุ่ม" (Group) Tab**: Shows all messages in the trip chat at once.
   - **Per-Passenger Tabs**: Each confirmed/pending passenger gets their own tab, filtered to show only messages FROM that passenger and system messages targeted at them.
   - Tab badges display **unread message counts** per conversation so the driver can see who needs attention.
   - Each passenger tab shows a **color-coded status dot** on their avatar:
-    - 🟠 Orange = \PENDING\ (รอตอบรับ)
-    - 🔵 Blue = \CONFIRMED\
-    - 🟢 Green = \IN_TRANSIT\
-  - Added a transparent **scope indicator** below the input (\👥 ข้อความจะส่งถึงทุกคนในทริป\) so the driver always knows messages are group-wide.
+    - 🟠 Orange = `PENDING` (รอตอบรับ)
+    - 🔵 Blue = `CONFIRMED`
+    - 🟢 Green = `IN_TRANSIT`
+  - Added a transparent **scope indicator** below the input (👥 ข้อความจะส่งถึงทุกคนในทริป) so the driver always knows messages are group-wide.
 - **Chat Passengers Source Fix**
-  - Updated \chatPassengers\ in \current-trip.vue\ to include \PENDING\ bookings (previously only \CONFIRMED\ and \IN_TRANSIT\), ensuring all passengers appear in chat tabs regardless of booking status.
-  - Added \profilePicture\ and \bookingStatus\ fields to the passenger map for correct avatar display and status dots.
+  - Updated `chatPassengers` in `current-trip.vue` to include `PENDING` bookings (previously only `CONFIRMED` and `IN_TRANSIT`), ensuring all passengers appear in chat tabs regardless of booking status.
+  - Added `profilePicture` and `bookingStatus` fields to the passenger map for correct avatar display and status dots.
 - **System Message Rendering**
-  - Added \DRIVER_ACKNOWLEDGE\ to the System Pill rendering logic with a 👍 thumbs-up icon.
-  - Enhanced \@mention\ highlighting in pills to use a blue badge background for better visibility.
+  - Added `DRIVER_ACKNOWLEDGE` to the System Pill rendering logic with a 👍 thumbs-up icon.
+  - Enhanced `@mention` highlighting in pills to use a blue badge background for better visibility.
 - **"แจ้งให้รอ" (Wait Request) — Inline Form for Passenger**
   - Replaced direct-submit button with a **2-step inline expandable form**.
   - Step 1: Passenger taps the orange button → form expands inline (no separate modal).
@@ -445,13 +446,13 @@ This project follows semantic versioning.
   - After sending, the button converts to a locked indigo state "คนขับได้รับเรื่องแล้ว (กำลังรอคุณอยู่)".
 
 ### Changed
-- **Removed Auto-@ Mention**: The \sendMessage\ function no longer auto-prepends \@passengerName\ when the driver sends from a passenger tab. All messages are sent as plain text.
-- **Message Filtering Logic**: Passenger tabs filter by sender ID (messages FROM that passenger) and targeted system metadata, replacing the fragile \@name\ text-search approach.
-- **Input Placeholder**: Unified to \"พิมพ์ข้อความถึงทุกคนในทริป...\" regardless of active tab, reflecting the true group-send behavior.
+- **Removed Auto-@ Mention**: The `sendMessage` function no longer auto-prepends `@passengerName` when the driver sends from a passenger tab. All messages are sent as plain text.
+- **Message Filtering Logic**: Passenger tabs filter by sender ID (messages FROM that passenger) and targeted system metadata, replacing the fragile `@name` text-search approach.
+- **Input Placeholder**: Unified to "พิมพ์ข้อความถึงทุกคนในทริป..." regardless of active tab, reflecting the true group-send behavior.
 
 ### Fixed
-- **Missing \</div>\ Build Error**: Fixed a malformed HTML structure in \TripChat.vue\ input area that caused \RollupError: Element is missing end tag\ during Docker build (\
-pm run build\).
+- **Missing `</div>` Build Error**: Fixed a malformed HTML structure in `TripChat.vue` input area that caused `RollupError: Element is missing end tag` during Docker build (`npm run build`).
+
 
 ## [3.0.4] - 2026-03-17 - (Narathaip)
 - **Trip Chat UI Harmonization**: Redesigned Arrival (Driver) and Wait (Passenger) cards to use a unified structure with rich gradient headers and chat-bubble corners (rounded-br-sm/rounded-bl-sm).
@@ -460,3 +461,13 @@ pm run build\).
 - **Group Chat Context**: Enhanced Arrival cards with explicit "แจ้งถึงผู้โดยสาร: [Name]" labels to provide clear context for participants in shared group chats.
 - **Safety Reminder Optimization**: Updated logic to display the Safety Reminder box only once per trip (attached to the first arrival notification) to reduce clutter.
 - **Backend Chat Clean-up**: Removed redundant emojis and "@" symbols in system-generated messages for a cleaner integration with the new UI cards.
+
+
+## [3.0.5] - 2026-03-17 - (Pavarit)
+- **Admin Report Enhancement (Situation Awareness)**: Overhauled the admin report detail view to include linked Route Context (start/end locations, driver info, and vehicle identity) and integrated a "View Reviews" cross-reference modal for all parties involved.
+- **Robust File Validation**: Implemented frontend-side file type and size (100MB) validation with immediate toast feedback across all report and review modals including the profile report page.
+- **Enhanced Identification**: Standardized the display of full names (FirstName LastName) across chat, notifications, and management interfaces to eliminate ambiguity between users with the same first name.
+- **Arrival Notification Refinement**: Logic update for "0 minutes" arrival to display "มาถึงจุดนัดพบแล้ว" and suppressed redundant default time update messages for a cleaner communication flow.
+- **Data Integrity Fixes**: Synchronized report categories across all UI points (restored `NO_SHOW` category) and resolved Prisma schema validation errors for vehicle data mapping.
+- **Driver Empowerment**: Updated reportable booking logic allowing drivers to report passengers from both completed and cancelled trips post-journey.
+- **UI Simplification**: Stripped "fantasy" elements and redundant plain-text parallels from the chat dialogue components to focus on practical information density.
