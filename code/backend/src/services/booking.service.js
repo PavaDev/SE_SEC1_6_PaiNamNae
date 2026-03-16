@@ -8,7 +8,8 @@ const { sendArrivalNotificationEmail, sendNoShowEmail } = require('./email.servi
 // --- Spam prevention: cooldown Map for arrival notifications ---
 // Key: bookingId, Value: timestamp of last notify
 const arrivalCooldowns = new Map();
-const ARRIVAL_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const emergencyTracker = new Map(); // Track timestamps for "spam-allowed" emergency notifications
+const ARRIVAL_COOLDOWN_MS = 30 * 1000; // 30 seconds
 
 const ACTIVE_STATUSES = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.IN_TRANSIT, BookingStatus.COMPLETED];
 
@@ -525,16 +526,37 @@ module.exports = {
   updatePassengerStatus,
   updateBookingStatus,
   notifyArrival,
+  notifyWait,
 };
 
 async function notifyArrival(bookingId, userId, minutes, customText = null, reason = null) {
   /* --- Spam prevention (Disabled for individual passenger updates) ---
   const now = Date.now();
-  const lastSent = arrivalCooldowns.get(bookingId);
-  if (lastSent && now - lastSent < ARRIVAL_COOLDOWN_MS) {
-    const remainingSec = Math.ceil((ARRIVAL_COOLDOWN_MS - (now - lastSent)) / 1000);
-    const remainingMin = Math.ceil(remainingSec / 60);
-    throw new ApiError(429, `กรุณารอก่อน คุณเพิ่งส่งแจ้งเตือนไปแล้ว กรุณารออีก ${remainingMin} นาที`);
+  const lastLockout = arrivalCooldowns.get(bookingId);
+
+  // Phase 1 Lock: Only applies to NORMAL notifications (no reason)
+  if (!reason && lastLockout && (now - lastLockout < 30 * 1000)) {
+    throw new ApiError(400, 'คุณส่งข้อมูลถี่เกินไป กรุณารอสักพัก (30 วินาที) ก่อนแจ้งใหม่');
+  }
+
+  if (reason) {
+    // Phase 2: Emergency mode (Bypasses normal lock, but capped at 3 per 10s)
+    let logs = emergencyTracker.get(bookingId) || [];
+    logs = logs.filter(t => now - t < 10000);
+
+    if (logs.length >= 3) {
+      // Trigger a hard lock if emergency spam limit reached
+      arrivalCooldowns.set(bookingId, now); 
+      throw new ApiError(400, 'คุณส่งข้อมูลฉุกเฉินถี่เกินไป (3 ครั้ง/10วิ) ระบบล็อกชั่วคราว 30 วินาที');
+    }
+    
+    // Add current timestamp to logs for this emergency
+    logs.push(now);
+    emergencyTracker.set(bookingId, logs);
+  } else {
+    // Phase 1: Normal mode -> Immediate 30s cooldown
+    arrivalCooldowns.set(bookingId, now);
+    emergencyTracker.delete(bookingId); // Reset spam tracker for this booking
   }
   */
 
@@ -603,7 +625,7 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
   if (!systemText) {
     const timeText = minutes === 0 ? 'ถึงจุดนัดพบแล้ว' : `จะถึงจุดรับของคุณในอีกประมาณ ${minutes} นาที`;
     const reasonText = reason ? ` (เหตุผล: ${reason})` : '';
-    
+
     if (isUpdate) {
       systemText = `🔄 @${passengerName} [เเจ้งเปลี่ยนเวลา]: ${timeText}${reasonText}`;
     } else {
@@ -724,6 +746,27 @@ async function updatePassengerStatus(id, status, userId, reason) {
       }
     });
 
+    // --- Save system message to TripChat for Check-in/Completion ---
+    if (status === BookingStatus.IN_TRANSIT || status === BookingStatus.COMPLETED) {
+      try {
+        const chatService = require('./chat.service');
+        const passengerName = booking.passenger.firstName;
+        const systemText = status === BookingStatus.IN_TRANSIT
+          ? ` @${passengerName} เช็คอินขึ้นรถเรียบร้อยแล้ว!`
+          : ` @${passengerName} ถึงจุดหมายปลายทางแล้ว`;
+
+        const metadata = {
+          type: 'STATUS_UPDATE',
+          status,
+          passengerId: booking.passengerId,
+          passengerName: passengerName
+        };
+        await chatService.sendSystemMessage(booking.routeId, booking.route.driverId, 'DRIVER', systemText, metadata);
+      } catch (e) {
+        console.error('[Chat] Failed to save status system message:', e.message);
+      }
+    }
+
     return updated;
   });
 
@@ -751,4 +794,60 @@ async function updatePassengerStatus(id, status, userId, reason) {
   }
 
   return result;
+}
+
+async function notifyWait(bookingId, passengerId, reason) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      route: true,
+      passenger: { select: { firstName: true, lastName: true } }
+    }
+  });
+
+  if (!booking) throw new ApiError(404, 'Booking not found');
+  if (booking.passengerId !== passengerId) throw new ApiError(403, 'Forbidden');
+  if (booking.status !== BookingStatus.CONFIRMED && booking.status !== BookingStatus.IN_TRANSIT) {
+    throw new ApiError(400, 'สามารถแจ้งให้รอได้เฉพาะกรณีที่ยืนยันแล้วเท่านั้น');
+  }
+
+  const io = getIO();
+  // Broadcast wait request via socket
+  io.to(`user:${booking.route.driverId}`).emit('booking:passengerRequestWait', {
+    bookingId,
+    routeId: booking.routeId,
+    passengerId,
+    passengerName: `${booking.passenger.firstName} ${booking.passenger.lastName}`,
+    reason
+  });
+
+  // --- Save system message to TripChat ---
+  try {
+    const chatService = require('./chat.service');
+    const passengerName = booking.passenger.firstName;
+    const systemText = `✋ @${passengerName}: ขอให้คนขับรอสักครู่${reason ? ` (เหตุผล: ${reason})` : ''}`;
+
+    const metadata = {
+      type: 'PASSENGER_WAIT',
+      passengerId: passengerId,
+      passengerName: passengerName,
+      reason: reason
+    };
+    await chatService.sendSystemMessage(booking.routeId, passengerId, 'PASSENGER', systemText, metadata);
+  } catch (e) {
+    console.error('[Chat] Failed to save wait system message:', e.message);
+  }
+
+  // Create official notification for driver
+  await prisma.notification.create({
+    data: {
+      userId: booking.route.driverId,
+      type: 'BOOKING',
+      title: 'ผู้โดยสารขอให้รอสักครู่',
+      body: `คุณ ${booking.passenger.firstName} ขอให้คุณช่วยรอก่อน: ${reason || 'ไม่มีเหตุผลระบุ'}`,
+      metadata: { kind: 'PASSENGER_WAIT_REQUEST', bookingId, routeId: booking.routeId, reason }
+    }
+  });
+
+  return { success: true };
 }

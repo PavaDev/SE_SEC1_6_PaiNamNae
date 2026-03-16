@@ -57,6 +57,10 @@ async function sendArrivalNotificationEmail(passenger, driver, booking, minutes,
           <p style="margin: 12px 0 0 0; color: #475569; font-size: 15px; font-weight: 500;">
             คุณ${driver.firstName} ${driver.lastName} กำลังมุ่งหน้าไปหาคุณ
           </p>
+          ${reason ? `
+          <p style="margin: 8px 0 0; color: #1e40af; font-size: 14px; text-align: center; background: white; padding: 8px; border-radius: 8px; border: 1px dashed #bfdbfe;">
+            💡 <strong>หมายเหตุ:</strong> ${reason}
+          </p>` : ''}
         </div>
 
         ${reason ? `

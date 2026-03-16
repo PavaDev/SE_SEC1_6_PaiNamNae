@@ -41,6 +41,19 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-painamnae}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-painamnae}?schema=public
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin123}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-123456789}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-System}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-Administrator}
+      WEB_PUSH_EMAIL: ${WEB_PUSH_EMAIL:-admin@painamnae.app}
+      WEB_PUSH_PUBLIC_KEY: ${WEB_PUSH_PUBLIC_KEY:-}
+      WEB_PUSH_PRIVATE_KEY: ${WEB_PUSH_PRIVATE_KEY:-}
       CHOKIDAR_USEPOLLING: "true"
 
     command: sh -c "npx prisma migrate dev && npm run dev"

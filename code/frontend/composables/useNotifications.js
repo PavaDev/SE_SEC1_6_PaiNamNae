@@ -55,17 +55,20 @@ export function useNotifications() {
 
     const fetchPersistedNotifications = async () => {
         try {
-            const apiBase = useRuntimeConfig().public.apiBase || 'http://localhost:3000/api'
-            const tk = useCookie('token')?.value || (process.client ? localStorage.getItem('token') : '')
+            if (!process.client) return
+            const tk = localStorage.getItem('token')
             if (!tk) return
 
-            const res = await $fetch('/notifications', {
-                baseURL: apiBase,
-                headers: { Accept: 'application/json', Authorization: `Bearer ${tk}` },
-                query: { page: 1, limit: 10 }
+            // Use native fetch - useNuxtApp works in composables
+            const nuxtApp = useNuxtApp()
+            const apiBase = nuxtApp.$config?.public?.apiBase || 'http://localhost:3000/api'
+            const res = await fetch(`${apiBase}/notifications?page=1&limit=10`, {
+                headers: { Accept: 'application/json', Authorization: `Bearer ${tk}` }
             })
+            if (!res.ok) return
+            const data = await res.json()
 
-            const raw = Array.isArray(res?.data) ? res.data : []
+            const raw = Array.isArray(data?.data) ? data.data : []
             // Filter only trip-related ones and add them if not already in list
             const tripRelated = raw.filter(it =>
                 it.type === 'BOOKING' || it.kind === 'ROUTE_COMPLETED' || it.kind === 'ARRIVAL_NOTIFICATION'
@@ -104,7 +107,9 @@ export function useNotifications() {
         // --- Event Listeners ---
 
         onEvent('booking:driverArriving', (data) => {
-            addNotification(`คนขับใกล้ถึงแล้ว! อีกประมาณ ${data.minutes} นาที`, 'arrival', true)
+            const prefix = data.reason ? '⚠️ แจ้งความล่าช้า: ' : '🚗 ใกล้ถึงแล้ว: '
+            const reasonText = data.reason ? ` เนื่องจาก: ${data.reason}` : ''
+            addNotification(`${prefix}คนขับจะมาถึงในอีกประมาณ ${data.minutes} นาที${reasonText}`, 'arrival', true)
         })
 
         onEvent('trip:started', () => {

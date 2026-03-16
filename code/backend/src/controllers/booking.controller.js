@@ -217,6 +217,16 @@ const notifyArrival = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'แจ้งเตือนผู้โดยสารเรียบร้อยแล้ว', data: result });
 });
 
+const notifyWait = asyncHandler(async (req, res) => {
+  const passengerId = req.user.sub;
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  const result = await bookingService.notifyWait(id, passengerId, reason);
+
+  res.status(200).json({ success: true, message: 'ส่งคำขอให้คนขับรอเรียบร้อยแล้ว', data: result });
+});
+
 module.exports = {
   adminListBookings,
   createBooking,
@@ -231,4 +241,5 @@ module.exports = {
   adminDeleteBooking,
   updatePassengerStatus,
   notifyArrival,
+  notifyWait,
 };

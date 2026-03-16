@@ -441,50 +441,79 @@
                     <div class="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
                         <!-- Status Badge -->
                         <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10">
-                            <div :class="passengerArrivalData.isUpdate ? 'bg-amber-500' : 'bg-blue-600'" 
+                            <div :class="passengerArrivalData.type === 'PASSENGER_WAIT' || passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'bg-indigo-500' : (Number(passengerArrivalData.minutes) === 0 ? 'bg-green-600' : (passengerArrivalData.isUpdate ? 'bg-amber-500' : 'bg-blue-600'))" 
                                  class="px-4 py-1.5 rounded-full shadow-lg">
                                 <span class="text-[10px] font-black text-white uppercase tracking-widest">
-                                    {{ passengerArrivalData.isUpdate ? 'เเจ้งเปลี่ยนเวลา' : 'คนขับใกล้ถึงเเล้ว' }}
+                                    {{ passengerArrivalData.type === 'PASSENGER_WAIT' ? 'ผู้โดยสารขอยืนยัน' : (passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'รับทราบคำขอ' : (Number(passengerArrivalData.minutes) === 0 ? 'ถึงจุดนัดพบเเล้ว' : (passengerArrivalData.isUpdate ? 'เเจ้งเปลี่ยนเวลา' : 'คนขับใกล้ถึงเเล้ว'))) }}
                                 </span>
                             </div>
                         </div>
 
                         <!-- Animated Background/Icon Area -->
-                        <div :class="passengerArrivalData.isUpdate ? 'bg-amber-50' : 'bg-blue-50'" 
+                        <div :class="passengerArrivalData.type === 'PASSENGER_WAIT' || passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'bg-indigo-50' : (Number(passengerArrivalData.minutes) === 0 ? 'bg-green-50' : (passengerArrivalData.isUpdate ? 'bg-amber-50' : 'bg-blue-50'))" 
                              class="relative h-48 flex items-center justify-center overflow-hidden">
                             <!-- Decorative Circles -->
                             <div class="absolute inset-0 flex items-center justify-center opacity-20">
-                                <div class="w-64 h-64 border-2 border-current rounded-full animate-ping duration-[3000ms]" :class="passengerArrivalData.isUpdate ? 'text-amber-300' : 'text-blue-300'"></div>
-                                <div class="absolute w-48 h-48 border-2 border-current rounded-full animate-ping duration-[4000ms]" :class="passengerArrivalData.isUpdate ? 'text-amber-200' : 'text-blue-200'"></div>
+                                <div class="w-64 h-64 border-2 border-current rounded-full animate-ping duration-[3000ms]" 
+                                     :class="passengerArrivalData.type === 'PASSENGER_WAIT' || passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'text-indigo-300' : (Number(passengerArrivalData.minutes) === 0 ? 'text-green-300' : (passengerArrivalData.isUpdate ? 'text-amber-300' : 'text-blue-300'))"></div>
+                                <div class="absolute w-48 h-48 border-2 border-current rounded-full animate-ping duration-[4000ms]" 
+                                     :class="passengerArrivalData.type === 'PASSENGER_WAIT' || passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'text-indigo-200' : (Number(passengerArrivalData.minutes) === 0 ? 'text-green-200' : (passengerArrivalData.isUpdate ? 'text-amber-200' : 'text-blue-200'))"></div>
                             </div>
 
-                            <!-- Main Visual -->
-                            <div :class="passengerArrivalData.isUpdate ? 'bg-amber-500' : 'bg-blue-600'" 
-                                 class="w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-xl rotate-3">
-                                 <i :class="passengerArrivalData.minutes === 0 ? 'fa-solid fa-location-dot' : (passengerArrivalData.isUpdate ? 'fa-solid fa-rotate-right' : 'fa-solid fa-car-side')" 
-                                    class="text-4xl text-white"></i>
+                            <!-- Main Visual (Detailed Sedan/Marker SVG) -->
+                            <div :class="passengerArrivalData.type === 'PASSENGER_WAIT' || passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'bg-indigo-500' : (Number(passengerArrivalData.minutes) === 0 ? 'bg-green-600' : (passengerArrivalData.isUpdate ? 'bg-amber-500' : 'bg-blue-600'))" 
+                                 class="w-24 h-24 rounded-[2.2rem] flex items-center justify-center shadow-2xl rotate-3 animate-bounce-short">
+                                 <!-- Wait Icon (Hand) -->
+                                 <svg v-if="passengerArrivalData.type === 'PASSENGER_WAIT'" class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7m0 0v1a4.5 4.5 0 01-9 0v-1m9 1H7" />
+                                 </svg>
+                                 <!-- Acknowledge Icon (Check) -->
+                                 <svg v-else-if="passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE'" class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                 </svg>
+                                 <!-- Arrived Icon (Location Marker SVG) -->
+                                 <svg v-else-if="Number(passengerArrivalData.minutes) === 0" class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                 </svg>
+                                 <!-- Coming Icon (Detailed Sedan SVG) -->
+                                 <svg v-else class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                     <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                                 </svg>
                             </div>
                         </div>
 
                         <div class="p-8 text-center bg-white">
                             <h2 class="text-2xl font-black text-gray-900 leading-tight mb-2">
-                                {{ passengerArrivalData.minutes === 0 ? 'คนขับถึงเเล้ว!' : `อีกประมาณ ${passengerArrivalData.minutes} นาที` }}
+                                <template v-if="passengerArrivalData.type === 'PASSENGER_WAIT'">รอก่อนนะ!</template>
+                                <template v-else-if="passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE'">รับทราบเเล้ว!</template>
+                                <template v-else-if="Number(passengerArrivalData.minutes) === 0">ถึงจุดนัดพบเเล้วนะ!</template>
+                                <template v-else>อีกประมาณ {{ passengerArrivalData.minutes }} นาที</template>
                             </h2>
-                            <p class="text-sm font-medium text-gray-500 mb-6">
-                                คุณ<strong>{{ passengerArrivalData.driverName }}</strong> {{ passengerArrivalData.minutes === 0 ? 'จอดรออยู่ที่จุดรับของคุณเเล้ว' : 'กำลังรอนำพาคุณเดินทาง' }}
+                            <p class="text-sm font-medium text-gray-400 mb-6">
+                                <template v-if="passengerArrivalData.type === 'PASSENGER_WAIT'">
+                                    คุณ {{ passengerArrivalData.passengerName }} กำลังรีบไปที่จุดนัดพบ
+                                </template>
+                                <template v-else-if="passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE'">
+                                    คนขับรับทราบคำขอของคุณแล้ว และกำลังจอดรออยู่ครับ
+                                </template>
+                                <template v-else>
+                                    คุณ {{ passengerArrivalData.driverName }} {{ Number(passengerArrivalData.minutes) === 0 ? 'จอดรออยู่ที่จุดรับของคุณเเล้ว' : 'กำลังเดินทางมารับคุณ' }}
+                                </template>
                             </p>
 
-                            <!-- Reason Block if Update -->
-                            <div v-if="passengerArrivalData.reason" class="mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-solid fa-comment-dots text-gray-400 text-xs"></i>
+                            <!-- Reason Block if Update/Wait -->
+                            <div v-if="passengerArrivalData.reason" class="mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-start gap-3 text-left">
+                                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    </svg>
                                 </div>
-                                <p class="text-[11px] text-gray-600 leading-normal text-left italic font-medium">"{{ passengerArrivalData.reason }}"</p>
+                                <p class="text-[11px] text-gray-600 leading-normal italic font-medium">"{{ passengerArrivalData.reason }}"</p>
                             </div>
 
                             <button @click="closePassengerArrivalModal" 
                                 class="w-full py-4 text-white font-black rounded-[1.25rem] transition-all active:scale-95 shadow-xl"
-                                :class="passengerArrivalData.isUpdate ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'">
+                                :class="passengerArrivalData.type === 'PASSENGER_WAIT' || passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : (Number(passengerArrivalData.minutes) === 0 ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : (passengerArrivalData.isUpdate ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'))">
                                 รับทราบ
                             </button>
                         </div>
@@ -770,12 +799,34 @@ function closePassengerArrivalModal() {
 
 onEvent('booking:driverArriving', (data) => {
     passengerArrivalData.value = {
+        type: 'DRIVER_ARRIVING',
         minutes: data.minutes,
         driverName: data.driverName,
         reason: data.reason || '',
         isUpdate: data.isUpdate || false
     }
     showPassengerArrivalModal.value = true
+})
+
+onEvent('booking:passengerWaitRequest', (data) => {
+    passengerArrivalData.value = {
+        type: 'PASSENGER_WAIT',
+        passengerName: data.passengerName,
+        reason: data.reason || 'กรุณารอสักครู่ กำลังเดินไปครับ/ค่ะ'
+    }
+    showPassengerArrivalModal.value = true
+})
+
+onEvent('trip:message', (msg) => {
+    // Only show modal for specifically targeted driver acknowledgements
+    if (msg.isSystem && msg.metadata?.type === 'DRIVER_ACKNOWLEDGE' && msg.metadata?.targetUserId === user.value?.sub) {
+        passengerArrivalData.value = {
+            type: 'DRIVER_ACKNOWLEDGE',
+            passengerName: msg.metadata?.targetUserName,
+            reason: ''
+        }
+        showPassengerArrivalModal.value = true
+    }
 })
 
 /* ใส่ฟอนต์ Kanit แบบเดิม */
@@ -850,5 +901,18 @@ useHead({
 
 .bell-shake {
     animation: bell-shake 0.8s ease-in-out;
+}
+
+.animate-bounce-short {
+    animation: bounce-short 1.5s infinite;
+}
+
+@keyframes bounce-short {
+    0%, 100% {
+        transform: translateY(-8%) scale(1.05) rotate(3deg);
+    }
+    50% {
+        transform: translateY(0) scale(1) rotate(3deg);
+    }
 }
 </style>
