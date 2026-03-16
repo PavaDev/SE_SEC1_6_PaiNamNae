@@ -712,6 +712,7 @@
             :myRole="role"
             :tripStatus="activeTrip.route.status"
             :passengers="chatPassengers"
+            :routeInfo="chatRouteInfo"
             bottomClass="bottom-6"
             rightClass="right-6"
         />
@@ -747,19 +748,39 @@ const openBubbleChat = () => {
 // --- TripChat computed props ---
 const tripChatRouteId = computed(() => activeTrip.value?.route?.id || null)
 
-// List of passengers for targeted actions in group chat
-// Include ALL active passengers (PENDING, CONFIRMED, IN_TRANSIT) so driver can chat with anyone
+// Route info (origin/destination) for the carpooling auto-card
+// Extracts .name from location objects (stored as { lat, lng, name })
+const chatRouteInfo = computed(() => {
+    const route = activeTrip.value?.route
+    if (!route) return {}
+    const extractName = (loc) => {
+        if (!loc) return null
+        if (typeof loc === 'string') {
+            try { loc = JSON.parse(loc) } catch { return loc }
+        }
+        if (typeof loc === 'object') return loc.name || loc.address || null
+        return loc
+    }
+    return {
+        fromCity: extractName(route.origin) || extractName(route.startLocation) || route.fromCity || null,
+        toCity: extractName(route.destination) || extractName(route.endLocation) || route.toCity || null,
+    }
+})
+
+// List of passengers shown in carpooling info card
+// Include ALL active passengers (PENDING, CONFIRMED, IN_TRANSIT)
 const chatPassengers = computed(() => {
-    if (!activeTrip.value || role.value !== 'DRIVER') return []
-    return activeTrip.value.route.bookings
-        ?.filter(b => ['PENDING', 'CONFIRMED', 'IN_TRANSIT'].includes(b.status))
-        ?.map(b => ({
+    if (!activeTrip.value) return []
+    const bookings = activeTrip.value.route?.bookings || []
+    return bookings
+        .filter(b => ['PENDING', 'CONFIRMED', 'IN_TRANSIT'].includes(b.status))
+        .map(b => ({
             id: b.passenger.id,
             firstName: b.passenger.firstName,
             lastName: b.passenger.lastName,
             profilePicture: b.passenger.profilePicture || null,
             bookingStatus: b.status
-        })) || []
+        }))
 })
 
 // Called by TripChat when driver clicks quick-arrival button

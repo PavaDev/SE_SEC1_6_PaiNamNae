@@ -465,7 +465,7 @@
                                  class="w-24 h-24 rounded-[2.2rem] flex items-center justify-center shadow-2xl rotate-3 animate-bounce-short">
                                  <!-- Wait Icon (Hand) -->
                                  <svg v-if="passengerArrivalData.type === 'PASSENGER_WAIT'" class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7m0 0v1a4.5 4.5 0 01-9 0v-1m9 1H7" />
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0V12m-3 .5V12m3 .5V12m0 0V5a1.5 1.5 0 013 0v7m0 0V6a1.5 1.5 0 113 0v7m0 0v1a4.5 4.5 0 01-9 0v-1m9 1H7" />
                                  </svg>
                                  <!-- Acknowledge Icon (Check) -->
                                  <svg v-else-if="passengerArrivalData.type === 'DRIVER_ACKNOWLEDGE'" class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -453,3 +453,10 @@ This project follows semantic versioning.
 - **Missing \</div>\ Build Error**: Fixed a malformed HTML structure in \TripChat.vue\ input area that caused \RollupError: Element is missing end tag\ during Docker build (\
 pm run build\).
 
+## [3.0.4] - 2026-03-17 - (Narathaip)
+- **Trip Chat UI Harmonization**: Redesigned Arrival (Driver) and Wait (Passenger) cards to use a unified structure with rich gradient headers and chat-bubble corners (rounded-br-sm/rounded-bl-sm).
+- **Advanced Micro-interactions**: Replaced basic wiggle with `pulse-attention` scale/glow animation for the chat bubble and added synchronous pulse effects to unread notification badges (Nav Bell & Chat) to improve user awareness.
+- **Arrival Modal Refinement**: Fixed broken SVG icons in the driver arrival modal by switching to stabilized FontAwesome icons (`fa-car`, `fa-location-dot`) and cleaned up malformed icon paths.
+- **Group Chat Context**: Enhanced Arrival cards with explicit "แจ้งถึงผู้โดยสาร: [Name]" labels to provide clear context for participants in shared group chats.
+- **Safety Reminder Optimization**: Updated logic to display the Safety Reminder box only once per trip (attached to the first arrival notification) to reduce clutter.
+- **Backend Chat Clean-up**: Removed redundant emojis and "@" symbols in system-generated messages for a cleaner integration with the new UI cards.

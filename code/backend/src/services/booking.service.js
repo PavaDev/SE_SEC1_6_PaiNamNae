@@ -625,7 +625,7 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
   if (!systemText) {
     const timeText = minutes === 0 ? 'ถึงจุดนัดพบแล้ว' : `จะถึงจุดรับของคุณในอีกประมาณ ${minutes} นาที`;
     const reasonText = reason ? ` (เหตุผล: ${reason})` : '';
-    
+
     if (isUpdate) {
       systemText = `🔄 @${passengerName} [เเจ้งเปลี่ยนเวลา]: ${timeText}${reasonText}`;
     } else {
@@ -751,10 +751,10 @@ async function updatePassengerStatus(id, status, userId, reason) {
       try {
         const chatService = require('./chat.service');
         const passengerName = booking.passenger.firstName;
-        const systemText = status === BookingStatus.IN_TRANSIT 
-          ? `✅ @${passengerName} เช็คอินขึ้นรถเรียบร้อยแล้ว!`
-          : `🏁 @${passengerName} ถึงจุดหมายปลายทางแล้ว`;
-        
+        const systemText = status === BookingStatus.IN_TRANSIT
+          ? ` @${passengerName} เช็คอินขึ้นรถเรียบร้อยแล้ว!`
+          : ` @${passengerName} ถึงจุดหมายปลายทางแล้ว`;
+
         const metadata = {
           type: 'STATUS_UPDATE',
           status,
@@ -826,7 +826,7 @@ async function notifyWait(bookingId, passengerId, reason) {
     const chatService = require('./chat.service');
     const passengerName = booking.passenger.firstName;
     const systemText = `✋ @${passengerName}: ขอให้คนขับรอสักครู่${reason ? ` (เหตุผล: ${reason})` : ''}`;
-    
+
     const metadata = {
       type: 'PASSENGER_WAIT',
       passengerId: passengerId,
