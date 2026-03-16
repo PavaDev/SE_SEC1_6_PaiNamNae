@@ -83,6 +83,10 @@
                                     <span class="text-xs text-gray-400">({{ activeTrip.route?.driver?.ratingCount || 0 }})</span>
                                 </div>
                             </div>
+<<<<<<< HEAD
+=======
+                           
+>>>>>>> main
                         </div>
                         <div class="space-y-3">
                             <h4 class="text-xs font-bold text-gray-400">เพื่อนร่วมทริป ({{ activeTrip.route?.bookings?.length || 0 }})</h4>
@@ -424,6 +428,7 @@
         <!-- Arrival Time Picker Modal -->
         <div v-if="showArrivalPicker" class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showArrivalPicker = false"></div>
+<<<<<<< HEAD
             <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center max-h-[90vh] overflow-y-auto">
                 <!-- Icon: Change to Bell (Web Notification style) -->
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-300"
@@ -502,13 +507,75 @@
                         <template v-if="isSubmittingArrival">กำลังส่ง...</template>
                         <template v-else-if="arrivalCooldownRemaining > 0 && (!hasDelay || (notificationCounts.get(selectedBookingForArrival?.id) || 0) >= 3)">รอ {{ arrivalCooldownRemaining }} วิ</template>
                         <template v-else>{{ hasDelay ? 'ส่งเหตุฉุกเฉิน' : (notifiedBookings.has(selectedBookingForArrival?.id) ? 'ส่งซ้ำ' : 'ยืนยัน') }}</template>
+=======
+            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-8 text-center overflow-hidden"
+                :class="selectedBookingForArrival?.hasNotifiedArrival ? 'border-t-[10px] border-amber-500' : ''">
+                
+                <!-- Awareness Badge for Updates -->
+                <div v-if="selectedBookingForArrival?.hasNotifiedArrival" 
+                    class="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-tighter">
+                    Update Mode
+                </div>
+
+                <div v-if="selectedBookingForArrival?.hasNotifiedArrival" 
+                    class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce-short">
+                    <i class="fas fa-redo-alt text-2xl"></i>
+                </div>
+                <div v-else class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+
+                <h3 class="text-xl font-black text-gray-900 mb-2">
+                    {{ selectedBookingForArrival?.hasNotifiedArrival ? 'อัพเดทเวลาถึง' : 'จะถึงภายในกี่นาที?' }}
+                </h3>
+                <p class="text-sm text-gray-500 mb-6 font-medium">
+                    {{ selectedBookingForArrival?.hasNotifiedArrival 
+                        ? 'คุณเคยเเจ้งเตือนไปเเล้ว ต้องการปรับเปลี่ยนเวลาไหม?' 
+                        : `แจ้งให้คุณ ${selectedBookingForArrival?.passenger.firstName} ทราบว่าคุณใกล้จะถึงแล้ว` }}
+                </p>
+                
+                <div class="grid grid-cols-4 gap-2 mb-4">
+                    <button @click="arrivalMinutes = 0" 
+                        class="py-3 px-2 rounded-xl border-2 font-bold transition text-xs"
+                        :class="arrivalMinutes === 0 ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-gray-100 text-gray-400 hover:border-gray-200'">
+                        ถึงแล้ว
+                    </button>
+                    <button v-for="m in [5,10,15,20,25,30]" :key="m" @click="arrivalMinutes = m" 
+                        class="py-3 px-2 rounded-xl border-2 font-bold transition text-sm"
+                        :class="[
+                            arrivalMinutes === m 
+                                ? (selectedBookingForArrival?.hasNotifiedArrival ? 'border-amber-600 bg-amber-50 text-amber-600' : 'border-blue-600 bg-blue-50 text-blue-600')
+                                : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                        ]">
+                        {{ m }}น.
+                    </button>
+                </div>
+
+                <div class="text-left mb-6">
+                    <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1.5 block">
+                        {{ selectedBookingForArrival?.hasNotifiedArrival ? 'เหตุผลการเลื่อนเวลา' : 'ระบุเหตุผล (ถ้ามี)' }}
+                    </label>
+                    <textarea v-model="arrivalReason" :placeholder="selectedBookingForArrival?.hasNotifiedArrival ? 'เช่น รถติดหนักกว่าที่คิด, ขออภัยในความเล่าช้า...' : 'เช่น รถติดเล็กน้อย, ถึงจุดนัดพบแล้ว...'" 
+                        class="w-full h-20 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:bg-white transition outline-none resize-none text-xs"
+                        :class="selectedBookingForArrival?.hasNotifiedArrival ? 'focus:ring-amber-500' : 'focus:ring-blue-500'"></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button @click="showArrivalPicker = false" class="flex-1 py-3 border border-gray-200 text-gray-600 font-bold rounded-2xl hover:bg-gray-50 transition">ยกเลิก</button>
+                    <button @click="submitArrivalNotif" :disabled="isSubmittingArrival" 
+                        class="flex-1 py-3 text-white font-bold rounded-2xl shadow-lg transition disabled:opacity-50"
+                        :class="selectedBookingForArrival?.hasNotifiedArrival 
+                            ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100' 
+                            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'">
+                        {{ isSubmittingArrival ? 'กำลังส่ง...' : (selectedBookingForArrival?.hasNotifiedArrival ? 'อัพเดทข้อมูล' : 'ยืนยัน') }}
+>>>>>>> main
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Driver Report Modal -->
-        <div v-if="showDriverReport" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div v-if="showDriverReport" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showDriverReport = false"></div>
             <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
                 <div class="p-6">
@@ -589,7 +656,7 @@
         </div>
 
         <!-- Passenger Report Modal -->
-        <div v-if="showPassengerReport" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div v-if="showPassengerReport" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showPassengerReport = false"></div>
             <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
                 <div class="p-6">
@@ -645,6 +712,7 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Passenger Wait Request Modal -->
         <div v-if="showWaitPicker" class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showWaitPicker = false"></div>
@@ -731,11 +799,24 @@
             </div>
         </div>
         </div>
+=======
+        <TripChat
+            v-if="activeTrip && tripChatRouteId"
+            :routeId="tripChatRouteId"
+            :myId="currentUserId"
+            :myRole="role"
+            :tripStatus="activeTrip.route.status"
+            :passengers="chatPassengers"
+            bottomClass="bottom-6"
+            rightClass="right-6"
+        />
+>>>>>>> main
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useNotifications } from '~/composables/useNotifications'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -745,7 +826,6 @@ const { toast } = useToast()
 const { onEvent } = useSocket()
 const router = useRouter()
 const routePath = useRoute()
-import { useNotifications } from '~/composables/useNotifications'
 
 const isLoading = ref(true)
 const activeTrip = ref(null)
@@ -757,6 +837,28 @@ const { notifications, isOpen: isChatOpen, resetChat } = useNotifications()
 
 const openBubbleChat = () => {
     isChatOpen.value = true
+}
+
+// --- TripChat computed props ---
+const tripChatRouteId = computed(() => activeTrip.value?.route?.id || null)
+
+// List of passengers for targeted actions in group chat
+const chatPassengers = computed(() => {
+    if (!activeTrip.value || role.value !== 'DRIVER') return []
+    return activeTrip.value.route.bookings
+        ?.filter(b => ['CONFIRMED', 'IN_TRANSIT'].includes(b.status))
+        ?.map(b => ({
+            id: b.passenger.id,
+            firstName: b.passenger.firstName,
+            lastName: b.passenger.lastName
+        })) || []
+})
+
+// Called by TripChat when driver clicks quick-arrival button
+const handleArrivalFromChat = async (targetUserId, minutes, reason = null) => {
+    // legacy or fallback? (TripChat no longer calls this for driver)
+    // but we can keep it for general use or if we decide to re-enable it later
+    // Actually, let's keep it but make it more robust.
 }
 
 const currentUserId = computed(() => user.value?.id)
@@ -840,8 +942,11 @@ const confirmAction = ref('') // 'start' | 'finish'
 const showArrivalPicker = ref(false)
 const selectedBookingForArrival = ref(null)
 const arrivalMinutes = ref(5)
+<<<<<<< HEAD
 const isCustomArrivalMinutes = ref(false)
 const hasDelay = ref(false)
+=======
+>>>>>>> main
 const arrivalReason = ref('')
 const isSubmittingArrival = ref(false)
 const notifiedBookings = ref(new Set()) // Track which booking IDs have been notified
@@ -884,11 +989,26 @@ const arrivalPredefinedReasons = [
     'ติดสายโทรศัพท์/ธุระด่วน'
 ]
 
+// --- Passenger Arrival Modal (High Awareness) ---
+const showPassengerArrivalModal = ref(false)
+const passengerArrivalData = ref({ minutes: 5, driverName: '', reason: '', isUpdate: false })
+
+function closePassengerArrivalModal() {
+    showPassengerArrivalModal.value = false
+}
+
 function openArrivalPicker(booking) {
+    if (activeTrip.value?.route?.status !== 'IN_TRANSIT') {
+        toast.warning('ยังไม่เริ่มการเดินทาง', 'คุณต้องกดเริ่มการเดินทางก่อนจึงจะแจ้งเตือนได้')
+        return
+    }
     selectedBookingForArrival.value = booking
     arrivalMinutes.value = 5
+<<<<<<< HEAD
     isCustomArrivalMinutes.value = false
     hasDelay.value = false
+=======
+>>>>>>> main
     arrivalReason.value = ''
     showArrivalPicker.value = true
 }
@@ -919,6 +1039,7 @@ async function submitArrivalNotif() {
         }
         await $api(`/bookings/${selectedBookingForArrival.value.id}/notify-arrival`, {
             method: 'PATCH',
+<<<<<<< HEAD
             body: payload
         })
         if (payload.reason) {
@@ -957,6 +1078,24 @@ async function submitArrivalNotif() {
     } catch (err) {
         console.error('[ArrivalNotif] Error:', err)
         toast.error('แจ้งเตือนไม่สำเร็จ', err.data?.message || 'เกิดข้อผิดพลาดกับระบบกรุณาลองใหม่')
+=======
+            body: { 
+                minutes: arrivalMinutes.value,
+                reason: arrivalReason.value.trim() || undefined
+            }
+        })
+        
+        // Update local state to reflect that this passenger has been notified
+        selectedBookingForArrival.value.hasNotifiedArrival = true
+        
+        const msg = arrivalMinutes.value === 0 
+            ? 'แจ้งถึงจุดนัดพบแล้ว' 
+            : `แจ้งจะถึงในอีก ${arrivalMinutes.value} นาที`
+        toast.success('แจ้งเตือนแล้ว', msg)
+        showArrivalPicker.value = false
+    } catch (err) {
+        toast.error('เกิดข้อผิดพลาด', err.data?.message || 'ไม่สามารถส่งการแจ้งเตือนได้')
+>>>>>>> main
     } finally {
         isSubmittingArrival.value = false
     }
@@ -1549,6 +1688,7 @@ onEvent('booking:passengerKicked', (data) => {
         router.push('/myTrip')
     }, 2000)
 })
+
   
 useHead({
     title: 'การเดินทางปัจจุบัน - ไปนำแหน่',

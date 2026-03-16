@@ -1,17 +1,22 @@
 <template>
-    <div>
-        <NuxtLayout>
-            <NuxtPage />
-        </NuxtLayout>
-        <ToastWrapper />
-    </div>
+  <div>
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+    <ToastWrapper />
+    
+  </div>
 </template>
 
 <script setup>
 import ToastWrapper from '~/components/ToastWrapper.vue';
 import NotiChat from '~/components/NotiChat.vue';
 import { useAuth } from '~/composables/useAuth';
+<<<<<<< HEAD
 import { computed, onMounted, watch } from 'vue';
+=======
+import { computed, watch } from 'vue';
+>>>>>>> main
 import { useRoute } from 'vue-router'
 import { useNotifications } from '~/composables/useNotifications'
 
@@ -29,8 +34,6 @@ const showChatBubble = computed(() => {
     const isTripPage = route.path === '/current-trip';
     const isAdminPage = route.path.startsWith('/admin');
     
-    // Show if on specific pages OR if there is unread info/active notifications
-    // This makes the bubble "pop up" when a new notification arrives
     return isTripPage || isAdminPage || (hasUnread.value && notifications.value.length > 0);
 });
 </script>

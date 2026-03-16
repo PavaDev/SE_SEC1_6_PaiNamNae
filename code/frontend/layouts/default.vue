@@ -418,7 +418,7 @@
         </main>
     </div>
 
-    <!-- ========== Global Driver Arrival Modal ========== -->
+    <!-- ========== Global Driver Arrival Modal (High Awareness) ========== -->
     <Teleport to="body">
         <Transition
             enter-active-class="transition ease-out duration-300"
@@ -428,15 +428,17 @@
             leave-from-class="opacity-100"
             leave-to-class="opacity-0"
         >
-            <div v-if="showArrivalModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div v-if="showPassengerArrivalModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                 <!-- Backdrop -->
-                <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showArrivalModal = false"></div>
+                <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-md" @click="closePassengerArrivalModal"></div>
+                
                 <!-- Modal Card -->
                 <Transition
-                    enter-active-class="transition ease-out duration-300"
-                    enter-from-class="opacity-0 scale-90"
-                    enter-to-class="opacity-100 scale-100"
+                    enter-active-class="transition ease-out duration-500"
+                    enter-from-class="opacity-0 scale-95 translate-y-4"
+                    enter-to-class="opacity-100 scale-100 translate-y-0"
                 >
+<<<<<<< HEAD
                     <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden">
                         <!-- Close button -->
                         <button @click="showArrivalModal = false"
@@ -485,6 +487,55 @@
                             <button @click="showArrivalModal = false"
                                 class="w-full py-4 text-white font-black rounded-2xl shadow-xl transition-all active:scale-95"
                                 :class="arrivalData?.reason ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'">
+=======
+                    <div class="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden">
+                        <!-- Status Badge -->
+                        <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10">
+                            <div :class="passengerArrivalData.isUpdate ? 'bg-amber-500' : 'bg-blue-600'" 
+                                 class="px-4 py-1.5 rounded-full shadow-lg">
+                                <span class="text-[10px] font-black text-white uppercase tracking-widest">
+                                    {{ passengerArrivalData.isUpdate ? 'เเจ้งเปลี่ยนเวลา' : 'คนขับใกล้ถึงเเล้ว' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Animated Background/Icon Area -->
+                        <div :class="passengerArrivalData.isUpdate ? 'bg-amber-50' : 'bg-blue-50'" 
+                             class="relative h-48 flex items-center justify-center overflow-hidden">
+                            <!-- Decorative Circles -->
+                            <div class="absolute inset-0 flex items-center justify-center opacity-20">
+                                <div class="w-64 h-64 border-2 border-current rounded-full animate-ping duration-[3000ms]" :class="passengerArrivalData.isUpdate ? 'text-amber-300' : 'text-blue-300'"></div>
+                                <div class="absolute w-48 h-48 border-2 border-current rounded-full animate-ping duration-[4000ms]" :class="passengerArrivalData.isUpdate ? 'text-amber-200' : 'text-blue-200'"></div>
+                            </div>
+
+                            <!-- Main Visual -->
+                            <div :class="passengerArrivalData.isUpdate ? 'bg-amber-500' : 'bg-blue-600'" 
+                                 class="w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-xl rotate-3">
+                                 <i :class="passengerArrivalData.minutes === 0 ? 'fa-solid fa-location-dot' : (passengerArrivalData.isUpdate ? 'fa-solid fa-rotate-right' : 'fa-solid fa-car-side')" 
+                                    class="text-4xl text-white"></i>
+                            </div>
+                        </div>
+
+                        <div class="p-8 text-center bg-white">
+                            <h2 class="text-2xl font-black text-gray-900 leading-tight mb-2">
+                                {{ passengerArrivalData.minutes === 0 ? 'คนขับถึงเเล้ว!' : `อีกประมาณ ${passengerArrivalData.minutes} นาที` }}
+                            </h2>
+                            <p class="text-sm font-medium text-gray-500 mb-6">
+                                คุณ<strong>{{ passengerArrivalData.driverName }}</strong> {{ passengerArrivalData.minutes === 0 ? 'จอดรออยู่ที่จุดรับของคุณเเล้ว' : 'กำลังรอนำพาคุณเดินทาง' }}
+                            </p>
+
+                            <!-- Reason Block if Update -->
+                            <div v-if="passengerArrivalData.reason" class="mb-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-comment-dots text-gray-400 text-xs"></i>
+                                </div>
+                                <p class="text-[11px] text-gray-600 leading-normal text-left italic font-medium">"{{ passengerArrivalData.reason }}"</p>
+                            </div>
+
+                            <button @click="closePassengerArrivalModal" 
+                                class="w-full py-4 text-white font-black rounded-[1.25rem] transition-all active:scale-95 shadow-xl"
+                                :class="passengerArrivalData.isUpdate ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'">
+>>>>>>> main
                                 รับทราบ
                             </button>
                         </div>
@@ -760,23 +811,37 @@ onEvent('booking:tripCompleted', () => {
 onEvent('booking:cancelled', () => checkActiveTrip())
 onEvent('trip:started', () => checkActiveTrip())
 
-/* ====== Driver Arrival Notification ====== */
-const showArrivalModal = ref(false)
-const arrivalData = ref(null)
+/* ====== Driver Arrival Notification (High Awareness) ====== */
+const showPassengerArrivalModal = ref(false)
+const passengerArrivalData = ref({ minutes: 5, driverName: '', reason: '', isUpdate: false })
+
+function closePassengerArrivalModal() {
+    showPassengerArrivalModal.value = false
+}
 
 onEvent('booking:driverArriving', (data) => {
+<<<<<<< HEAD
     // If we're on the current-trip page, it has its own detailed modal, so skip this one
     if (route.path === '/current-trip') return
     
     arrivalData.value = data
     showArrivalModal.value = true
+=======
+    passengerArrivalData.value = {
+        minutes: data.minutes,
+        driverName: data.driverName,
+        reason: data.reason || '',
+        isUpdate: data.isUpdate || false
+    }
+    showPassengerArrivalModal.value = true
+>>>>>>> main
 })
 
 /* ใส่ฟอนต์ Kanit แบบเดิม */
 useHead({
     link: [
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap' },
-        { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css' }
+        { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css' }
     ]
 })
 </script>

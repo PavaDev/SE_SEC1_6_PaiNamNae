@@ -9,6 +9,8 @@ const notificationRoutes = require('./notification.routes')
 const mapRoutes = require('./maps.routes')
 const reviewRoutes = require('./review.routes')
 const reportRoutes = require('./report.routes')
+const chatRoutes = require('./chat.routes')
+const webpushRoutes = require('./webpush.routes')
 
 const router = express.Router();
 
@@ -22,5 +24,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/reports', reportRoutes);
 router.use('/api/maps', mapRoutes);
+router.use('/chat', chatRoutes);
+router.use('/push', webpushRoutes);
 
 module.exports = router;

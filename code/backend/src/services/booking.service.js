@@ -529,7 +529,12 @@ module.exports = {
   notifyWait,
 };
 
+<<<<<<< HEAD
 async function notifyArrival(bookingId, minutes, userId, reason) {
+=======
+async function notifyArrival(bookingId, userId, minutes, customText = null, reason = null) {
+  /* --- Spam prevention (Disabled for individual passenger updates) ---
+>>>>>>> main
   const now = Date.now();
   const lastLockout = arrivalCooldowns.get(bookingId);
 
@@ -557,6 +562,7 @@ async function notifyArrival(bookingId, minutes, userId, reason) {
     arrivalCooldowns.set(bookingId, now);
     emergencyTracker.delete(bookingId); // Reset spam tracker for this booking
   }
+  */
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -572,18 +578,98 @@ async function notifyArrival(bookingId, minutes, userId, reason) {
 
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.route.driverId !== userId) throw new ApiError(403, 'Forbidden');
+
+  // Guard: Trip must be started (IN_TRANSIT) to notify arrival
+  if (booking.route.status !== RouteStatus.IN_TRANSIT) {
+    throw new ApiError(400, 'ต้องกดเริ่มการเดินทางก่อนจึงจะสามารถแจ้งเตือนถึงผู้โดยสารได้');
+  }
+
   if (booking.status !== BookingStatus.CONFIRMED && booking.status !== BookingStatus.IN_TRANSIT) {
     throw new ApiError(400, 'สามารถแจ้งเตือนได้เฉพาะผู้โดยสารที่ยืนยันแล้วหรือกำลังเดินทางเท่านั้น');
   }
 
+<<<<<<< HEAD
+=======
+  // Record cooldown timestamp BEFORE emitting to prevent double-send on concurrent calls
+  arrivalCooldowns.set(bookingId, Date.now());
+
+  // --- Check if this is an update ---
+  const existingNotification = await prisma.tripMessage.findFirst({
+    where: {
+      routeId: booking.routeId,
+      isSystem: true,
+      metadata: {
+        path: ['type'],
+        equals: 'ARRIVAL'
+      },
+      AND: {
+        metadata: {
+          path: ['targetUserId'],
+          equals: booking.passengerId
+        }
+      }
+    }
+  });
+  const isUpdate = !!existingNotification;
+
+>>>>>>> main
   const io = getIO();
   io.to(`user:${booking.passengerId}`).emit('booking:driverArriving', {
     bookingId,
     routeId: booking.routeId,
     minutes,
+<<<<<<< HEAD
     reason,
     driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`
+=======
+    driverName: `${booking.route.driver.firstName} ${booking.route.driver.lastName}`,
+    isUpdate,
+    reason
+>>>>>>> main
   });
+
+  // --- Save system message to TripChat ---
+  const driverName = `${booking.route.driver.firstName} ${booking.route.driver.lastName}`;
+  const passengerName = booking.passenger.firstName;
+
+  // Format system message with reason if provided
+  let systemText = customText;
+  if (!systemText) {
+    const timeText = minutes === 0 ? 'ถึงจุดนัดพบแล้ว' : `จะถึงจุดรับของคุณในอีกประมาณ ${minutes} นาที`;
+    const reasonText = reason ? ` (เหตุผล: ${reason})` : '';
+    
+    if (isUpdate) {
+      systemText = `🔄 @${passengerName} [เเจ้งเปลี่ยนเวลา]: ${timeText}${reasonText}`;
+    } else {
+      systemText = `🚗 @${passengerName}: ${timeText}${reasonText}`;
+    }
+  }
+
+  try {
+    const chatService = require('./chat.service');
+    const metadata = {
+      type: 'ARRIVAL',
+      targetUserId: booking.passengerId,
+      minutes: minutes,
+      reason: reason,
+      isUpdate: isUpdate
+    };
+    await chatService.sendSystemMessage(booking.routeId, userId, 'DRIVER', systemText, metadata);
+  } catch (e) {
+    console.error('[Chat] Failed to save arrival system message:', e.message);
+  }
+
+  // --- Web Push to passenger ---
+  try {
+    const { sendPushToUser } = require('./webpush.service');
+    await sendPushToUser(booking.passengerId, {
+      title: '🚗 คนขับใกล้ถึงแล้ว!',
+      body: `${driverName} จะถึงในอีกประมาณ ${minutes} นาที`,
+      url: '/current-trip',
+    });
+  } catch (e) {
+    // Non-fatal
+  }
 
   // Send email asynchronously (don't block the response)
   sendArrivalNotificationEmail(
@@ -591,6 +677,10 @@ async function notifyArrival(bookingId, minutes, userId, reason) {
     booking.route.driver,
     booking,
     minutes,
+<<<<<<< HEAD
+=======
+    isUpdate,
+>>>>>>> main
     reason
   ).catch(err => console.error('[Email] sendArrivalNotificationEmail failed:', err.message));
 

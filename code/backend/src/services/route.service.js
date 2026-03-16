@@ -471,7 +471,30 @@ const getActiveTrip = async (userId) => {
     orderBy: { updatedAt: 'desc' }
   });
 
-  if (driverRoute) return { role: 'DRIVER', route: driverRoute };
+  if (driverRoute) {
+    // Check which bookings have already been notified of arrival
+    const bookingsWithArrivalInfo = await Promise.all(driverRoute.bookings.map(async (b) => {
+      const count = await prisma.tripMessage.count({
+        where: {
+          routeId: driverRoute.id,
+          isSystem: true,
+          metadata: {
+            path: ['type'],
+            equals: 'ARRIVAL'
+          },
+          AND: {
+            metadata: {
+              path: ['targetUserId'],
+              equals: b.passengerId
+            }
+          }
+        }
+      });
+      return { ...b, hasNotifiedArrival: count > 0 };
+    }));
+    driverRoute.bookings = bookingsWithArrivalInfo;
+    return { role: 'DRIVER', route: driverRoute };
+  }
 
   // 2. Check if user is a passenger with a confirmed/in-transit booking on an active route
   const passengerBooking = await prisma.booking.findFirst({

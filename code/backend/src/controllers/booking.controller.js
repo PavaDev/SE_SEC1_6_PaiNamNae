@@ -210,9 +210,9 @@ const updatePassengerStatus = asyncHandler(async (req, res) => {
 const notifyArrival = asyncHandler(async (req, res) => {
   const driverId = req.user.sub;
   const { id } = req.params;
-  const { minutes, reason } = req.body;
+  const { minutes, text, reason } = req.body;
 
-  const result = await bookingService.notifyArrival(id, minutes, driverId, reason);
+  const result = await bookingService.notifyArrival(id, driverId, minutes, text, reason);
 
   res.status(200).json({ success: true, message: 'แจ้งเตือนผู้โดยสารเรียบร้อยแล้ว', data: result });
 });
