@@ -5,7 +5,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="-1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta content="Robot Framework 7.4.1 (Python 3.14.3 on win32)" name="Generator">
+<meta content="Robot Framework 7.3.2 (Python 3.13.7 on win32)" name="Generator">
 <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKcAAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAAqAAAAAAAAAAAAAAAAAAAALIAAAD/AAAA4AAAANwAAADcAAAA3AAAANwAAADcAAAA3AAAANwAAADcAAAA4AAAAP8AAACxAAAAAAAAAKYAAAD/AAAAuwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC/AAAA/wAAAKkAAAD6AAAAzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN8AAAD/AAAA+gAAAMMAAAAAAAAAAgAAAGsAAABrAAAAawAAAGsAAABrAAAAawAAAGsAAABrAAAADAAAAAAAAADaAAAA/wAAAPoAAADDAAAAAAAAAIsAAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAANEAAAAAAAAA2gAAAP8AAAD6AAAAwwAAAAAAAAAAAAAAMgAAADIAAAAyAAAAMgAAADIAAAAyAAAAMgAAADIAAAAFAAAAAAAAANoAAAD/AAAA+gAAAMMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADaAAAA/wAAAPoAAADDAAAAAAAAADwAAAB8AAAAAAAAAGAAAABcAAAAAAAAAH8AAABKAAAAAAAAAAAAAAAAAAAA2gAAAP8AAAD6AAAAwwAAAAAAAADCAAAA/wAAACkAAADqAAAA4QAAAAAAAAD7AAAA/wAAALAAAAAGAAAAAAAAANoAAAD/AAAA+gAAAMMAAAAAAAAAIwAAAP4AAAD/AAAA/wAAAGAAAAAAAAAAAAAAAMkAAAD/AAAAigAAAAAAAADaAAAA/wAAAPoAAADDAAAAAAAAAAAAAAAIAAAAcAAAABkAAAAAAAAAAAAAAAAAAAAAAAAAEgAAAAAAAAAAAAAA2gAAAP8AAAD7AAAAywAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN4AAAD/AAAAqwAAAP8AAACvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALIAAAD/AAAAsgAAAAAAAAC5AAAA/wAAAMoAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMkAAAD/AAAAvAAAAAAAAAAAAAAAAAAAAKwAAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAArQAAAAAAAAAAwAMAAIABAAAf+AAAP/wAAD/8AAAgBAAAP/wAAD/8AAA//AAAJIwAADHEAAA//AAAP/wAAB/4AACAAQAAwAMAAA==">
 <style media="all">
 :root {
@@ -116,16 +116,15 @@ select {
 #header {
     width: 65em;
     height: 3em;
-    margin: 1em 0 0 0;
+    margin: 20px 0 6px 0;
 }
 h1 {
     float: left;
-    margin: 0 0 1em 0;
+    margin: 0 0 0.5em 0;
     width: 75%;
 }
 h2 {
     clear: left;
-    margin: 1.5em 0 0.5em 0;
 }
 #generated {
     float: right;
@@ -169,13 +168,7 @@ h2 {
     background-color: var(--primary-color);
     border-radius: 3px;
 }
-/* https://stackoverflow.com/questions/75238633 */
-@supports (-moz-appearance: none) {
-    .label {
-        padding-top: 4px;
-    }
-}
-.label.debug, .label.trace, .label.error {
+.label.debug, .label.trace, .label.error, .label.keyword {
     letter-spacing: 0;
 }
 .label.pass, .label.fail, .label.error, .label.skip, .label.warn {
@@ -361,6 +354,19 @@ th.stats-col-graph:hover {
 [data-theme="dark"] .light-mode-icon,
 [data-theme="light"] .dark-mode-icon {
     display: block;
+}
+@keyframes highlight {
+    0% {
+        background: var(--primary-color)
+    }
+    100% {
+        background: var(--target-color);
+    }
+}
+:target {
+    background: var(--target-color);
+    transition: background 0.3s;
+    animation: highlight 4s;
 }
 </style>
 <style media="all">
@@ -951,7 +957,7 @@ window.model = (function () {
         kw.type = data.type;
         kw.template = 'keywordTemplate';
         kw.arguments = data.args;
-        kw.assign = data.assign;
+        kw.assign = data.assign + (data.assign ? ' =  ' : '');
         kw.tags = data.tags;
         kw.timeout = data.timeout;
         kw.populateKeywords = createIterablePopulator('Keyword');
@@ -1690,7 +1696,7 @@ function addStatistics() {
         '<th class="stats-col-elapsed">Elapsed</th>' +
         '<th class="stats-col-graph">Pass / Fail / Skip</th>';
     var statTable =
-        '<h2>Statistics</h2>' +
+        '<h2>{Test} Statistics</h2>' +
         '<table class="statistics" id="total-stats"><thead><tr>' +
         '<th class="stats-col-name">Total Statistics</th>' + statHeaders +
         '</tr></thead></table>' +
@@ -1700,7 +1706,7 @@ function addStatistics() {
         '<table class="statistics" id="suite-stats"><thead><tr>' +
         '<th class="stats-col-name">Statistics by Suite</th>' + statHeaders +
         '</tr></thead></table>';
-    $(statTable).appendTo('#statistics-container');
+    $(testOrTask(statTable)).appendTo('#statistics-container');
     util.map(['total', 'tag', 'suite'], addStatTable);
     addTooltipsToElapsedTimes();
     enableStatisticsSorter();
@@ -1881,22 +1887,22 @@ storage = function () {
 window.output = {};
 </script>
 <script type="text/javascript">
-window.output["suite"] = [1,2,3,4,[],[0,0,137299],[],[[5,0,6,[7,8,9],[1,3266,24806],[]],[10,0,11,[12,7,13],[1,28073,23456],[]],[14,0,15,[12,16,8,17],[1,51531,20259],[]],[18,0,19,[20,8,21],[1,71792,15011],[]],[22,0,23,[21,13,24],[0,86806,29610,25],[]],[26,0,27,[28,8,9],[1,116420,18086],[]]],[],[6,5,1,0]];
+window.output["suite"] = [1,2,3,4,[],[0,0,133678],[],[[5,0,6,[7,8,9],[1,1874,22782],[]],[10,0,11,[12,7,13],[1,24657,22096],[]],[14,0,15,[12,16,8,17],[1,46754,18842],[]],[18,0,19,[20,8,21],[0,65597,22952,22],[]],[23,0,24,[21,13,25],[0,88549,26082,26],[]],[27,0,28,[29,8,9],[1,114632,16805],[]]],[],[6,4,2,0]];
 </script>
 <script type="text/javascript">
 window.output["strings"] = [];
 </script>
 <script type="text/javascript">
-window.output["strings"] = window.output["strings"].concat(["*","*passengerGetNotify","*C:\\Users\\lbask\\OneDrive\\เดสก์ท็อป\\Work\\SE\\Sprint2\\SE_SEC1_6_PaiNamNae\\tests\\backend\\uat\\robot\\passengerGetNotify\\passengerGetNotify.robot","*passengerGetNotify.robot","*<p>Robot Framework — Passenger Get Notification User Story: As a passenger, I want to get a notification when the driver is about to pick me up so that I can get myself ready or respond to the driver. Test Level: UAT (Browser-based E2E)\x3c/p>","*Driver Creates A Route","*<p>Given a verified driver who is logged in, When they navigate to the create trip page and fill in the route details, Then a new route should be created successfully.\x3c/p>","*create","*driver","*route","*Passenger Books The Route","*<p>Given a passenger who is logged in, When they navigate to find trip and book the route created by the driver, Then the booking should be successful.\x3c/p>","*booking","*passenger","*Driver Confirms Booking And Starts Trip","*<p>Given a driver who has a pending booking request, When they confirm the booking and start the trip, Then the route status should change to IN_TRANSIT.\x3c/p>","*confirm","*start","*Driver Sends Arrival Notification","*<p>Given a driver who is in transit, When they click the bell icon next to a confirmed passenger and select arrival time, Then the arrival notification should be sent.\x3c/p>","*arrival","*notification","*Passenger Sees Arrival Notification","*<p>Given a passenger whose driver has sent an arrival notification, When they click 'กำลังเดินทาง...' to view current trip, Then they should see the arrival notification modal.\x3c/p>","*verify","*Text '5 นาที' did not appear in 15 seconds.","*Driver Completes The Route","*<p>Given a driver who has picked up the passenger, When they drop off the passenger and finish the route, Then the trip should be completed successfully.\x3c/p>","*complete"]);
+window.output["strings"] = window.output["strings"].concat(["*","*passengerGetNotify","*C:\\SoftEN\\sprint3\\SE_SEC1_6_PaiNamNae\\test\\backend\\robot\\passengerGetNotify\\passengerGetNotify.robot","*passengerGetNotify.robot","*<p>Robot Framework — Passenger Get Notification User Story: As a passenger, I want to get a notification when the driver is about to pick me up so that I can get myself ready or respond to the driver. Test Level: UAT (Browser-based E2E)\x3c/p>","*Driver Creates A Route","*<p>Given a verified driver who is logged in, When they navigate to the create trip page and fill in the route details, Then a new route should be created successfully.\x3c/p>","*create","*driver","*route","*Passenger Books The Route","*<p>Given a passenger who is logged in, When they navigate to find trip and book the route created by the driver, Then the booking should be successful.\x3c/p>","*booking","*passenger","*Driver Confirms Booking And Starts Trip","*<p>Given a driver who has a pending booking request, When they confirm the booking and start the trip, Then the route status should change to IN_TRANSIT.\x3c/p>","*confirm","*start","*Driver Sends Arrival Notification","*<p>Given a driver who is in transit, When they click the bell icon next to a confirmed passenger and select arrival time, Then the arrival notification should be sent.\x3c/p>","*arrival","*notification","*Element 'xpath=//button[contains(text(),'5 นาที')]' did not appear in 15 seconds.","*Passenger Sees Arrival Notification","*<p>Given a passenger whose driver has sent an arrival notification, When they click 'กำลังเดินทาง...' to view current trip, Then they should see the arrival notification modal.\x3c/p>","*verify","*Element 'xpath=//button[@aria-label='Toggle Trip Status']' did not appear in 15 seconds.","*Driver Completes The Route","*<p>Given a driver who has picked up the passenger, When they drop off the passenger and finish the route, Then the trip should be completed successfully.\x3c/p>","*complete"]);
 </script>
 <script type="text/javascript">
-window.output["stats"] = [[{"elapsed":"00:02:11","fail":1,"label":"All Tests","pass":5,"skip":0}],[{"elapsed":"00:00:15","fail":0,"label":"arrival","pass":1,"skip":0},{"elapsed":"00:00:44","fail":0,"label":"booking","pass":2,"skip":0},{"elapsed":"00:00:18","fail":0,"label":"complete","pass":1,"skip":0},{"elapsed":"00:00:20","fail":0,"label":"confirm","pass":1,"skip":0},{"elapsed":"00:00:48","fail":0,"label":"create","pass":2,"skip":0},{"elapsed":"00:01:18","fail":0,"label":"driver","pass":4,"skip":0},{"elapsed":"00:00:45","fail":1,"label":"notification","pass":1,"skip":0},{"elapsed":"00:00:53","fail":1,"label":"passenger","pass":1,"skip":0},{"elapsed":"00:00:43","fail":0,"label":"route","pass":2,"skip":0},{"elapsed":"00:00:20","fail":0,"label":"start","pass":1,"skip":0},{"elapsed":"00:00:30","fail":1,"label":"verify","pass":0,"skip":0}],[{"elapsed":"00:02:17","fail":1,"id":"s1","label":"passengerGetNotify","name":"passengerGetNotify","pass":5,"skip":0}]];
+window.output["stats"] = [[{"elapsed":"00:02:10","fail":2,"label":"All Tests","pass":4,"skip":0}],[{"elapsed":"00:00:23","fail":1,"label":"arrival","pass":0,"skip":0},{"elapsed":"00:00:41","fail":0,"label":"booking","pass":2,"skip":0},{"elapsed":"00:00:17","fail":0,"label":"complete","pass":1,"skip":0},{"elapsed":"00:00:19","fail":0,"label":"confirm","pass":1,"skip":0},{"elapsed":"00:00:45","fail":0,"label":"create","pass":2,"skip":0},{"elapsed":"00:01:21","fail":1,"label":"driver","pass":3,"skip":0},{"elapsed":"00:00:49","fail":2,"label":"notification","pass":0,"skip":0},{"elapsed":"00:00:48","fail":1,"label":"passenger","pass":1,"skip":0},{"elapsed":"00:00:40","fail":0,"label":"route","pass":2,"skip":0},{"elapsed":"00:00:19","fail":0,"label":"start","pass":1,"skip":0},{"elapsed":"00:00:26","fail":1,"label":"verify","pass":0,"skip":0}],[{"elapsed":"00:02:14","fail":2,"id":"s1","label":"passengerGetNotify","name":"passengerGetNotify","pass":4,"skip":0}]];
 </script>
 <script type="text/javascript">
-window.output["baseMillis"] = 1772483463413;
+window.output["baseMillis"] = 1773764458421;
 </script>
 <script type="text/javascript">
-window.output["generated"] = 137340;
+window.output["generated"] = 133707;
 </script>
 <script type="text/javascript">
 window.output["expand_keywords"] = null;
@@ -2279,7 +2285,7 @@ function hideHiddenDetailsColumns(elem) {
 </script>
 
 <script type="text/x-jquery-tmpl" id="summaryTableTemplate">
-  <h2>Summary</h2>
+  <h2>Summary Information</h2>
   <table class="details">
     <tr>
       <th>Status:</th>
@@ -2376,7 +2382,7 @@ function hideHiddenDetailsColumns(elem) {
 </script>
 
 <script type="text/x-jquery-tmpl" id="detailsHeaderTemplate">
-  <h2 id="${linkTarget}">Details</h2>
+  <h2 id="${linkTarget}">{{= testOrTask('{Test} Details')}}</h2>
   <ul id="detail-tabs">
     <li class="${totalTabStatus} detail-tab">
       <a href="#totals" onclick="renderTotalSelector()"
