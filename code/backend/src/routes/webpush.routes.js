@@ -6,7 +6,7 @@ const router = express.Router();
 // POST /push/subscribe — บันทึก push subscription
 router.post('/subscribe', protect, webpushController.subscribe);
 
-// DELETE /push/unsubscribe — ลบ push subscription
-router.delete('/unsubscribe', protect, webpushController.unsubscribe);
+// POST /push/unsubscribe — ลบ push subscription
+router.post('/unsubscribe', protect, webpushController.unsubscribe);
 
 module.exports = router;

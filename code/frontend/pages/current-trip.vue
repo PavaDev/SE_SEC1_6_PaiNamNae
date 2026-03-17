@@ -303,33 +303,50 @@
         <!-- Review Modal / Overlay -->
         <div v-if="isTripCompleted" class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="closeReview"></div>
-            <div class="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-                <div class="p-8 text-center bg-gradient-to-b from-blue-50 to-white">
-                    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 scale-110">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col max-h-[90vh]">
+                <div class="p-6 md:p-8 text-center bg-gradient-to-b from-blue-50 to-white flex-shrink-0">
+                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 scale-110">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 class="text-3xl font-black text-gray-900 mb-2">ถึงที่หมายแล้ว!</h2>
-                    <p class="text-gray-600 mb-6">การเดินทางของคุณเสร็จสิ้นเรียบร้อยแล้ว<br/>รบกวนช่วยแบ่งปันความประทับใจเพื่อพัฒนาชุมชนของเรา</p>
+                    <h2 class="text-2xl font-black text-gray-900 mb-1">ถึงที่หมายแล้ว!</h2>
+                    <p class="text-sm text-gray-600">การเดินทางของคุณเสร็จสิ้นเรียบร้อยแล้ว<br/>รบกวนช่วยแบ่งปันความประทับใจเพื่อพัฒนาชุมชนของเรา</p>
+                </div>
+
+                <div class="px-6 md:px-8 pb-8 overflow-y-auto custom-scrollbar">
                     
-                    <div v-if="role === 'PASSENGER'" class="space-y-5 text-left">
+                    <div v-if="role === 'PASSENGER'" class="space-y-6 text-left pt-2">
                         <!-- Rating -->
-                        <div class="flex items-center justify-center gap-2">
+                        <div class="flex items-center justify-center gap-1 md:gap-2">
                             <button v-for="s in 5" :key="s" @click="rating = s" class="p-1 transition-transform active:scale-95" :class="s <= rating ? 'text-yellow-400' : 'text-gray-200'">
-                                <svg class="w-10 h-10 fill-current" viewBox="0 0 20 20">
+                                <svg class="w-8 h-8 md:w-10 md:h-10 fill-current" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
                             </button>
                         </div>
+                        
+                        <!-- Categories -->
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">จุดเด่นที่ประทับใจ</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="cat in availableReviewCategories" :key="cat.value" 
+                                    @click="toggleReviewCategory(cat.value)"
+                                    class="px-2.5 py-1.5 rounded-full text-[10px] md:text-xs font-medium transition-colors border"
+                                    :class="selectedReviewCategories.includes(cat.value) ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'">
+                                    {{ cat.label }}
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Comment -->
-                        <textarea v-model="comment" placeholder="พิมพ์ความเศร้าหรือความสุขของคุณที่นี่..." class="w-full h-28 p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition outline-none resize-none text-sm"></textarea>
+                        <textarea v-model="comment" placeholder="พิมพ์ความเศร้าหรือความสุขของคุณที่นี่..." class="w-full h-24 p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition outline-none resize-none text-sm"></textarea>
                         
                         <!-- File Attachments -->
                         <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">แนบไฟล์ (สูงสุด 3 ไฟล์ — รูป/วิดีโอ/เสียง)</label>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">แนบไฟล์ (สูงสุด 3 ไฟล์)</label>
                             <div class="flex flex-wrap gap-2">
-                                <div v-for="(f, i) in reviewFiles" :key="i" class="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+                                <div v-for="(f, i) in reviewFiles" :key="i" class="relative w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
                                     <img v-if="f.type.startsWith('image/')" :src="f.preview" class="w-full h-full object-cover" />
                                     <div v-else class="w-full h-full flex flex-col items-center justify-center">
                                         <svg v-if="f.type.startsWith('video/')" class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
@@ -340,22 +357,22 @@
                                         <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 </div>
-                                <label v-if="reviewFiles.length < 3" class="w-16 h-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition">
-                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    <span class="text-[9px] text-gray-400 mt-0.5">เพิ่ม</span>
+                                <label v-if="reviewFiles.length < 3" class="w-14 h-14 md:w-16 md:h-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition text-center px-1">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    <span class="text-[8px] text-gray-400 mt-0.5 font-bold uppercase">เพิ่มไฟล์</span>
                                     <input type="file" accept="image/*,video/*,audio/*" class="hidden" @change="onReviewFileChange" />
                                 </label>
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-3 pt-1">
-                            <button @click="submitReview" :disabled="isSubmittingReview" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 disabled:opacity-50 transition">
+                        <div class="flex flex-col gap-3 pt-2">
+                            <button @click="submitReview" :disabled="isSubmittingReview" class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 disabled:opacity-50 transition">
                                 {{ isSubmittingReview ? 'กำลังส่งรีวิว...' : 'บันทึกและให้คะแนน' }}
                             </button>
-                            <button @click="closeReview" class="text-sm text-gray-400 font-medium hover:text-gray-600">ข้ามขั้นตอนความสัมพันธ์</button>
+                            <button @click="closeReview" class="text-xs text-gray-400 font-medium hover:text-gray-600 text-center">ข้ามขั้นตอนความสัมพันธ์</button>
                         </div>
                     </div>
-                    <div v-else class="flex flex-col gap-3">
+                    <div v-else class="flex flex-col gap-3 pt-4">
                         <button @click="closeReview" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition">
                             ตกลง
                         </button>
@@ -731,8 +748,28 @@ const canFinishTrip = computed(() => {
 // --- Review State ---
 const rating = ref(5)
 const comment = ref('')
+const selectedReviewCategories = ref([])
 const isSubmittingReview = ref(false)
 const reviewFiles = ref([]) // { file, type, preview }
+
+const availableReviewCategories = [
+    { value: 'GOOD_DRIVING', label: 'ขับรถดี' },
+    { value: 'POLITE', label: 'คนขับสุภาพ' },
+    { value: 'ON_TIME', label: 'มาตรงเวลา' },
+    { value: 'CLEAN_CAR', label: 'รถสะอาด' },
+    { value: 'SAFE_DRIVING', label: 'ขับปลอดภัย' },
+    { value: 'GOOD_COMMUNICATION', label: 'สื่อสารดี' },
+    { value: 'FAIR_PRICE', label: 'ราคายุติธรรม' }
+]
+
+function toggleReviewCategory(value) {
+    const idx = selectedReviewCategories.value.indexOf(value)
+    if (idx > -1) {
+        selectedReviewCategories.value.splice(idx, 1)
+    } else {
+        selectedReviewCategories.value.push(value)
+    }
+}
 
 function validateFile(file) {
     const maxSize = 100 * 1024 * 1024 // 100MB
@@ -1302,12 +1339,14 @@ async function submitReview() {
         fd.append('bookingId', activeTrip.value.bookingId)
         fd.append('rating', String(rating.value))
         fd.append('comment', comment.value)
+        fd.append('categories', JSON.stringify(selectedReviewCategories.value))
         reviewFiles.value.forEach(f => fd.append('images', f.file))
 
         await $api('/reviews', { method: 'POST', body: fd })
         toast.success('ขอบคุณ', 'เราบันทึกรีวิวของคุณแล้วนะ')
         reviewFiles.value.forEach(f => { if (f.preview) URL.revokeObjectURL(f.preview) })
         reviewFiles.value = []
+        selectedReviewCategories.value = []
         closeReview()
     } catch (err) {
         toast.error('เกิดข้อผิดพลาด', err.data?.message || 'ไม่สามารถส่งรีวิวได้')
@@ -1448,8 +1487,8 @@ onEvent('booking:tripCompleted', async () => {
 })
 
 onEvent('booking:driverArriving', (data) => {
-    console.log('[Socket] booking:driverArriving received:', data)
-    console.log('[Socket] Current activeTrip routeId:', activeTrip.value?.route?.id)
+    // console.log('[Socket] booking:driverArriving received:', data)
+    // console.log('[Socket] Current activeTrip routeId:', activeTrip.value?.route?.id)
     
     // Loosen the strict check to allow the modal to pop even if activeTrip is slightly out of sync initially
     if (activeTrip.value && activeTrip.value.route?.id !== data.routeId) {
@@ -1469,7 +1508,7 @@ onEvent('booking:driverArriving', (data) => {
 
     // Rule 1: First time ever receiving an arrival ping -> show it
     if (!hasSeenArrivalModal.value) {
-        console.log('[Socket] Showing modal (first time)')
+        // console.log('[Socket] Showing modal (first time)')
         showPassengerArrivalModal.value = true
         hasSeenArrivalModal.value = true
         if (isEmergency) { tripHasAlreadySentEmergency.value = true }
@@ -1577,5 +1616,19 @@ const mapStyles = [
         transform: translateY(0) scale(1);
         animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
     }
+}
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>

@@ -3,6 +3,13 @@ import { useCookie } from '#app'
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
 
+  const cookieOpts = {
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  }
+
   const api = $fetch.create({
     baseURL: config.public.apiBase,
     credentials: 'include',
@@ -43,6 +50,12 @@ export default defineNuxtPlugin(() => {
         if (token.value) {
           token.value = null
           user.value = null
+          
+          // Force clear with options just in case 
+          const tCookie = useCookie('token', cookieOpts)
+          const uCookie = useCookie('user', cookieOpts)
+          tCookie.value = null
+          uCookie.value = null
 
           const toast = useToast()
           const router = useRouter()

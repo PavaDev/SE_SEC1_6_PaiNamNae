@@ -9,7 +9,7 @@ const { BookingStatus, RouteStatus } = require('@prisma/client');
  * @returns {Promise<Object>} Created review
  */
 const createReview = async (userId, data) => {
-    const { bookingId, rating, comment, images = null } = data;
+    const { bookingId, rating, comment, images = null, categories = [] } = data;
 
     return prisma.$transaction(async (tx) => {
         // 1. Validate Booking
@@ -53,7 +53,8 @@ const createReview = async (userId, data) => {
                 revieweeId,
                 rating,
                 comment,
-                images
+                images,
+                categories
             },
             include: {
                 booking: { select: { routeId: true } }

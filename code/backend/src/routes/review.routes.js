@@ -9,6 +9,12 @@ const parseReviewBody = require('../middlewares/parseReviewBody');
 
 const router = express.Router();
 
+// Get reviews given by me (default /api/reviews)
+router.get('/', protect, reviewController.getGivenReviews);
+
+// Get reviews received by me (default /api/reviews/received)
+router.get('/received', protect, reviewController.getReceivedReviews);
+
 // Create a review
 router.post(
     '/',

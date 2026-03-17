@@ -334,7 +334,7 @@
                                     <span v-else class="text-gray-300">★</span>
                                 </template>
                                 <span class="ml-2 text-gray-600">
-                                    ({{ selectedUserForReviews?.ratingAverage?.toFixed(1) || '0.0' }})
+                                    ({{ selectedUserForReviews?.ratingAverage ? selectedUserForReviews.ratingAverage.toFixed(1) : '0.0' }})
                                 </span>
                             </div>
                             <p class="text-sm text-gray-500">ทั้งหมด {{ userReviews.length }} รายการ</p>
@@ -370,6 +370,14 @@
                                             <span v-for="i in 5" :key="i">{{ i <= review.rating ? '★' : '☆' }}</span>
                                         </div>
                                         <p class="mt-2 text-sm text-gray-700 leading-relaxed">{{ review.comment }}</p>
+
+                                        <!-- Review Categories -->
+                                        <div v-if="review.categories && review.categories.length" class="flex flex-wrap gap-1.5 mt-2">
+                                            <span v-for="cat in review.categories" :key="cat" 
+                                                class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium border border-blue-100">
+                                                {{ reviewCategoryLabelTh(cat) }}
+                                            </span>
+                                        </div>
                                         
                                         <!-- Review Images -->
                                         <div v-if="review.images && review.images.length" class="grid grid-cols-4 gap-2 mt-3">
@@ -591,6 +599,19 @@ function categoryLabelTh(cat) {
         OTHER: 'อื่น ๆ'
     }
     return labels[cat] || cat || '-'
+}
+
+function reviewCategoryLabelTh(cat) {
+    const labels = {
+        GOOD_DRIVING: 'ขับรถดี',
+        POLITE: 'คนขับสุภาพ',
+        ON_TIME: 'มาตรงเวลา',
+        CLEAN_CAR: 'รถสะอาด',
+        SAFE_DRIVING: 'ขับปลอดภัย',
+        GOOD_COMMUNICATION: 'สื่อสารดี',
+        FAIR_PRICE: 'ราคายุติธรรม'
+    }
+    return labels[cat] || cat
 }
 
 function formatDate(iso) {

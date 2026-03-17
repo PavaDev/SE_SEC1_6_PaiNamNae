@@ -122,7 +122,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center mt-1">
-                                                    <div class="flex text-yellow-400">
+                                                    <div class="flex items-center text-yellow-400">
                                                         <template v-for="i in 5" :key="i">
                                                             <span v-if="i <= Math.floor(route.driver.rating)">★</span>
                                                             <span v-else-if="i <= Math.ceil(route.driver.rating) && route.driver.rating % 1 > 0" class="relative">
@@ -135,6 +135,10 @@
                                                     <span class="ml-2 text-sm text-gray-600">
                                                         {{ Number(route.driver.rating).toFixed(1) }} ({{ route.driver.reviews }} รีวิว)
                                                     </span>
+                                                    <!-- New Review Button -->
+                                                    <button @click.stop="openDriverReview(route.driver)" class="ml-3 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors border border-blue-200">
+                                                        ดูรีวิวคนขับ
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div class="text-right">
@@ -491,7 +495,7 @@
                 รีวิวคนขับ
                 </h3>
                 <button @click="closeDriverModal" class="text-gray-400 hover:text-gray-600">
-                ✕
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
 
@@ -521,21 +525,60 @@
                 </div>
             </div>
 
-            <!-- reviews -->
-            <div class="p-6 overflow-y-auto max-h-[60vh]">
+            <!-- Filters -->
+            <div class="p-4 bg-white border-b border-gray-200">
+                <!-- Star Filters -->
+                <div class="mb-3">
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">กรองตามคะแนน (ดาว)</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors border"
+                            :class="filterRating === null ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+                            @click="filterRating = null">
+                            ทั้งหมด
+                        </button>
+                        <button v-for="star in 5" :key="'star-'+star" 
+                            class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors border flex items-center gap-1"
+                            :class="filterRating === star ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+                            @click="filterRating === star ? filterRating = null : filterRating = star">
+                            {{ star }} <span class="text-yellow-400 text-base leading-none">★</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Category Filters -->
+                <div>
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">กรองตามจุดเด่น</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors border"
+                            :class="filterCategory === null ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+                            @click="filterCategory = null">
+                            ทั้งหมด
+                        </button>
+                        <button v-for="cat in reviewCategoriesConfig" :key="'cat-'+cat.value" 
+                            class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors border"
+                            :class="filterCategory === cat.value ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+                            @click="filterCategory === cat.value ? filterCategory = null : filterCategory = cat.value">
+                            {{ cat.label }}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                <div v-if="loadingDriverReviews" class="text-center text-gray-500">
+            <!-- reviews -->
+            <div class="p-6 overflow-y-auto max-h-[50vh] bg-white">
+
+                <div v-if="loadingDriverReviews" class="text-center text-gray-500 py-8">
                 กำลังโหลดรีวิว...
                 </div>
 
-                <div v-else-if="driverReviews.length === 0"
-                    class="text-center text-gray-500">
-                ยังไม่มีรีวิว
+                <div v-else-if="filteredDriverReviews.length === 0"
+                    class="text-center text-gray-500 py-8">
+                    {{ driverReviews.length === 0 ? 'ยังไม่มีรีวิว' : 'ไม่พบรีวิวที่ตรงกับตัวกรองที่เลือก' }}
                 </div>
 
                 <div v-else class="space-y-4">
 
-                <div v-for="review in driverReviews"
+                <div v-for="review in filteredDriverReviews"
                     :key="review.id"
                     class="p-4 border rounded-lg bg-gray-50">
 
@@ -554,9 +597,17 @@
                     {{ '☆'.repeat(5 - review.rating) }}
                     </div>
 
-                    <p class="mt-2 text-sm text-gray-700">
+                    <p v-if="review.comment" class="mt-2 text-sm text-gray-700 whitespace-pre-line">
                     {{ review.comment }}
                     </p>
+
+                    <!-- Categories -->
+                    <div v-if="review.categories && review.categories.length > 0" class="flex flex-wrap gap-1.5 mt-3">
+                        <span v-for="catValue in review.categories" :key="catValue" 
+                            class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md border border-gray-200">
+                            {{ getCategoryLabel(catValue) }}
+                        </span>
+                    </div>
 
                     <!-- images -->
                     <div v-if="review.images?.length"
@@ -633,6 +684,42 @@ const showDriverModal = ref(false)
 const selectedDriver = ref(null)
 const driverReviews = ref([])
 const loadingDriverReviews = ref(false)
+
+// Review Filters
+const filterRating = ref(null)
+const filterCategory = ref(null)
+
+const reviewCategoriesConfig = [
+    { value: 'GOOD_DRIVING', label: 'ขับรถดี' },
+    { value: 'POLITE', label: 'คนขับสุภาพ' },
+    { value: 'ON_TIME', label: 'มาตรงเวลา' },
+    { value: 'CLEAN_CAR', label: 'รถสะอาด' },
+    { value: 'SAFE_DRIVING', label: 'ขับปลอดภัย' },
+    { value: 'GOOD_COMMUNICATION', label: 'สื่อสารดี' },
+    { value: 'FAIR_PRICE', label: 'ราคายุติธรรม' }
+]
+
+function getCategoryLabel(val) {
+    const found = reviewCategoriesConfig.find(c => c.value === val)
+    return found ? found.label : val
+}
+
+const filteredDriverReviews = computed(() => {
+    return driverReviews.value.filter(review => {
+        let matchRating = true
+        let matchCategory = true
+        
+        if (filterRating.value !== null) {
+            matchRating = review.rating === filterRating.value
+        }
+        
+        if (filterCategory.value !== null) {
+            matchCategory = review.categories && review.categories.includes(filterCategory.value)
+        }
+        
+        return matchRating && matchCategory
+    })
+})
 
 
 const headScripts = []

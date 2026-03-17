@@ -9,6 +9,8 @@ const reportInclude = {
             lastName: true,
             email: true,
             profilePicture: true,
+            ratingAverage: true,
+            ratingCount: true,
         },
     },
     targetUser: {
@@ -18,6 +20,8 @@ const reportInclude = {
             lastName: true,
             email: true,
             profilePicture: true,
+            ratingAverage: true,
+            ratingCount: true,
         },
     },
     route: {

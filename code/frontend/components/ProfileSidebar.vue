@@ -14,6 +14,12 @@
                             โปรไฟล์ของฉัน
                         </NuxtLink>
                     </li>
+                    <li>
+                        <NuxtLink to="/profile/reviews" class="block px-4 py-2 text-sm rounded-md"
+                            :class="isActive('/profile/reviews') ? 'font-semibold text-blue-600 bg-blue-100' : 'text-gray-700 hover:bg-gray-100'">
+                            รีวิวของฉัน
+                        </NuxtLink>
+                    </li>
                 </ul>
             </div>
             <div>

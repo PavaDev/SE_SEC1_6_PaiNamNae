@@ -2,7 +2,7 @@ import { useCookie } from '#app'
 import { useRouter } from 'vue-router'
 
 export function useAuth() {
-  const { $api } = useNuxtApp()
+  const { $api, $subscribeToPush, $unsubscribeFromPush } = useNuxtApp()
 
   const cookieOpts = {
     maxAge: 60 * 60 * 24 * 7,
@@ -30,6 +30,12 @@ export function useAuth() {
     })
     token.value = res.token
     user.value = res.user
+
+    // Request push notification permission and subscribe after successful login
+    if ($subscribeToPush) {
+        $subscribeToPush()
+    }
+
     return res
   }
 
@@ -49,11 +55,22 @@ export function useAuth() {
     return res
   }
 
-  const logout = () => {
-    token.value = null
-    user.value = null
-    return router.push('/')
+  const logout = async () => {
+    try {
+      // Unsubscribe from push notifications before clearing the token
+      if ($unsubscribeFromPush) {
+          // Use a promise race or just try-catch to ensure we don't hang logout
+          await $unsubscribeFromPush().catch(err => console.warn('[Logout] Push unsubscribe failed:', err))
+      }
+    } catch (err) {
+      console.warn('[Logout] Error during pre-logout steps:', err)
+    } finally {
+      // Always clear tokens and redirect, even if unsubscription fails
+      token.value = null
+      user.value = null
+      router.push('/')
+    }
   }
 
-  return { token, user, login, logout, register }
+  return { token, user, login, logout, register, cookieOpts }
 }

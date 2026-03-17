@@ -2,61 +2,98 @@
  * Web Push plugin — registers service worker, requests permission,
  * subscribes to push, and registers the subscription with the backend.
  */
-export default defineNuxtPlugin(async () => {
+export default defineNuxtPlugin(async (nuxtApp) => {
     if (!process.client) return;
 
-    // Wait for service worker support
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.warn('[WebPush] Not supported in this browser');
         return;
     }
 
-    try {
-        // Register service worker
-        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        console.log('[WebPush] Service Worker registered:', registration.scope);
+    const config = useRuntimeConfig();
+    const vapidPublicKey = config.public.vapidPublicKey;
 
-        // Wait until SW is active
-        await navigator.serviceWorker.ready;
+    const cookieOpts = {
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
+    };
 
-        // Only subscribe if user is logged in (token cookie present)
-        const token = useCookie('token');
-        if (!token.value) return;
+    const subscribeToPush = async () => {
+        try {
+            const token = useCookie('token', cookieOpts);
+            if (!token.value) return;
 
-        const config = useRuntimeConfig();
-        const vapidPublicKey = config.public.vapidPublicKey;
-        if (!vapidPublicKey) {
-            console.warn('[WebPush] No VAPID public key configured');
-            return;
-        }
-
-        // Check existing subscription
-        let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-            // Only request if permission not yet denied
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                console.log('[WebPush] Permission not granted:', permission);
+            if (!vapidPublicKey) {
+                console.warn('[WebPush] No VAPID public key configured');
                 return;
             }
 
-            // Subscribe
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-            });
+            const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            await navigator.serviceWorker.ready;
+
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('[WebPush] Permission not granted:', permission);
+                    return;
+                }
+
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                });
+            }
+
+            // Send subscription to backend
+            await $fetch('/push/subscribe', {
+                baseURL: config.public.apiBase,
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token.value}` },
+                body: subscription.toJSON(),
+            }).catch(err => console.warn('[WebPush] Subscribe failed:', err.message));
+
+        } catch (err) {
+            console.error('[WebPush] Setup error:', err);
         }
+    };
 
-        // Send subscription to backend
-        await $fetch('/push/subscribe', {
-            baseURL: config.public.apiBase,
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token.value}` },
-            body: subscription.toJSON(),
-        }).catch(err => console.warn('[WebPush] Subscribe failed:', err.message));
+    const unsubscribeFromPush = async () => {
+        try {
+            const token = useCookie('token', cookieOpts);
+            if (!token.value) return;
 
-    } catch (err) {
-        console.error('[WebPush] Setup error:', err);
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+                const endpoint = subscription.endpoint;
+                
+                // 1. Try to unsubscribe from the browser side
+                await subscription.unsubscribe().catch(e => console.warn('[WebPush] browser unsubscribe failed:', e));
+
+                // 2. Call backend with a simple timeout/catch
+                await $fetch('/push/unsubscribe', {
+                    baseURL: config.public.apiBase,
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token.value}` },
+                    body: { endpoint },
+                    timeout: 5000 // Ensure it doesn't hang forever
+                }).catch(err => console.warn('[WebPush] Backend unsubscribe failed:', err.message));
+            }
+        } catch (err) {
+            console.error('[WebPush] Unsubscribe error:', err);
+        }
+    };
+
+    nuxtApp.provide('subscribeToPush', subscribeToPush);
+    nuxtApp.provide('unsubscribeFromPush', unsubscribeFromPush);
+
+    // Auto-subscribe if already granted (won't show prompt)
+    if (Notification.permission === 'granted') {
+        subscribeToPush();
     }
 });
 

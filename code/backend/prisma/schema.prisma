@@ -93,6 +93,16 @@ enum ReportStatus {
   RESOLVED
 }
 
+enum ReviewCategory {
+  GOOD_DRIVING        // ขับรถดี
+  POLITE              // คนขับสุภาพ
+  ON_TIME             // มาตรงเวลา
+  CLEAN_CAR           // รถสะอาด
+  SAFE_DRIVING        // ขับรถปลอดภัย
+  GOOD_COMMUNICATION  // สื่อสารดี
+  FAIR_PRICE          // ราคายุติธรรม
+}
+
 model User {
   id                    String   @id @default(cuid())
   username              String   @unique
@@ -275,6 +285,7 @@ model Review {
   rating      Int      // 1–5 ดาว
   comment     String?
   images      Json?    @db.Json
+  categories  ReviewCategory[]
 
   createdAt   DateTime @default(now())
 }
