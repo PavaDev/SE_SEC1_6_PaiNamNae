@@ -480,3 +480,16 @@ This project follows semantic versioning.
 - **Add test case for passenger report driver**
   - Add **Robot Test** for passenger report driver.
   - Add **Integration Test** for passenger report driver.
+
+## [3.0.7] - 2026-03-17 - (Arimeta)
+
+### Updated
+- Updated User_manaul: The usage details have been updated based on feature fixes in the reporting, review, and notification.
+
+### Added
+- Added sprint3_adapt_blueprint in doc/adapt_blueprint
+- Added sprint3_test_report in doc/test_report
+- Added sprint3_test_date in test/test_data
+- Added sprint3_test_design in test/test_design
+- Added sprint3 in sprint_backlog
+- Added images in img
