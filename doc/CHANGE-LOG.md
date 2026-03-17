@@ -471,3 +471,12 @@ This project follows semantic versioning.
 - **Data Integrity Fixes**: Synchronized report categories across all UI points (restored `NO_SHOW` category) and resolved Prisma schema validation errors for vehicle data mapping.
 - **Driver Empowerment**: Updated reportable booking logic allowing drivers to report passengers from both completed and cancelled trips post-journey.
 - **UI Simplification**: Stripped "fantasy" elements and redundant plain-text parallels from the chat dialogue components to focus on practical information density.
+
+
+## [3.0.6] - 2026-03-17 - (Panya)
+- **Add test case for admin report status update**
+  - Add **Integration Test** for admin report status update.
+  - Add **Robot Test** for admin report status update.
+- **Add test case for passenger report driver**
+  - Add **Robot Test** for passenger report driver.
+  - Add **Integration Test** for passenger report driver.
