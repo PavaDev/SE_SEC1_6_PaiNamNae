@@ -8,7 +8,7 @@ module.exports = {
     // Tell Jest to look for tests in the tests/backend directory
     roots: [
         '<rootDir>',
-        '<rootDir>/../../tests/backend',
+        '<rootDir>/../../test/backend',
     ],
 
     // Tell Jest where to find node_modules for test files outside src/backend
