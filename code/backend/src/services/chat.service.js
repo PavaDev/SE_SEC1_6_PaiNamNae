@@ -112,7 +112,9 @@ const sendMessage = async (routeId, userId, text, metadata = null) => {
                         title: '💬 ข้อความจากคนขับ',
                         body: text.length > 80 ? text.slice(0, 77) + '...' : text,
                         url: '/current-trip',
-                    }).catch(() => {});
+                    }).catch(err => {
+                        console.error(`[WebPush] Message push to passenger ${b.passengerId} failed:`, err.message);
+                    });
                 }
             } else {
                 // notify driver
@@ -120,10 +122,13 @@ const sendMessage = async (routeId, userId, text, metadata = null) => {
                     title: '💬 ข้อความจากผู้โดยสาร',
                     body: text.length > 80 ? text.slice(0, 77) + '...' : text,
                     url: '/current-trip',
-                }).catch(() => {});
+                }).catch(err => {
+                    console.error(`[WebPush] Message push to driver ${route.driverId} failed:`, err.message);
+                });
             }
         }
     } catch (e) {
+        console.error('[WebPush] Unexpected error in chat sendMessage push:', e.message);
         // Non-fatal — web push may not be set up
     }
 

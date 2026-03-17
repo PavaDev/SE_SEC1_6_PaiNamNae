@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:3000/api/",
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-      vapidPublicKey: process.env.NUXT_PUBLIC_VAPID_KEY || "BPzJIlZgpC6eUT9FxnezScfezfh3LU-ODCVxE5KJn9GvqDA7_Qbnn7WUc4sPwZPUSGx_SHZyr7mBjOLltPxVpMk",
+      vapidPublicKey: process.env.NUXT_PUBLIC_VAPID_KEY || "BNAFp0ETIEJno96V-RqmehMmKMT8Vah61qZhF1pAwSHd_2Sx8v6Tl2CY9ZPGqkIB460VXsv-NT05J_RHjzhRFcg",
     },
   },
 

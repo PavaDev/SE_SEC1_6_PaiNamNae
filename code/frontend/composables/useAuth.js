@@ -59,8 +59,8 @@ export function useAuth() {
     try {
       // Unsubscribe from push notifications before clearing the token
       if ($unsubscribeFromPush) {
-          // Use a promise race or just try-catch to ensure we don't hang logout
-          await $unsubscribeFromPush().catch(err => console.warn('[Logout] Push unsubscribe failed:', err))
+          // DO NOT await here: in incognito or some environments, SW ready might hang
+          $unsubscribeFromPush().catch(err => console.warn('[Logout] Push unsubscribe failed:', err))
       }
     } catch (err) {
       console.warn('[Logout] Error during pre-logout steps:', err)

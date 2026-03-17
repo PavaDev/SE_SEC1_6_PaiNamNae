@@ -17,21 +17,18 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: example@gmail.com
- *               username:
- *                 type: string
- *                 example: jonathan01
- *               password:
- *                 type: string
- *                 example: mysecurepassword
  *             oneOf:
  *               - required: [email, password]
  *               - required: [username, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 example: mysecurepassword
+ *         
  *     responses:
  *       200:
  *         description: Successful login

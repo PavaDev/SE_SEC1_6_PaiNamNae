@@ -651,28 +651,33 @@ async function notifyArrival(bookingId, userId, minutes, customText = null, reas
   // --- Web Push to passenger ---
   try {
     const { sendPushToUser } = require('./webpush.service');
+    const pushTitle = minutes === 0
+      ? '🚗 คนขับถึงจุดรับแล้ว!'
+      : (isUpdate ? '🔄 คนขับแจ้งเปลี่ยนเวลา' : '🚗 คนขับกำลังเดินทางมาหาคุณ');
+
     await sendPushToUser(booking.passengerId, {
-      title: '🚗 คนขับถึงจุดรับแล้ว!',
-      body: minutes === 0 
-        ? `${driverName} มาถึงจุดนัดพบแล้ว` 
+      title: pushTitle,
+      body: minutes === 0
+        ? `${driverName} มาถึงจุดนัดพบแล้ว`
         : `${driverName} จะถึงในอีกประมาณ ${minutes} นาที`,
       url: '/current-trip',
     });
   } catch (e) {
+    console.error('[WebPush] Error in notifyArrival push:', e.message);
     // Non-fatal
   }
 
-  // Send email asynchronously (don't block the response)
-  sendArrivalNotificationEmail(
-    booking.passenger,
-    booking.route.driver,
-    booking,
-    minutes,
-    isUpdate,
-    reason
-  ).catch(err => console.error('[Email] sendArrivalNotificationEmail failed:', err.message));
+// Send email asynchronously (don't block the response)
+sendArrivalNotificationEmail(
+  booking.passenger,
+  booking.route.driver,
+  booking,
+  minutes,
+  isUpdate,
+  reason
+).catch(err => console.error('[Email] sendArrivalNotificationEmail failed:', err.message));
 
-  return { success: true };
+return { success: true };
 }
 
 async function updatePassengerStatus(id, status, userId, reason) {

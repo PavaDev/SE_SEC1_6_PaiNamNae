@@ -7,6 +7,127 @@
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - id
+ *         - email
+ *         - username
+ *         - role
+ *         - isActive
+ *         - createdAt
+ *       properties:
+ *         id:
+ *           type: string
+ *         email:
+ *           type: string
+ *         username:
+ *           type: string
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         phoneNumber:
+ *           type: string
+ *         gender:
+ *           type: string
+ *         role:
+ *           type: string
+ *           enum: [ADMIN, DRIVER, PASSENGER]
+ *         isActive:
+ *           type: boolean
+ *         isVerified:
+ *           type: boolean
+ *         profilePicture:
+ *           type: string
+ *         ratingAverage:
+ *           type: number
+ *         ratingCount:
+ *           type: integer
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     UserResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               $ref: '#/components/schemas/User'
+ *
+ *     UserListResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *             pagination:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *
+ *     CreateUserRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *         - username
+ *         - password
+ *         - firstName
+ *         - lastName
+ *         - phoneNumber
+ *         - gender
+ *         - nationalIdNumber
+ *         - nationalIdExpiryDate
+ *       properties:
+ *         email:
+ *           type: string
+ *         username:
+ *           type: string
+ *         password:
+ *           type: string
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         phoneNumber:
+ *           type: string
+ *         gender:
+ *           type: string
+ *         nationalIdNumber:
+ *           type: string
+ *         nationalIdExpiryDate:
+ *           type: string
+ *           format: date
+ *       example:
+ *         email: test@mail.com
+ *         username: user123
+ *         password: 123456
+ *         firstName: John
+ *         lastName: Doe
+ *         phoneNumber: "0812345678"
+ *         gender: male
+ *
+ *     UpdateUserStatusRequest:
+ *       type: object
+ *       required: [isActive]
+ *       properties:
+ *         isActive:
+ *           type: boolean
+ */
+
+/**
+ * @swagger
  * /api/users:
  *   post:
  *     summary: Register a new user
@@ -16,57 +137,23 @@
  *       content:
  *         multipart/form-data:
  *           schema:
- *             type: object
- *             required:
- *               - email
- *               - username
- *               - password
- *               - firstName
- *               - lastName
- *               - phoneNumber
- *               - gender
- *               - nationalIdNumber
- *               - nationalIdExpiryDate
- *               - nationalIdPhotoUrl
- *               - selfiePhotoUrl
- *             properties:
- *               email:
- *                 type: string
- *                 example: example@gmail.com
- *               username:
- *                 type: string
- *                 example: jonathan01
- *               password:
- *                 type: string
- *                 example: mysecurepassword
- *               firstName:
- *                 type: string
- *                 example: Jonathan
- *               lastName:
- *                 type: string
- *                 example: Doillon
- *               phoneNumber:
- *                 type: string
- *                 example: "0812345678"
- *               gender:
- *                 type: string
- *                 example: MALE
- *               nationalIdNumber:
- *                 type: string
- *                 example: "1234567890123"
- *               nationalIdExpiryDate:
- *                 type: string
- *                 format: date-time
- *                 example: "2030-12-31T00:00:00.000Z"
- *               nationalIdPhotoUrl:
- *                 type: string
- *                 format: binary
- *               selfiePhotoUrl:
- *                 type: string
- *                 format: binary
+ *             allOf:
+ *               - $ref: '#/components/schemas/CreateUserRequest'
+ *               - type: object
+ *                 properties:
+ *                   nationalIdPhotoUrl:
+ *                     type: string
+ *                     format: binary
+ *                   selfiePhotoUrl:
+ *                     type: string
+ *                     format: binary
  *     responses:
  *       201:
  *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  *       400:
  *         description: Validation error
  *       409:
@@ -77,13 +164,17 @@
  * @swagger
  * /api/users/me:
  *   get:
- *     summary: Get the authenticated user's profile
+ *     summary: Get my profile
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: User profile retrieved
+ *         description: Profile retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  *       401:
  *         description: Unauthorized
  */
@@ -92,29 +183,22 @@
  * @swagger
  * /api/users/me:
  *   put:
- *     summary: Update the authenticated user's profile
+ *     summary: Update my profile
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: false
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               email:
- *                 type: string
- *               username:
- *                 type: string
- *               firstName:
- *                 type: string
- *               lastName:
- *                 type: string
- *               phoneNumber:
- *                 type: string
- *               gender:
- *                 type: string
+ *               email: { type: string }
+ *               username: { type: string }
+ *               firstName: { type: string }
+ *               lastName: { type: string }
+ *               phoneNumber: { type: string }
+ *               gender: { type: string }
  *               profilePicture:
  *                 type: string
  *                 format: binary
@@ -127,26 +211,30 @@
  *     responses:
  *       200:
  *         description: Profile updated
- *       401:
- *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  */
 
 /**
  * @swagger
  * /api/users/{id}:
  *   get:
- *     summary: Get public user profile by ID
+ *     summary: Get public user profile
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema:
- *           type: string
- *         description: User ID (CUID)
+ *         schema: { type: string }
  *     responses:
  *       200:
  *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  *       404:
  *         description: User not found
  */
@@ -155,158 +243,35 @@
  * @swagger
  * /api/users/admin:
  *   get:
- *     summary: Get all users (Admin only)
+ *     summary: Get all users (Admin)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema: { type: integer }
- *       - in: query
- *         name: limit
- *         schema: { type: integer }
- *       - in: query
- *         name: q
- *         schema: { type: string }
- *       - in: query
- *         name: role
- *         schema: { type: string, enum: [ADMIN, DRIVER, PASSENGER] }
- *       - in: query
- *         name: isActive
- *         schema: { type: boolean }
- *       - in: query
- *         name: isVerified
- *         schema: { type: boolean }
- *       - in: query
- *         name: sortBy
- *         schema: { type: string, enum: [createdAt, lastLogin, email, username, firstName, lastName, ratingAverage, ratingCount] }
- *       - in: query
- *         name: sortOrder
- *         schema: { type: string, enum: [asc, desc] }
  *     responses:
  *       200:
- *         description: Paginated users list with rating data
- *       401:
- *         description: Unauthorized
+ *         description: Users list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserListResponse'
  *       403:
  *         description: Forbidden
  */
 
 /**
  * @swagger
- * /api/users/admin/{id}:
- *   get:
- *     summary: Get user by ID (Admin only)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User retrieved
- *       404:
- *         description: User not found
- */
-
-/**
- * @swagger
- * /api/users/admin/{id}:
- *   put:
- *     summary: Update a user (Admin only)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: false
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               username:
- *                 type: string
- *               firstName:
- *                 type: string
- *               lastName:
- *                 type: string
- *               phoneNumber:
- *                 type: string
- *               gender:
- *                 type: string
- *               isVerified:
- *                 type: boolean
- *               isActive:
- *                 type: boolean
- *               role:
- *                 type: string
- *                 enum: [ADMIN, DRIVER, PASSENGER]
- *               nationalIdPhotoUrl:
- *                 type: string
- *                 format: binary
- *               selfiePhotoUrl:
- *                 type: string
- *                 format: binary
- *               profilePicture:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: User updated
- *       404:
- *         description: User not found
- */
-
-/**
- * @swagger
  * /api/users/admin/{id}/status:
  *   patch:
- *     summary: Update user status (isActive / isVerified)
+ *     summary: Update user status
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               isActive:
- *                 type: boolean
- *               isVerified:
- *                 type: boolean
+ *             $ref: '#/components/schemas/UpdateUserStatusRequest'
  *     responses:
  *       200:
- *         description: User status updated
- *       400:
- *         description: Invalid input
- */
-
-/**
- * @swagger
- * /api/users/admin/{id}:
- *   delete:
- *     summary: Delete a user (Admin only)
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       404:
- *         description: User not found
+ *         description: Status updated
  */

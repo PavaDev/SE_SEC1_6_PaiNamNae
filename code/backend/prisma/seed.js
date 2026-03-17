@@ -49,7 +49,7 @@ async function main() {
                     color: 'Crystal Black',
                     seatCapacity: 4,
                     amenities: ['Air Conditioning', 'Apple CarPlay', 'USB Charger', 'Drinking Water'],
-                    photos: ['https://placehold.co/600x400?text=Civic+Side', 'https://placehold.co/600x400?text=Civic+Interior'],
+                    photos: ['https://tse3.mm.bing.net/th/id/OIP.-FNTHa73w2U-UmXbOASoPAAAAA?rs=1&pid=ImgDetMain&o=7&rm=3', 'https://tse3.mm.bing.net/th/id/OIP.7ASVRFqpM1JaaBIagWmT3QHaFj?w=640&h=480&rs=1&pid=ImgDetMain&o=7&rm=3'],
                     isDefault: true
                 }
             }

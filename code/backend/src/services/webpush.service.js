@@ -50,30 +50,43 @@ const deleteSubscription = async (userId, endpoint) => {
  * @param {{ title: string, body: string, url?: string, icon?: string }} payload
  */
 const sendPushToUser = async (userId, payload) => {
+    console.log(`[WebPush] Sending push to user: ${userId}`);
     const subs = await prisma.pushSubscription.findMany({ where: { userId } });
-    if (!subs.length) return;
+    if (!subs.length) {
+        console.log(`[WebPush] No subscriptions found for user: ${userId}`);
+        return;
+    }
+    console.log(`[WebPush] Found ${subs.length} subscriptions for user: ${userId}`);
 
     const notifPayload = JSON.stringify({
         title: payload.title || 'PaiNamNae',
         body: payload.body || '',
         url: payload.url || '/',
-        icon: payload.icon || '/icon-192.png',
-        badge: '/icon-72.png',
+        icon: payload.icon || '/favicon.ico',
+        badge: '/favicon.ico',
     });
 
     const results = await Promise.allSettled(
-        subs.map(sub =>
-            webpush.sendNotification(
+        subs.map(sub => {
+            console.log(`[WebPush] Attempting to send to endpoint: ${sub.endpoint.substring(0, 50)}...`);
+            return webpush.sendNotification(
                 { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
                 notifPayload
-            ).catch(async (err) => {
-                // 410 Gone = subscription expired, clean it up
-                if (err.statusCode === 410) {
+            ).then(res => {
+                console.log(`[WebPush] Success for endpoint: ${sub.endpoint.substring(0, 50)}... Status: ${res.statusCode}`);
+                return res;
+            }).catch(async (err) => {
+                console.error(`[WebPush] Error for endpoint: ${sub.endpoint.substring(0, 50)}... Status: ${err.statusCode}, Message: ${err.message}`);
+                // 410 Gone = subscription expired
+                // 401 Unauthorized / 403 Forbidden = VAPID keys changed or invalid
+                // 404 Not Found = subscription no longer exists
+                if ([401, 403, 404, 410].includes(err.statusCode)) {
+                    console.log(`[WebPush] Subscription invalid (${err.statusCode}), deleting: ${sub.endpoint.substring(0, 50)}...`);
                     await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } }).catch(() => { });
                 }
                 throw err;
-            })
-        )
+            });
+        })
     );
 
     return results;

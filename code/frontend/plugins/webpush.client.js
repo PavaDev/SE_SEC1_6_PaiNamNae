@@ -21,39 +21,53 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     };
 
     const subscribeToPush = async () => {
+        console.log('[WebPush] subscribeToPush starting...');
         try {
             const token = useCookie('token', cookieOpts);
-            if (!token.value) return;
+            if (!token.value) {
+                console.log('[WebPush] No token found, skipping subscription');
+                return;
+            }
 
             if (!vapidPublicKey) {
                 console.warn('[WebPush] No VAPID public key configured');
                 return;
             }
 
+            console.log('[WebPush] Registering service worker...');
             const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log('[WebPush] Service worker registered, waiting for ready...');
             await navigator.serviceWorker.ready;
+            console.log('[WebPush] Service worker ready');
 
             let subscription = await registration.pushManager.getSubscription();
             if (!subscription) {
+                console.log('[WebPush] No existing subscription, requesting permission...');
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
                     console.log('[WebPush] Permission not granted:', permission);
                     return;
                 }
 
+                console.log('[WebPush] Subscribing to push manager...');
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
                 });
             }
 
+            console.log('[WebPush] Sending subscription to backend...', subscription.endpoint);
             // Send subscription to backend
             await $fetch('/push/subscribe', {
                 baseURL: config.public.apiBase,
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token.value}` },
                 body: subscription.toJSON(),
-            }).catch(err => console.warn('[WebPush] Subscribe failed:', err.message));
+            }).then(() => {
+                console.log('[WebPush] Subscription saved to backend successfully');
+            }).catch(err => {
+                console.warn('[WebPush] Subscribe fetch failed:', err.message);
+            });
 
         } catch (err) {
             console.error('[WebPush] Setup error:', err);

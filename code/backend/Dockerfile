@@ -32,5 +32,5 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-# Run migrations then start the server
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Run migrations with reset (flushes data and runs seed) then start the server
+CMD ["sh", "-c", "npx prisma migrate reset --force && node server.js"]

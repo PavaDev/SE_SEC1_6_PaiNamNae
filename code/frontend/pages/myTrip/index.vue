@@ -204,10 +204,19 @@
                                                         </div>
 
                                                         <!-- stars -->
-                                                        <div class="flex items-center mt-1 text-xs text-yellow-400">
-                                                            <span>
+                                                        <div class="flex items-center mt-1 space-x-2">
+                                                            <div class="flex items-center text-xs text-yellow-400">
                                                                 {{ '★'.repeat(review.rating) }}
                                                                 {{ '☆'.repeat(5 - review.rating) }}
+                                                            </div>
+                                                            <span class="text-xs font-bold text-gray-700">({{ (review.rating || 0).toFixed(1) }})</span>
+                                                        </div>
+
+                                                        <!-- Categories -->
+                                                        <div v-if="review.categories && review.categories.length" class="flex flex-wrap gap-1 mt-2">
+                                                            <span v-for="cat in review.categories" :key="cat" 
+                                                                class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded-full border border-blue-100">
+                                                                {{ getReviewCategoryLabel(cat) }}
                                                             </span>
                                                         </div>
 
@@ -251,10 +260,19 @@
                                                         </div>
 
                                                         <!-- stars -->
-                                                        <div class="flex items-center mt-1 text-xs text-yellow-400">
-                                                            <span>
+                                                        <div class="flex items-center mt-1 space-x-2">
+                                                            <div class="flex items-center text-xs text-yellow-400">
                                                                 {{ '★'.repeat(review.rating) }}
                                                                 {{ '☆'.repeat(5 - review.rating) }}
+                                                            </div>
+                                                            <span class="text-xs font-bold text-gray-700">({{ (review.rating || 0).toFixed(1) }})</span>
+                                                        </div>
+
+                                                        <!-- Categories -->
+                                                        <div v-if="review.categories && review.categories.length" class="flex flex-wrap gap-1 mt-2">
+                                                            <span v-for="cat in review.categories" :key="cat" 
+                                                                class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded-full border border-blue-100">
+                                                                {{ getReviewCategoryLabel(cat) }}
                                                             </span>
                                                         </div>
 
@@ -412,9 +430,21 @@
                             ★
                         </button>
                     </div>
-                    <p class="mt-2 text-center text-sm font-medium text-gray-600">
-                        {{ ['ให้ปรับปรุง', 'พอใช้', 'ดี', 'ดีมาก', 'ยอดเยี่ยม'][reviewRating - 1] }}
+                    <p class="mt-2 text-center text-sm font-medium" :class="reviewRating >= 4 ? 'text-green-600' : reviewRating >= 3 ? 'text-blue-600' : 'text-orange-600'">
+                        {{ ['ให้ปรับปรุง', 'พอใช้', 'ดี', 'ดีมาก', 'ยอดเยี่ยม'][reviewRating - 1] }} ({{ reviewRating }}.0)
                     </p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">จุดเด่นที่ประทับใจ</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button v-for="cat in availableReviewCategories" :key="cat.value" 
+                            @click="toggleReviewCategory(cat.value)"
+                            class="px-3 py-1.5 rounded-full text-xs font-medium transition-all border"
+                            :class="selectedReviewCategories.includes(cat.value) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'">
+                            {{ cat.label }}
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -1486,11 +1516,37 @@ const reviewTrip = ref(null)
 const reviewRating = ref(5)
 const reviewText = ref('')
 const reviewImages = ref([])
+const selectedReviewCategories = ref([])
+
+const availableReviewCategories = [
+    { value: 'GOOD_DRIVING', label: 'ขับรถดี' },
+    { value: 'POLITE', label: 'คนขับสุภาพ' },
+    { value: 'ON_TIME', label: 'มาตรงเวลา' },
+    { value: 'CLEAN_CAR', label: 'รถสะอาด' },
+    { value: 'SAFE_DRIVING', label: 'ขับปลอดภัย' },
+    { value: 'GOOD_COMMUNICATION', label: 'สื่อสารดี' },
+    { value: 'FAIR_PRICE', label: 'ราคายุติธรรม' }
+]
+
+function getReviewCategoryLabel(value) {
+    const cat = availableReviewCategories.find(c => c.value === value)
+    return cat ? cat.label : value
+}
+
+function toggleReviewCategory(value) {
+    const idx = selectedReviewCategories.value.indexOf(value)
+    if (idx > -1) {
+        selectedReviewCategories.value.splice(idx, 1)
+    } else {
+        selectedReviewCategories.value.push(value)
+    }
+}
 
 function openReviewModal(trip) {
     reviewTrip.value = trip
     reviewRating.value = 5
     reviewText.value = ''
+    selectedReviewCategories.value = []
     reviewImages.value.forEach(it => it.url && URL.revokeObjectURL(it.url))
     reviewImages.value = []
     showReviewModal.value = true
@@ -1529,6 +1585,12 @@ async function submitReview() {
         fd.append('bookingId', reviewTrip.value.id)
         fd.append('rating', String(reviewRating.value))
         fd.append('comment', reviewText.value || '')
+        
+        if (selectedReviewCategories.value.length) {
+            selectedReviewCategories.value.forEach(cat => {
+                fd.append('categories[]', cat)
+            })
+        }
 
         if (reviewImages.value.length) {
             reviewImages.value.forEach((item) => {
@@ -1557,6 +1619,7 @@ async function submitReview() {
         // reset state ของ modal
         reviewRating.value = 5
         reviewText.value = ''
+        selectedReviewCategories.value = []
         reviewImages.value.forEach(it => it.url && URL.revokeObjectURL(it.url))
         reviewImages.value = []
 

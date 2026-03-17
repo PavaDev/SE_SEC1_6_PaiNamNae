@@ -7,50 +7,156 @@
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     Report:
+ *       type: object
+ *       required:
+ *         - id
+ *         - category
+ *         - description
+ *         - status
+ *         - reporterId
+ *         - createdAt
+ *       properties:
+ *         id:
+ *           type: string
+ *         category:
+ *           type: string
+ *           enum: [vehicle_issue, passenger_issue, road_issue, safety_issue, payment_issue, no_show, other]
+ *         description:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [PENDING, APPROVED, REJECTED, RESOLVED]
+ *         reporterId:
+ *           type: string
+ *         targetUserId:
+ *           type: string
+ *         bookingId:
+ *           type: string
+ *         routeId:
+ *           type: string
+ *         images:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example:
+ *             - https://example.com/image1.jpg
+ *         adminNotes:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     ReportResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               $ref: '#/components/schemas/Report'
+ *
+ *     ReportListResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Report'
+ *             pagination:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *
+ *     UpdateReportStatusRequest:
+ *       type: object
+ *       required: [status]
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [PENDING, APPROVED, REJECTED, RESOLVED]
+ *         adminNotes:
+ *           type: string
+ *
+ *     CreateReportRequest:
+ *       type: object
+ *       required: [category, description]
+ *       properties:
+ *         category:
+ *           type: string
+ *           enum: [vehicle_issue, passenger_issue, road_issue, safety_issue, payment_issue, no_show, other]
+ *         description:
+ *           type: string
+ *         targetUserId:
+ *           type: string
+ *         bookingId:
+ *           type: string
+ *         routeId:
+ *           type: string
+ *       example:
+ *         category: passenger_issue
+ *         description: Passenger was late
+ *         bookingId: booking123
+ */
+
+/**
+ * @swagger
  * /api/reports/admin:
  *   get:
- *     summary: Get all reports (Admin only)
- *     description: ดึงข้อมูลรายงานทั้งหมดพร้อมตัวกรองและสถานะ (สำหรับแอดมิน)
+ *     summary: Get all reports (Admin)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
- *         schema: { type: integer, default: 1 }
+ *         schema: { type: integer }
  *       - in: query
  *         name: limit
- *         schema: { type: integer, default: 20 }
+ *         schema: { type: integer }
  *       - in: query
  *         name: q
  *         schema: { type: string }
- *         description: Search by ID, title, or reporter name/email
  *       - in: query
- *         name: type
- *         schema: { type: string, enum: ['DRIVER', 'USER', 'BOOKING', 'OTHER'] }
+ *         name: category
+ *         schema: { type: string }
  *       - in: query
  *         name: status
- *         schema: { type: string, enum: ['PENDING', 'APPROVED', 'REJECTED', 'RESOLVED'] }
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, APPROVED, REJECTED, RESOLVED]
  *       - in: query
  *         name: dateFrom
- *         schema: { type: string, format: date }
+ *         schema: { type: string, format: date-time }
  *       - in: query
  *         name: dateTo
- *         schema: { type: string, format: date }
+ *         schema: { type: string, format: date-time }
  *     responses:
  *       200:
- *         description: Reports retrieved successfully with pagination
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReportListResponse'
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden (admin only)
+ *         description: Forbidden
  */
 
 /**
  * @swagger
  * /api/reports/admin/{id}:
  *   get:
- *     summary: Get report details by ID (Admin only)
+ *     summary: Get report by ID (Admin)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
@@ -61,21 +167,20 @@
  *         schema: { type: string }
  *     responses:
  *       200:
- *         description: Report details retrieved successfully
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReportResponse'
  *       404:
- *         description: Report not found
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden (admin only)
+ *         description: Not found
  */
 
 /**
  * @swagger
  * /api/reports/admin/{id}:
  *   patch:
- *     summary: Update report status (Admin only)
- *     description: อัปเดตสถานะของรายงานและเพิ่มหมายเหตุจากแอดมิน
+ *     summary: Update report status (Admin)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
@@ -89,34 +194,21 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [status]
- *             properties:
- *               status:
- *                 type: string
- *                 enum: ['PENDING', 'APPROVED', 'REJECTED', 'RESOLVED']
- *                 example: "APPROVED"
- *               adminNotes:
- *                 type: string
- *                 example: "ได้รับการยืนยันจากแอดมิน"
+ *             $ref: '#/components/schemas/UpdateReportStatusRequest'
  *     responses:
  *       200:
- *         description: Report status updated successfully
- *       400:
- *         description: Invalid input
- *       404:
- *         description: Report not found
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden (admin only)
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReportResponse'
  */
 
 /**
  * @swagger
  * /api/reports/admin/{id}:
  *   delete:
- *     summary: Delete report by ID (Admin only)
+ *     summary: Delete report (Admin)
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
@@ -127,52 +219,27 @@
  *         schema: { type: string }
  *     responses:
  *       200:
- *         description: Report deleted successfully
- *       404:
- *         description: Report not found
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden (admin only)
+ *         description: Deleted
  */
 
 /**
  * @swagger
  * /api/reports/me:
  *   get:
- *     summary: Get current user's own reports
+ *     summary: Get my reports
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of user's submitted reports
- */
-
-/**
- * @swagger
- * /api/reports/booking/{bookingId}:
- *   get:
- *     summary: Check if a report exists for a specific booking
- *     tags: [Reports]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: bookingId
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Report details if found, otherwise empty object
+ *         description: Success
  */
 
 /**
  * @swagger
  * /api/reports:
  *   post:
- *     summary: Create a new report (Authenticated user)
- *     description: ผู้ใช้สามารถสร้างรายงานเพื่อแจ้งปัญหา พร้อมแนบรูปภาพได้สูงสุด 2 รูป
+ *     summary: Create report
  *     tags: [Reports]
  *     security:
  *       - bearerAuth: []
@@ -181,58 +248,16 @@
  *       content:
  *         multipart/form-data:
  *           schema:
- *             type: object
- *             required: [category, description]
- *             properties:
- *               category:
- *                 type: string
- *                 enum: [vehicle_issue, passenger_issue, road_issue, safety_issue, payment_issue, no_show, other]
- *                 example: "passenger_issue"
- *               description:
- *                 type: string
- *                 example: "ผู้โดยสารไม่เคารพกฎระเบียบในรถ"
- *               targetUserId:
- *                 type: string
- *                 description: ID ของผู้ที่ถูกรายงาน (optional)
- *               bookingId:
- *                 type: string
- *                 description: ID ของการจองที่เกี่ยวข้อง
- *               routeId:
- *                 type: string
- *                 description: ID ของเส้นทางที่เกี่ยวข้อง
- *               images:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *                 description: ไฟล์รูปภาพแนบ (สูงสุด 2 รูป)
+ *             allOf:
+ *               - $ref: '#/components/schemas/CreateReportRequest'
+ *               - type: object
+ *                 properties:
+ *                   images:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       format: binary
  *     responses:
  *       201:
- *         description: Report created successfully
- *       400:
- *         description: Invalid input
- *       401:
- *         description: Unauthorized
- */
-
-/**
- * @swagger
- * /api/reports/{id}:
- *   get:
- *     summary: Get report details by ID (Authenticated user)
- *     tags: [Reports]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Report details retrieved successfully
- *       404:
- *         description: Report not found
- *       401:
- *         description: Unauthorized
+ *         description: Created
  */

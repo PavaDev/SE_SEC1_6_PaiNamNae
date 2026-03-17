@@ -15,7 +15,7 @@
           </div>
 
           <!-- Overview Stats -->
-          <div v-if="reviews.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div v-if="reviews.length > 0" class="grid grid-cols-2 md:grid-cols-2 gap-4 mb-8">
             <!-- stats content remains same -->
             <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col justify-center items-center">
               <div class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">คะแนนเฉลี่ย</div>
@@ -27,16 +27,7 @@
               <div class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">รีวิวทั้งหมด</div>
               <div class="text-3xl font-black text-gray-900">{{ reviews.length }}</div>
             </div>
-            <div class="col-span-2 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col justify-center">
-              <div class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">สัดส่วนคะแนน</div>
-              <div class="flex h-3 rounded-full overflow-hidden w-full bg-gray-200">
-                <div v-for="s in 5" :key="s" 
-                     :style="{ width: `${ratingPercentages[5-s]}%` }"
-                     :class="getRatingColorClass(5-s)"
-                     :title="`${5-s} ดาว (${ratingCounts[5-s] || 0})`">
-                </div>
-              </div>
-            </div>
+            
           </div>
 
           <!-- Filters -->

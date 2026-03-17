@@ -7,13 +7,98 @@
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     LatLng:
+ *       type: object
+ *       required: [lat, lng]
+ *       properties:
+ *         lat:
+ *           type: number
+ *           example: 16.4772
+ *         lng:
+ *           type: number
+ *           example: 102.8141
+ *
+ *     DirectionsResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: object
+ *               properties:
+ *                 routes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       summary:
+ *                         type: string
+ *                       distance:
+ *                         type: object
+ *                         properties:
+ *                           text:
+ *                             type: string
+ *                             example: "10 km"
+ *                           value:
+ *                             type: integer
+ *                             example: 10000
+ *                       duration:
+ *                         type: object
+ *                         properties:
+ *                           text:
+ *                             type: string
+ *                             example: "15 mins"
+ *                           value:
+ *                             type: integer
+ *                             example: 900
+ *                       overview_polyline:
+ *                         type: object
+ *                         properties:
+ *                           points:
+ *                             type: string
+ *
+ *     GeocodeResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: object
+ *               required: [lat, lng]
+ *               properties:
+ *                 lat:
+ *                   type: number
+ *                 lng:
+ *                   type: number
+ *                 formatted_address:
+ *                   type: string
+ *
+ *     ReverseGeocodeResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: object
+ *               required: [lat, lng]
+ *               properties:
+ *                 lat:
+ *                   type: number
+ *                 lng:
+ *                   type: number
+ *                 name:
+ *                   type: string
+ *                 address:
+ *                   type: string
+ */
+
+/**
+ * @swagger
  * /api/maps/directions:
  *   post:
  *     summary: Get driving directions between two points
- *     description: |
- *       เรียกใช้งาน Google Maps Directions API (API ภายนอก) เพื่อคำนวณเส้นทางระหว่างจุดเริ่มต้นและปลายทาง  
- *       รองรับการเพิ่มจุดแวะ (waypoints), ตัวเลือกเส้นทางทางเลือก, และเวลาออกเดินทาง  
- *       ใช้สำหรับสร้างเส้นทางก่อนบันทึก Route ในระบบ
  *     tags: [Maps]
  *     security:
  *       - bearerAuth: []
@@ -26,61 +111,40 @@
  *             required: [origin, destination]
  *             properties:
  *               origin:
- *                 type: object
- *                 description: จุดเริ่มต้น (lat/lng หรือ place object)
- *                 example:
- *                   lat: 16.4745
- *                   lng: 102.8235
- *                   name: "Khon Kaen University"
- *                   address: "123 ม.16 ถ.มิตรภาพ ขอนแก่น"
+ *                 $ref: '#/components/schemas/LatLng'
  *               destination:
- *                 type: object
- *                 description: จุดปลายทาง
- *                 example:
- *                   lat: 16.4389
- *                   lng: 102.8354
- *                   name: "Central Plaza Khon Kaen"
- *                   address: "ถ. ศรีจันทร์ ขอนแก่น"
+ *                 $ref: '#/components/schemas/LatLng'
  *               waypoints:
  *                 type: array
- *                 description: จุดแวะระหว่างทาง (optional)
  *                 items:
- *                   type: object
- *                   example:
- *                     lat: 16.4593
- *                     lng: 102.8261
- *                     name: "ตลาดต้นตาล"
+ *                   $ref: '#/components/schemas/LatLng'
  *               alternatives:
  *                 type: boolean
- *                 description: เปิด/ปิดการขอเส้นทางทางเลือก
- *                 example: true
  *               departureTime:
  *                 type: string
- *                 description: เวลาที่ออกเดินทาง (ISO string)
- *                 example: "2025-10-15T09:30:00Z"
+ *                 format: date-time
  *               optimizeWaypoints:
  *                 type: boolean
- *                 description: ให้ Google จัดลำดับ waypoints ที่เหมาะสมที่สุด
- *                 example: true
+ *           example:
+ *             origin:
+ *               lat: 16.4772
+ *               lng: 102.8141
+ *             destination:
+ *               lat: 16.4820
+ *               lng: 102.8200
  *     responses:
  *       200:
  *         description: Directions fetched successfully
  *         content:
  *           application/json:
- *             example:
- *               success: true
- *               data:
- *                 routes:
- *                   - summary: "Mittraphap Road"
- *                     distance: "5.2 km"
- *                     duration: "12 mins"
- *                     overview_polyline: "abcd1234..."
- *                     legs:
- *                       - start_address: "Khon Kaen University"
- *                         end_address: "Central Plaza Khon Kaen"
- *                         steps: [...]
+ *             schema:
+ *               $ref: '#/components/schemas/DirectionsResponse'
  *       400:
- *         description: Missing or invalid parameters
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
  */
 
 /**
@@ -88,9 +152,6 @@
  * /api/maps/geocode:
  *   get:
  *     summary: Geocode an address into coordinates
- *     description: |
- *       แปลงข้อความที่อยู่ให้เป็นพิกัดละติจูด/ลองจิจูด โดยใช้ Google Maps Geocoding API (API ภายนอก)  
- *       ใช้สำหรับแปลงที่อยู่ของผู้ใช้เป็นพิกัดก่อนสร้าง route หรือ booking
  *     tags: [Maps]
  *     security:
  *       - bearerAuth: []
@@ -100,20 +161,20 @@
  *         required: true
  *         schema:
  *           type: string
- *           example: "Central Plaza Khon Kaen, Thailand"
+ *         example: Khon Kaen University
  *     responses:
  *       200:
  *         description: Geocode successful
  *         content:
  *           application/json:
- *             example:
- *               success: true
- *               data:
- *                 lat: 16.4389
- *                 lng: 102.8354
- *                 formatted_address: "Central Plaza Khon Kaen, ถ. ศรีจันทร์ ขอนแก่น"
+ *             schema:
+ *               $ref: '#/components/schemas/GeocodeResponse'
  *       400:
- *         description: Missing or invalid address
+ *         description: Invalid address
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
  */
 
 /**
@@ -121,9 +182,6 @@
  * /api/maps/reverse-geocode:
  *   get:
  *     summary: Reverse geocode coordinates into an address
- *     description: |
- *       แปลงพิกัด latitude/longitude ให้เป็นชื่อสถานที่และที่อยู่ โดยใช้ Google Maps Reverse Geocoding API (API ภายนอก)  
- *       ใช้สำหรับการแสดงผลจุดรับ-ส่ง หรือ checkpoint ในระบบ
  *     tags: [Maps]
  *     security:
  *       - bearerAuth: []
@@ -133,23 +191,24 @@
  *         required: true
  *         schema:
  *           type: string
- *           example: "16.4745"
+ *         example: "16.4772"
  *       - in: query
  *         name: lng
  *         required: true
  *         schema:
  *           type: string
- *           example: "102.8235"
+ *         example: "102.8141"
  *     responses:
  *       200:
  *         description: Reverse geocode successful
  *         content:
  *           application/json:
- *             example:
- *               success: true
- *               data:
- *                 name: "Khon Kaen University"
- *                 address: "123 ม.16 ถ.มิตรภาพ ต.ในเมือง อ.เมือง จ.ขอนแก่น"
+ *             schema:
+ *               $ref: '#/components/schemas/ReverseGeocodeResponse'
  *       400:
  *         description: Missing coordinates
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
  */

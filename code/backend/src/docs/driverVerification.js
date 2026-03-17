@@ -2,7 +2,89 @@
  * @swagger
  * tags:
  *   name: DriverVerifications
- *   description: Driver identity verification endpoints (for drivers and admins)
+ *   description: Driver identity verification endpoints
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     DriverVerification:
+ *       type: object
+ *       required:
+ *         - id
+ *         - userId
+ *         - licenseNumber
+ *         - status
+ *       properties:
+ *         id:
+ *           type: string
+ *         userId:
+ *           type: string
+ *         licenseNumber:
+ *           type: string
+ *         firstNameOnLicense:
+ *           type: string
+ *         lastNameOnLicense:
+ *           type: string
+ *         typeOnLicense:
+ *           type: string
+ *           enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME]
+ *         status:
+ *           type: string
+ *           enum: [PENDING, APPROVED, REJECTED]
+ *         licenseIssueDate:
+ *           type: string
+ *           format: date
+ *           example: 2024-01-01
+ *         licenseExpiryDate:
+ *           type: string
+ *           format: date
+ *           example: 2030-01-01
+ *         licensePhotoUrl:
+ *           type: string
+ *           example: https://cdn.app/license.jpg
+ *         selfiePhotoUrl:
+ *           type: string
+ *           example: https://cdn.app/selfie.jpg
+ *
+ *     DriverVerificationResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               $ref: '#/components/schemas/DriverVerification'
+ *
+ *     DriverVerificationListResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/DriverVerification'
+ *             pagination:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 limit:
+ *                   type: integer
+ *                   example: 10
+ *                 total:
+ *                   type: integer
+ *                   example: 100
+ *
+ *     UpdateVerificationStatusRequest:
+ *       type: object
+ *       required: [status]
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [PENDING, APPROVED, REJECTED]
  */
 
 /**
@@ -31,59 +113,68 @@
  *             properties:
  *               licenseNumber:
  *                 type: string
- *                 example: "1234567890"
  *               firstNameOnLicense:
  *                 type: string
- *                 example: Jonathan
  *               lastNameOnLicense:
  *                 type: string
- *                 example: Doillon
  *               typeOnLicense:
  *                 type: string
  *                 enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME]
  *               licenseIssueDate:
  *                 type: string
- *                 format: date-time
- *                 example: "2022-05-10T00:00:00Z"
+ *                 format: date
  *               licenseExpiryDate:
  *                 type: string
- *                 format: date-time
- *                 example: "2027-05-10T00:00:00Z"
+ *                 format: date
  *               licensePhotoUrl:
  *                 type: string
  *                 format: binary
+ *                 description: Driver license image file
  *               selfiePhotoUrl:
  *                 type: string
  *                 format: binary
+ *                 description: Selfie image file
  *     responses:
  *       201:
- *         description: Verification submitted successfully
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
  *       400:
- *         description: Missing required files or invalid data
+ *         description: Bad request
  *       401:
  *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
  */
 
 /**
  * @swagger
  * /api/driver-verifications/me:
  *   get:
- *     summary: Get current driver's verification record
+ *     summary: Get my verification
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Driver verification record retrieved
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
  *       401:
  *         description: Unauthorized
+ *       404:
+ *         description: Not found
  */
 
 /**
  * @swagger
  * /api/driver-verifications/{id}:
  *   put:
- *     summary: Update driver verification record (Driver)
+ *     summary: Update my verification (Driver)
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
@@ -93,7 +184,6 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Verification record ID
  *     requestBody:
  *       required: false
  *       content:
@@ -109,33 +199,36 @@
  *                 type: string
  *               typeOnLicense:
  *                 type: string
- *                 enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME]
  *               licenseIssueDate:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *               licenseExpiryDate:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *               licensePhotoUrl:
  *                 type: string
  *                 format: binary
- *               selfiePhotoUrl:
- *                 type: string
- *                 format: binary
+ *                 description: Driver license image file
  *     responses:
  *       200:
- *         description: Verification updated successfully
- *       403:
- *         description: Forbidden (not your record)
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
  *       404:
- *         description: Record not found
+ *         description: Not found
  */
 
 /**
  * @swagger
  * /api/driver-verifications/admin:
  *   get:
- *     summary: List all driver verification requests (Admin)
+ *     summary: List verifications (Admin)
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
@@ -151,13 +244,21 @@
  *         schema: { type: string }
  *       - in: query
  *         name: status
- *         schema: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, APPROVED, REJECTED]
  *       - in: query
  *         name: typeOnLicense
- *         schema: { type: string, enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME] }
+ *         schema:
+ *           type: string
+ *           enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME]
  *     responses:
  *       200:
- *         description: Paginated list of driver verifications
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationListResponse'
  *       401:
  *         description: Unauthorized
  *       403:
@@ -166,9 +267,34 @@
 
 /**
  * @swagger
+ * /api/driver-verifications/admin/{id}:
+ *   get:
+ *     summary: Get verification by ID (Admin)
+ *     tags: [DriverVerifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
+ *       404:
+ *         description: Not found
+ */
+
+/**
+ * @swagger
  * /api/driver-verifications/admin:
  *   post:
- *     summary: Create a driver verification record manually (Admin)
+ *     summary: Create verification (Admin)
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
@@ -181,15 +307,9 @@
  *             required:
  *               - userId
  *               - licenseNumber
- *               - firstNameOnLicense
- *               - lastNameOnLicense
- *               - typeOnLicense
- *               - licenseIssueDate
- *               - licenseExpiryDate
  *             properties:
  *               userId:
  *                 type: string
- *                 example: "cuid_user_123"
  *               licenseNumber:
  *                 type: string
  *               firstNameOnLicense:
@@ -198,13 +318,12 @@
  *                 type: string
  *               typeOnLicense:
  *                 type: string
- *                 enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME]
  *               licenseIssueDate:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *               licenseExpiryDate:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *               licensePhotoUrl:
  *                 type: string
  *                 format: binary
@@ -216,37 +335,18 @@
  *                 enum: [PENDING, APPROVED, REJECTED]
  *     responses:
  *       201:
- *         description: Verification created successfully
- *       400:
- *         description: Invalid input
- */
-
-/**
- * @swagger
- * /api/driver-verifications/admin/{id}:
- *   get:
- *     summary: Get driver verification by ID (Admin)
- *     tags: [DriverVerifications]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Record retrieved successfully
- *       404:
- *         description: Not found
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
  */
 
 /**
  * @swagger
  * /api/driver-verifications/admin/{id}:
  *   put:
- *     summary: Update driver verification record (Admin)
+ *     summary: Update verification (Admin)
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
@@ -271,13 +371,12 @@
  *                 type: string
  *               typeOnLicense:
  *                 type: string
- *                 enum: [PRIVATE_CAR_TEMPORARY, PRIVATE_CAR, PUBLIC_CAR, LIFETIME]
  *               licenseIssueDate:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *               licenseExpiryDate:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *               licensePhotoUrl:
  *                 type: string
  *                 format: binary
@@ -289,16 +388,18 @@
  *                 enum: [PENDING, APPROVED, REJECTED]
  *     responses:
  *       200:
- *         description: Verification updated successfully
- *       404:
- *         description: Record not found
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
  */
 
 /**
  * @swagger
  * /api/driver-verifications/admin/{id}:
  *   delete:
- *     summary: Delete driver verification record (Admin)
+ *     summary: Delete verification (Admin)
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
@@ -310,16 +411,18 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Record deleted successfully
- *       404:
- *         description: Record not found
+ *         description: Deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
  */
 
 /**
  * @swagger
  * /api/driver-verifications/{id}/status:
  *   patch:
- *     summary: Update driver verification status (Admin)
+ *     summary: Update verification status (Admin)
  *     tags: [DriverVerifications]
  *     security:
  *       - bearerAuth: []
@@ -334,16 +437,18 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [PENDING, APPROVED, REJECTED]
+ *             $ref: '#/components/schemas/UpdateVerificationStatusRequest'
  *     responses:
  *       200:
- *         description: Status updated successfully
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverVerificationResponse'
  *       400:
- *         description: Invalid status
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
  *       404:
- *         description: Record not found
+ *         description: Not found
  */

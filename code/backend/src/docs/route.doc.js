@@ -7,72 +7,180 @@
 
 /**
  * @swagger
- * /api/routes:
- *   get:
- *     summary: Search for available routes (Public)
- *     description: ค้นหาเส้นทางที่ตรงกับพิกัด/เวลา/จำนวนที่นั่ง โดยสามารถกรองด้วย lat/lng (radius), driverId, vehicleId, status, หรือช่วงเวลาเดินทางได้
- *     tags: [Routes]
- *     parameters:
- *       - in: query
- *         name: q
- *         schema: { type: string, example: "ขอนแก่น มหาวิทยาลัย" }
- *       - in: query
- *         name: driverId
- *         schema: { type: string, example: "cmuser1234567890abcd" }
- *       - in: query
- *         name: vehicleId
- *         schema: { type: string, example: "cmvehicle1234567890abcd" }
- *       - in: query
- *         name: status
- *         schema: { type: string, enum: [AVAILABLE, FULL, CANCELLED] }
- *       - in: query
- *         name: startNearLat
- *         schema: { type: number, example: 16.4772 }
- *       - in: query
- *         name: startNearLng
- *         schema: { type: number, example: 102.8141 }
- *       - in: query
- *         name: endNearLat
- *         schema: { type: number, example: 16.4755 }
- *       - in: query
- *         name: endNearLng
- *         schema: { type: number, example: 102.8256 }
- *       - in: query
- *         name: radiusMeters
- *         schema: { type: integer, example: 500 }
- *       - in: query
- *         name: seatsRequired
- *         schema: { type: integer, example: 2 }
- *       - in: query
- *         name: sortBy
- *         schema: { type: string, enum: [createdAt, departureTime, pricePerSeat, availableSeats] }
- *       - in: query
- *         name: sortOrder
- *         schema: { type: string, enum: [asc, desc] }
- *       - in: query
- *         name: page
- *         schema: { type: integer, example: 1 }
- *       - in: query
- *         name: limit
- *         schema: { type: integer, example: 10 }
- *     responses:
- *       200:
- *         description: Routes retrieved successfully
+ * components:
+ *   schemas:
+ *     Location:
+ *       type: object
+ *       required: [lat, lng]
+ *       properties:
+ *         lat:
+ *           type: number
+ *           example: 16.4772
+ *         lng:
+ *           type: number
+ *           example: 102.8141
+ *         name:
+ *           type: string
+ *         address:
+ *           type: string
+ *
+ *     Route:
+ *       type: object
+ *       required:
+ *         - id
+ *         - driverId
+ *         - vehicleId
+ *         - startLocation
+ *         - endLocation
+ *         - departureTime
+ *         - availableSeats
+ *         - pricePerSeat
+ *         - status
+ *       properties:
+ *         id:
+ *           type: string
+ *         driverId:
+ *           type: string
+ *         vehicleId:
+ *           type: string
+ *         startLocation:
+ *           $ref: '#/components/schemas/Location'
+ *         endLocation:
+ *           $ref: '#/components/schemas/Location'
+ *         waypoints:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Location'
+ *         departureTime:
+ *           type: string
+ *           format: date-time
+ *         availableSeats:
+ *           type: integer
+ *         pricePerSeat:
+ *           type: number
+ *         conditions:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [AVAILABLE, FULL, CANCELLED, ONGOING, COMPLETED]
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     RouteResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               $ref: '#/components/schemas/Route'
+ *
+ *     RouteListResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Route'
+ *             pagination:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *
+ *     CreateRouteRequest:
+ *       type: object
+ *       required: [vehicleId, startLocation, endLocation, departureTime, availableSeats, pricePerSeat]
+ *       properties:
+ *         vehicleId:
+ *           type: string
+ *         startLocation:
+ *           $ref: '#/components/schemas/Location'
+ *         endLocation:
+ *           $ref: '#/components/schemas/Location'
+ *         departureTime:
+ *           type: string
+ *           format: date-time
+ *         availableSeats:
+ *           type: integer
+ *         pricePerSeat:
+ *           type: number
+ *         conditions:
+ *           type: string
+ *         waypoints:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Location'
+ *         optimizeWaypoints:
+ *           type: boolean
+ *       example:
+ *         vehicleId: "vehicle123"
+ *         startLocation:
+ *           lat: 16.47
+ *           lng: 102.81
+ *         endLocation:
+ *           lat: 16.48
+ *           lng: 102.82
+ *         departureTime: "2026-03-17T12:00:00Z"
+ *         availableSeats: 3
+ *         pricePerSeat: 50
  */
 
 /**
  * @swagger
- * /api/routes/me:
+ * /api/routes:
  *   get:
- *     summary: Get all routes created by the authenticated driver
+ *     summary: Search for available routes (Public)
+ *     tags: [Routes]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema: { type: string }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Routes retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RouteListResponse'
+ */
+
+/**
+ * @swagger
+ * /api/routes:
+ *   post:
+ *     summary: Create a new route (Driver)
  *     tags: [Routes]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateRouteRequest'
  *     responses:
- *       200:
- *         description: Driver's routes retrieved successfully
- *       401:
- *         description: Unauthorized
+ *       201:
+ *         description: Route created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RouteResponse'
  */
 
 /**
@@ -89,382 +197,10 @@
  *     responses:
  *       200:
  *         description: Route retrieved successfully
- *       404:
- *         description: Route not found
- */
-
-/**
- * @swagger
- * /api/routes:
- *   post:
- *     summary: Create a new route (Driver)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - vehicleId
- *               - startLocation
- *               - endLocation
- *               - departureTime
- *               - availableSeats
- *               - pricePerSeat
- *             properties:
- *               vehicleId:
- *                 type: string
- *                 example: "cmvehicle1234567890abcd"
- *               startLocation:
- *                 type: object
- *                 example: { lat: 16.4772, lng: 102.8141, name: "Khon Kaen University", address: "123 ถนนมิตรภาพ" }
- *               endLocation:
- *                 type: object
- *                 example: { lat: 16.445, lng: 102.834, name: "Central Plaza Khon Kaen", address: "ถ. ศรีจันทร์" }
- *               departureTime:
- *                 type: string
- *                 format: date-time
- *                 example: "2025-10-15T09:00:00Z"
- *               availableSeats:
- *                 type: integer
- *                 example: 3
- *               pricePerSeat:
- *                 type: number
- *                 example: 50
- *               conditions:
- *                 type: string
- *                 example: "ห้ามสูบบุหรี่ในรถ"
- *               waypoints:
- *                 type: array
- *                 items: { type: object }
- *                 example: [{ lat: 16.460, lng: 102.820, name: "ตลาดต้นตาล" }]
- *               optimizeWaypoints:
- *                 type: boolean
- *                 example: true
- *     responses:
- *       201:
- *         description: Route created successfully
- *       400:
- *         description: Invalid data or vehicle not found
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Driver not verified
- */
-
-/**
- * @swagger
- * /api/routes/{id}:
- *   put:
- *     summary: Update existing route (Driver)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               vehicleId: { type: string }
- *               startLocation: { type: object }
- *               endLocation: { type: object }
- *               departureTime: { type: string, format: date-time }
- *               availableSeats: { type: integer }
- *               pricePerSeat: { type: number }
- *               conditions: { type: string }
- *               waypoints: { type: array, items: { type: object } }
- *               optimizeWaypoints: { type: boolean }
- *     responses:
- *       200:
- *         description: Route updated successfully
- *       404:
- *         description: Route not found
- *       403:
- *         description: Forbidden
- */
-
-/**
- * @swagger
- * /api/routes/{id}/cancel:
- *   patch:
- *     summary: Cancel a route (Driver)
- *     description: คนขับสามารถยกเลิกเส้นทางที่สร้างไว้ได้ พร้อมระบุเหตุผล
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [reason]
- *             properties:
- *               reason:
- *                 type: string
- *                 example: "ติดธุระด่วน"
- *     responses:
- *       200:
- *         description: Route cancelled successfully
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Route not found
- */
-
-/**
- * @swagger
- * /api/routes/{id}/complete:
- *   patch:
- *     summary: Mark route as completed (Driver)
- *     description: คนขับยืนยันการเดินทางเสร็จสิ้น
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Route marked as completed
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Route not found
- */
-
-/**
- * @swagger
- * /api/routes/{id}:
- *   delete:
- *     summary: Delete route (Driver)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Route deleted successfully
- *       404:
- *         description: Route not found
- *       403:
- *         description: Forbidden
- */
-
-/**
- * @swagger
- * /api/routes/admin:
- *   get:
- *     summary: Get all routes (Admin)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: q
- *         schema: { type: string, example: "Khon Kaen" }
- *       - in: query
- *         name: status
- *         schema: { type: string, enum: [AVAILABLE, FULL, CANCELLED] }
- *       - in: query
- *         name: driverId
- *         schema: { type: string }
- *       - in: query
- *         name: vehicleId
- *         schema: { type: string }
- *       - in: query
- *         name: dateFrom
- *         schema: { type: string, format: date-time }
- *       - in: query
- *         name: dateTo
- *         schema: { type: string, format: date-time }
- *       - in: query
- *         name: sortBy
- *         schema: { type: string, enum: [createdAt, departureTime, pricePerSeat, availableSeats] }
- *       - in: query
- *         name: sortOrder
- *         schema: { type: string, enum: [asc, desc] }
- *     responses:
- *       200:
- *         description: Admin route list retrieved successfully
- *       401:
- *         description: Unauthorized
- */
-
-/**
- * @swagger
- * /api/routes/admin/driver/{driverId}:
- *   get:
- *     summary: Get all routes for a specific driver (Admin)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: driverId
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Routes retrieved successfully
- *       404:
- *         description: Driver not found
- */
-
-/**
- * @swagger
- * /api/routes/admin/{id}:
- *   get:
- *     summary: Get route details by ID (Admin)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Route details retrieved successfully
- *       404:
- *         description: Route not found
- */
-
-/**
- * @swagger
- * /api/routes/admin:
- *   post:
- *     summary: Create a new route (Admin)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - driverId
- *               - vehicleId
- *               - startLocation
- *               - endLocation
- *               - departureTime
- *               - availableSeats
- *               - pricePerSeat
- *             properties:
- *               driverId:
- *                 type: string
- *                 example: "cmuser1234567890abcd"
- *               vehicleId:
- *                 type: string
- *                 example: "cmvehicle1234567890abcd"
- *               startLocation:
- *                 type: object
- *                 example: { lat: 16.4772, lng: 102.8141, name: "Khon Kaen University" }
- *               endLocation:
- *                 type: object
- *                 example: { lat: 16.445, lng: 102.834, name: "Central Plaza Khon Kaen" }
- *               departureTime:
- *                 type: string
- *                 format: date-time
- *               availableSeats:
- *                 type: integer
- *                 example: 3
- *               pricePerSeat:
- *                 type: number
- *                 example: 50
- *               conditions:
- *                 type: string
- *                 example: "ไม่รับสัตว์เลี้ยง"
- *               waypoints:
- *                 type: array
- *                 items: { type: object }
- *                 example: [{ lat: 16.460, lng: 102.820, name: "ตลาดต้นตาล" }]
- *               optimizeWaypoints:
- *                 type: boolean
- *                 example: false
- *     responses:
- *       201:
- *         description: Route created successfully
- *       400:
- *         description: Invalid or driver not verified
- */
-
-/**
- * @swagger
- * /api/routes/admin/{id}:
- *   put:
- *     summary: Update route (Admin)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               driverId: { type: string }
- *               vehicleId: { type: string }
- *               startLocation: { type: object }
- *               endLocation: { type: object }
- *               departureTime: { type: string, format: date-time }
- *               availableSeats: { type: integer }
- *               pricePerSeat: { type: number }
- *               status: { type: string, enum: [AVAILABLE, FULL, CANCELLED] }
- *               conditions: { type: string }
- *               waypoints: { type: array, items: { type: object } }
- *               optimizeWaypoints: { type: boolean }
- *     responses:
- *       200:
- *         description: Route updated successfully
- *       404:
- *         description: Route not found
- */
-
-/**
- * @swagger
- * /api/routes/admin/{id}:
- *   delete:
- *     summary: Delete route (Admin)
- *     tags: [Routes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200:
- *         description: Route deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RouteResponse'
  *       404:
  *         description: Route not found
  */

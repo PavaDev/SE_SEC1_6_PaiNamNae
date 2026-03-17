@@ -2,29 +2,141 @@
  * @swagger
  * tags:
  *   name: Bookings
- *   description: Booking management endpoints for passengers, drivers, and admins
+ *   description: Booking management endpoints
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Booking:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         routeId:
+ *           type: string
+ *         passengerId:
+ *           type: string
+ *         driverId:
+ *           type: string
+ *         numberOfSeats:
+ *           type: integer
+ *         status:
+ *           type: string
+ *           enum: [PENDING, CONFIRMED, REJECTED, CANCELLED]
+ *         pickupLocation:
+ *           type: object
+ *         dropoffLocation:
+ *           type: object
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     BookingResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               $ref: '#/components/schemas/Booking'
+ *
+ *     BookingListResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/SuccessResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Booking'
+ *
+ *     CreateBookingRequest:
+ *       type: object
+ *       required: [routeId, numberOfSeats, pickupLocation, dropoffLocation]
+ *       properties:
+ *         routeId:
+ *           type: string
+ *         numberOfSeats:
+ *           type: integer
+ *         pickupLocation:
+ *           type: object
+ *         dropoffLocation:
+ *           type: object
+ *
+ *     UpdateBookingStatusRequest:
+ *       type: object
+ *       required: [status]
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [PENDING, CONFIRMED, REJECTED, CANCELLED]
+ *
+ *     CancelBookingRequest:
+ *       type: object
+ *       required: [reason]
+ *       properties:
+ *         reason:
+ *           type: string
+ *           enum: [
+ *             CHANGE_OF_PLAN,
+ *             FOUND_ALTERNATIVE,
+ *             DRIVER_DELAY,
+ *             PRICE_ISSUE,
+ *             WRONG_LOCATION,
+ *             DUPLICATE_OR_WRONG_DATE,
+ *             SAFETY_CONCERN,
+ *             WEATHER_OR_FORCE_MAJEURE,
+ *             COMMUNICATION_ISSUE
+ *           ]
+ *
+ *     PassengerStatusRequest:
+ *       type: object
+ *       required: [status]
+ *       properties:
+ *         status:
+ *           type: string
+ *           example: PICKED_UP
+ *
+ *     NotifyArrivalRequest:
+ *       type: object
+ *       required: [etaMinutes]
+ *       properties:
+ *         etaMinutes:
+ *           type: integer
+ *           example: 5
+ *
+ *     NotifyWaitRequest:
+ *       type: object
+ *       required: [minutes]
+ *       properties:
+ *         minutes:
+ *           type: integer
+ *           example: 10
  */
 
 /**
  * @swagger
  * /api/bookings/me:
  *   get:
- *     summary: Get all bookings of the authenticated passenger
+ *     summary: Get my bookings (Passenger)
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Passenger's bookings retrieved successfully
- *       401:
- *         description: Unauthorized
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingListResponse'
  */
 
 /**
  * @swagger
  * /api/bookings/{id}:
  *   get:
- *     summary: Get booking details by ID (Passenger or Driver)
+ *     summary: Get booking by ID
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -32,12 +144,15 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Booking retrieved successfully
- *       403:
- *         description: Forbidden (not your booking)
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  *       404:
  *         description: Booking not found
  */
@@ -46,8 +161,7 @@
  * @swagger
  * /api/bookings:
  *   post:
- *     summary: Create a new booking (Passenger)
- *     description: ผู้โดยสารสามารถจองที่นั่งบนเส้นทางได้ โดยต้องไม่ถูกระงับสิทธิ์การจอง
+ *     summary: Create booking (Passenger)
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -56,30 +170,14 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [routeId, numberOfSeats, pickupLocation, dropoffLocation]
- *             properties:
- *               routeId:
- *                 type: string
- *                 example: "cmroute1234567890abcd"
- *               numberOfSeats:
- *                 type: integer
- *                 example: 2
- *               pickupLocation:
- *                 type: object
- *                 example: { lat: 16.4772, lng: 102.8141, name: "หน้ามข.", address: "ถนนหลังมอ" }
- *               dropoffLocation:
- *                 type: object
- *                 example: { lat: 16.4755, lng: 102.8256, name: "ปลายทางฝั่งตะวันออก", address: "ถนนสหศาสตร์" }
+ *             $ref: '#/components/schemas/CreateBookingRequest'
  *     responses:
  *       201:
- *         description: Booking created successfully
- *       400:
- *         description: Invalid input or route not available
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Passenger suspended
+ *         description: Booking created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  */
 
 /**
@@ -87,7 +185,7 @@
  * /api/bookings/{id}/status:
  *   patch:
  *     summary: Update booking status (Driver)
- *     description: คนขับสามารถยืนยัน (CONFIRMED) หรือปฏิเสธ (REJECTED) การจองได้
+ *     description: Only verified drivers
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -95,26 +193,21 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [status]
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [PENDING, CONFIRMED, REJECTED, CANCELLED]
- *                 example: CONFIRMED
+ *             $ref: '#/components/schemas/UpdateBookingStatusRequest'
  *     responses:
  *       200:
- *         description: Booking status updated successfully
- *       403:
- *         description: Forbidden (not your route)
- *       404:
- *         description: Booking not found
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  */
 
 /**
@@ -122,7 +215,6 @@
  * /api/bookings/{id}/cancel:
  *   patch:
  *     summary: Cancel booking (Passenger)
- *     description: ผู้โดยสารสามารถยกเลิกการจอง พร้อมระบุเหตุผลที่ยกเลิกได้
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -130,46 +222,117 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [reason]
- *             properties:
- *               reason:
- *                 type: string
- *                 enum: [
- *                   CHANGE_OF_PLAN,
- *                   FOUND_ALTERNATIVE,
- *                   DRIVER_DELAY,
- *                   PRICE_ISSUE,
- *                   WRONG_LOCATION,
- *                   DUPLICATE_OR_WRONG_DATE,
- *                   SAFETY_CONCERN,
- *                   WEATHER_OR_FORCE_MAJEURE,
- *                   COMMUNICATION_ISSUE
- *                 ]
- *                 example: CHANGE_OF_PLAN
+ *             $ref: '#/components/schemas/CancelBookingRequest'
  *     responses:
  *       200:
- *         description: Booking cancelled successfully
- *       400:
- *         description: Cannot cancel this booking
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Booking not found
+ *         description: Cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
+ */
+
+/**
+ * @swagger
+ * /api/bookings/{id}/passenger-status:
+ *   patch:
+ *     summary: Update passenger status (Driver)
+ *     description: Only verified drivers
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PassengerStatusRequest'
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
+ */
+
+/**
+ * @swagger
+ * /api/bookings/{id}/notify-arrival:
+ *   patch:
+ *     summary: Notify arrival (Driver)
+ *     description: Only verified drivers
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/NotifyArrivalRequest'
+ *     responses:
+ *       200:
+ *         description: Notified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
+ */
+
+/**
+ * @swagger
+ * /api/bookings/{id}/notify-wait:
+ *   patch:
+ *     summary: Notify wait delay
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/NotifyWaitRequest'
+ *     responses:
+ *       200:
+ *         description: Notified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  */
 
 /**
  * @swagger
  * /api/bookings/{id}:
  *   delete:
- *     summary: Delete booking (Passenger or Driver)
- *     description: ลบได้เฉพาะการจองที่สถานะ CANCELLED หรือ REJECTED
+ *     summary: Delete booking
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -177,16 +340,15 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Booking deleted successfully
- *       400:
- *         description: Only cancelled or rejected bookings can be deleted
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Booking not found
+ *         description: Deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
  */
 
 /**
@@ -194,54 +356,31 @@
  * /api/bookings/admin:
  *   get:
  *     summary: Get all bookings (Admin)
+ *     description: Admin only
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: q
- *         schema: { type: string, example: "ขอนแก่น" }
- *       - in: query
- *         name: status
- *         schema: { type: string, enum: [PENDING, CONFIRMED, REJECTED, CANCELLED] }
- *       - in: query
- *         name: passengerId
- *         schema: { type: string }
- *       - in: query
- *         name: routeId
- *         schema: { type: string }
- *       - in: query
- *         name: driverId
- *         schema: { type: string }
- *       - in: query
- *         name: createdFrom
- *         schema: { type: string, format: date-time }
- *       - in: query
- *         name: createdTo
- *         schema: { type: string, format: date-time }
- *       - in: query
- *         name: routeDepartureFrom
- *         schema: { type: string, format: date-time }
- *       - in: query
- *         name: routeDepartureTo
- *         schema: { type: string, format: date-time }
- *       - in: query
- *         name: sortBy
- *         schema: { type: string, enum: [createdAt, status, numberOfSeats] }
- *       - in: query
- *         name: sortOrder
- *         schema: { type: string, enum: [asc, desc] }
- *       - in: query
  *         name: page
- *         schema: { type: integer }
+ *         schema:
+ *           type: integer
  *       - in: query
  *         name: limit
- *         schema: { type: integer }
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, CONFIRMED, REJECTED, CANCELLED]
  *     responses:
  *       200:
- *         description: Admin booking list retrieved successfully
- *       401:
- *         description: Unauthorized
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingListResponse'
  */
 
 /**
@@ -256,12 +395,15 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Booking retrieved successfully
- *       404:
- *         description: Booking not found
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  */
 
 /**
@@ -269,7 +411,6 @@
  * /api/bookings/admin:
  *   post:
  *     summary: Create booking (Admin)
- *     description: แอดมินสามารถสร้างการจองแทนผู้ใช้ (passengerId) ได้โดยตรง
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -278,34 +419,14 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - routeId
- *               - passengerId
- *               - numberOfSeats
- *               - pickupLocation
- *               - dropoffLocation
- *             properties:
- *               routeId:
- *                 type: string
- *                 example: "cmroute1234567890abcd"
- *               passengerId:
- *                 type: string
- *                 example: "cmpassenger1234567890"
- *               numberOfSeats:
- *                 type: integer
- *                 example: 1
- *               pickupLocation:
- *                 type: object
- *                 example: { lat: 16.4772, lng: 102.8141, name: "Khon Kaen", address: "หลังมข." }
- *               dropoffLocation:
- *                 type: object
- *                 example: { lat: 16.4755, lng: 102.8256, name: "Central", address: "ถนนศรีจันทร์" }
+ *             $ref: '#/components/schemas/CreateBookingRequest'
  *     responses:
  *       201:
- *         description: Booking created successfully
- *       400:
- *         description: Invalid route or not enough seats
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  */
 
 /**
@@ -313,7 +434,6 @@
  * /api/bookings/admin/{id}:
  *   put:
  *     summary: Update booking (Admin)
- *     description: แก้ไขข้อมูลการจอง เช่น จำนวนที่นั่ง จุดรับ-ส่ง หรือสถานะ
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -321,26 +441,21 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               routeId: { type: string }
- *               passengerId: { type: string }
- *               numberOfSeats: { type: integer }
- *               pickupLocation: { type: object }
- *               dropoffLocation: { type: object }
- *               status:
- *                 type: string
- *                 enum: [PENDING, CONFIRMED, REJECTED, CANCELLED]
+ *             $ref: '#/components/schemas/CreateBookingRequest'
  *     responses:
  *       200:
- *         description: Booking updated successfully
- *       404:
- *         description: Booking not found
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingResponse'
  */
 
 /**
@@ -355,10 +470,14 @@
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Booking deleted successfully
- *       404:
- *         description: Booking not found
+ *         description: Deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
  */
+

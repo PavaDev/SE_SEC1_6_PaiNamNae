@@ -245,11 +245,20 @@
                                                         </div>
 
                                                         <!-- stars -->
-                                                        <div class="flex items-center mt-1 text-xs text-yellow-400">
-                                                        <span>
-                                                            {{ '★'.repeat(review.rating) }}
-                                                            {{ '☆'.repeat(5 - review.rating) }}
-                                                        </span>
+                                                        <div class="flex items-center mt-1 space-x-2">
+                                                            <div class="flex items-center text-xs text-yellow-400">
+                                                                {{ '★'.repeat(review.rating) }}
+                                                                {{ '☆'.repeat(5 - review.rating) }}
+                                                            </div>
+                                                            <span class="text-xs font-bold text-gray-700">({{ (review.rating || 0).toFixed(1) }})</span>
+                                                        </div>
+
+                                                        <!-- Categories -->
+                                                        <div v-if="review.categories && review.categories.length" class="flex flex-wrap gap-1 mt-2">
+                                                            <span v-for="cat in review.categories" :key="cat" 
+                                                                class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-medium rounded-full border border-blue-100">
+                                                                {{ getReviewCategoryLabel(cat) }}
+                                                            </span>
                                                         </div>
 
                                                         <!-- comment -->
@@ -725,6 +734,21 @@ const driverReportImages = ref([])
 
 const routeReviews = reactive({}) // { routeId: Review[] }
 const loadingReviews = reactive({}) // loading state per route
+
+const availableReviewCategories = [
+    { value: 'GOOD_DRIVING', label: 'ขับรถดี' },
+    { value: 'POLITE', label: 'คนขับสุภาพ' },
+    { value: 'ON_TIME', label: 'มาตรงเวลา' },
+    { value: 'CLEAN_CAR', label: 'รถสะอาด' },
+    { value: 'SAFE_DRIVING', label: 'ขับปลอดภัย' },
+    { value: 'GOOD_COMMUNICATION', label: 'สื่อสารดี' },
+    { value: 'FAIR_PRICE', label: 'ราคายุติธรรม' }
+]
+
+function getReviewCategoryLabel(value) {
+    const cat = availableReviewCategories.find(c => c.value === value)
+    return cat ? cat.label : value
+}
 
 // ---------- Google Maps states ----------
 let gmap = null
